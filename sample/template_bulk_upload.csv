@@ -1,0 +1,3 @@
+name,description,type,title,template
+TEST,Testing email,EMAIL,Test email template,<html> This is sample email template </html>
+TEST,Testing push notification,PUSH,Test push notification,This is sample push notification
