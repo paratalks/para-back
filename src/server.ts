@@ -51,7 +51,7 @@ function shutDown() {
 
     setTimeout(() => {
         logger.info("Could not close connections in time, forcefully shutting down");
-        process.exit(1);
+        process.exit(1);  
     }, 10000);
 
     connections.forEach((curr: any) => curr.end());
