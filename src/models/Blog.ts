@@ -8,19 +8,24 @@ const blogSchema = new Schema(
       type: Number,
     },
     category_id: {
-      type: Number,
+      type: Schema.Types.ObjectId,
+      ref: "category"
     },
     user_id: {
-      type: Number,
+      type: Schema.Types.ObjectId,
+      ref: "user"
     },
     title: {
       type: String,
+      required: [true,"Please provide title"],
     },
     slug: {
       type: String,
+      required: true,
     },
     description: {
       type: String,
+      required: [true, "Please provide description"],
     },
     image_path: {
       type: String,
@@ -29,13 +34,10 @@ const blogSchema = new Schema(
       type: Number,
     },
     is_approved: {
-      type: Number,
+      type: Boolean,
     },
-    
   },
   { timestamps: true }
 );
 
-
-
-export const blogs = mongoose.model("blogs", blogSchema)
+export const blogs = mongoose.model("blogs", blogSchema);
