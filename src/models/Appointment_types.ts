@@ -6,9 +6,11 @@ const appointment_typesSchema = new Schema(
   {
     id: {
       type: Number,
+      unique: true
     },
     name: {
         type: String,
+        required: true
     },
     is_schedule_required:{
         type: Boolean,
