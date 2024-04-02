@@ -101,3 +101,9 @@ const BookAppointmentSchema = new Schema(
   },
   { timestamps: true }
 );
+
+const BookAppointments = mongoose.model("bookappointments", BookAppointmentSchema);
+
+export default BookAppointments;
+
+
