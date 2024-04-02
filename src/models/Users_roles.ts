@@ -4,6 +4,7 @@ const users_rolesSchema = new Schema({
     id:{
         type: Number,
         unique:true,
+        required: [true, "Id is required"],
     },
     user_id:{
         type: Schema.Types.ObjectId,

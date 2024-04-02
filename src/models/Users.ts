@@ -5,18 +5,28 @@ const usersSchema = new Schema({
     id: {
         type: Number,
         unique: true,
+        required: [true, "Id is required"],
     },
     first_name: {
         type: String,
         default: null,
+        required: [true, "Please provide a firstName"],
     },
     last_name: {
         type: String,
         default: null,
+        required: [true, "Please provide a lastName"],
     },
     email: {
         type: String,
-        default: null,
+        required: [true, "Please provide email"],
+        unique: true,
+        match: [
+            /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/,
+            "Please provide valid email",
+        ],
+        trim: true,
+        lowercase: true,
     },
     about:{
         type: String,
@@ -25,10 +35,12 @@ const usersSchema = new Schema({
     password: {
         type: String,
         default: null,
+        required: [true, "Please provide a password"],
     },
     phone:{
         type: String,
         default: null,
+        required: [true, "Please provide a phone number"],
     },
     image_path:{
         type: String,
