@@ -4,7 +4,8 @@ const {Schema} = mongoose;
 
 const CommissionSchema = new Schema({
     id:{
-        type: Number
+        type: Number,
+        unique:true,
     },
     fixed:{
         type:Number, //doubt tiny int(3)

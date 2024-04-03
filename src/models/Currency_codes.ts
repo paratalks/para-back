@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 
 const {Schema} = mongoose;
 
-const CurrencyCodesSchema = new Schema({
+const Currency_codesSchema = new Schema({
     id:{
         type:Number,
+        unique:true,
         required:true
     },
     code:{
@@ -21,6 +22,6 @@ const CurrencyCodesSchema = new Schema({
     }
 })
 
-const CurrencyCodes = mongoose.model("currency_codes", CurrencyCodesSchema)
+const Currency_codes = mongoose.model("Currency_codes", Currency_codesSchema)
 
-export default CurrencyCodes;
+export default Currency_codes;

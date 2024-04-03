@@ -5,6 +5,7 @@ const {Schema} = mongoose;
 const GeneralSettingsSchema = new Schema({
     id:{
         type:Number,
+        unique:true,
         required:true,
     },
     logo:{
@@ -49,6 +50,6 @@ const GeneralSettingsSchema = new Schema({
     },
 })
 
-const GeneralSettings = mongoose.model("general_settings", GeneralSettingsSchema)
+const General_settings = mongoose.model("General_settings", GeneralSettingsSchema)
 
-export default GeneralSettings;
+export default General_settings;

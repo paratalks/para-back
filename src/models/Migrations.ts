@@ -14,4 +14,4 @@ const migrationsSchema = new Schema({
     },
 })
 
-export const migrations = mongoose.model("migrations", migrationsSchema)
+export const Migrations = mongoose.model("Migrations", migrationsSchema)

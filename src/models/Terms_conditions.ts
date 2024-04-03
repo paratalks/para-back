@@ -12,4 +12,4 @@ const terms_conditionsSchema = new Schema({
     }
 },{timestamps: true});
 
-export const terms_conditions = mongoose.model("terms_conditions", terms_conditionsSchema)
+export const Terms_conditions = mongoose.model("Terms_conditions", terms_conditionsSchema)

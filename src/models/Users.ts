@@ -99,18 +99,18 @@ const usersSchema = new Schema({
         default: "offline",
     },
     admin_user:{
-        type: Boolean,
+        type: Boolean,     
         default: false,
     },
     fb_id:{
-        type: String,
+        type: String,     
         default: null,
     },
     google_id:{
-        type: String,
+        type: String,      
         default: null,
     },
     
 },{timestamps:true})
 
-export const users = mongoose.model("users", usersSchema)
+export const Users = mongoose.model("Users", usersSchema)

@@ -29,4 +29,4 @@ const settingsSchema = new Schema({
 
 },{timestamps: true});
 
-export const settings = mongoose.model("settings", settingsSchema)
+export const Settings = mongoose.model("Settings", settingsSchema)

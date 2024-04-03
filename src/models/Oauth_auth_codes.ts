@@ -11,7 +11,8 @@ const oauth_auth_codesSchema = new Schema({
         ref: "users",
     },
     client_id:{
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref:"Oauth_clients",     //which client to refer
     },
     scopes:{
         type: String,
@@ -27,4 +28,4 @@ const oauth_auth_codesSchema = new Schema({
     }
 })
 
-export const oauth_auth_codes = mongoose.model("oauth_auth_codes", oauth_auth_codesSchema)
+export const Oauth_auth_codes = mongoose.model("Oauth_auth_codes", oauth_auth_codesSchema)

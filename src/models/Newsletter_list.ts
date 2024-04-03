@@ -1,20 +1,26 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const newsletter_listSchema = new Schema({
-    id:{
+    id: {
         type: Number,
         unique: true,
         required: [true, "Id is required"],
     },
-    email:{
+    email: {
         type: String,
+        required: [true, "Please provide email"],
         unique: true,
-        required: [true, "Email is required"],
+        match: [
+            /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/,
+            "Please provide valid email",
+        ],
+        trim: true,
+        lowercase: true,
     },
-    is_subscriber:{
+    is_subscriber: {
         type: Boolean,
         default: true,
     }
-},{timestamps: true});
+}, { timestamps: true });
 
-export const newsletter_list = mongoose.model("newsletter_list", newsletter_listSchema)
+export const Newsletter_list = mongoose.model("Newsletter_list", newsletter_listSchema)

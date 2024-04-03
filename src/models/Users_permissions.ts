@@ -3,12 +3,12 @@ import mongoose, {Schema} from "mongoose";
 const users_permissionsSchema = new Schema({
     user_id:{
         type: Schema.Types.ObjectId,
-        ref: "users",
+        ref: "Users",
     },
     permission_id:{
         type: Schema.Types.ObjectId,
-        ref: "permissions",
+        ref: "Permissions",
     },
 })
 
-export const users_permissions = mongoose.model("users_permissions", users_permissionsSchema)
+export const Users_permissions = mongoose.model("Users_permissions", users_permissionsSchema)

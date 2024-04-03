@@ -8,15 +8,15 @@ const ratingsSchema = new Schema({
     },
     mentee_id:{
         type: Schema.Types.ObjectId,
-        ref: "mentee",
+        ref: "Mentee",
     },
     mentor_id:{
         type: Schema.Types.ObjectId,
-        ref: "mentor",
+        ref: "Mentor",
     },
     appointment_id:{
         type: Schema.Types.ObjectId,
-        ref: "appointment_types",
+        ref: "Appointment_types",
     },
     rating:{
         type:Number,
@@ -27,4 +27,4 @@ const ratingsSchema = new Schema({
     },
 },{timestamps: true});
 
-export const ratings = mongoose.model("ratings", ratingsSchema)
+export const Ratings = mongoose.model("Ratings", ratingsSchema)

@@ -8,7 +8,7 @@ const oauth_clientsSchema = new Schema({
     },
     user_id:{
         type: Schema.Types.ObjectId,
-        ref: "users",
+        ref: "Users",
         default:null,
     },
     name:{
@@ -38,4 +38,4 @@ const oauth_clientsSchema = new Schema({
 
 },{timestamps: true});
 
-export const oauth_clients = mongoose.model("oauth_clients", oauth_clientsSchema)
+export const Oauth_clients = mongoose.model("Oauth_clients", oauth_clientsSchema)

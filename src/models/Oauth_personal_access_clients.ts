@@ -7,8 +7,9 @@ const oauth_personal_access_clientsSchema = new Schema({
         required: [true, "Id is required"],
     },
     client_id:{
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref:"Oauth_clients",       //which client to refer
     },
 }, {timestamps: true});
 
-export const oauth_personal_access_clients = mongoose.model("oauth_personal_access_clients", oauth_personal_access_clientsSchema)
+export const Oauth_personal_access_clients = mongoose.model("Oauth_personal_access_clients", oauth_personal_access_clientsSchema)

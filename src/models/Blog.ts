@@ -9,11 +9,11 @@ const blogSchema = new Schema(
     },
     category_id: {
       type: Schema.Types.ObjectId,
-      ref: "category"
+      ref: "Blog_Category"
     },
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "user"
+      ref: "Users"
     },
     title: {
       type: String,
@@ -40,4 +40,4 @@ const blogSchema = new Schema(
   { timestamps: true }
 );
 
-export const blogs = mongoose.model("blogs", blogSchema);
+export const Blogs = mongoose.model("Blogs", blogSchema);

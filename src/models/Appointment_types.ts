@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const appointment_typesSchema = new Schema(
   {
     id: {
-      type: Number,
+      type: Number,          //autoincrement, req. true?
       unique: true
     },
     name: {
@@ -20,4 +20,4 @@ const appointment_typesSchema = new Schema(
   { timestamps: true }
 );
 
-export const appointment_types = mongoose.model("appointment_types", appointment_typesSchema)
+export const Appointment_types = mongoose.model("Appointment_types", appointment_typesSchema)

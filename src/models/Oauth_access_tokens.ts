@@ -8,10 +8,11 @@ const Oauth_access_tokensSchema = new Schema({
     },
     user_id:{
         type: Schema.Types.ObjectId,
-        ref: "users",
+        ref: "Users",
     },
-    client_id:{
-        type: String,
+    client_id:{              //which client to refer
+        type: Schema.Types.ObjectId,
+        ref:"Oauth_clients",
     },
     name:{
         type: String,
@@ -31,4 +32,4 @@ const Oauth_access_tokensSchema = new Schema({
     }
 },{timestamps: true});
 
-export const oauth_access_tokens = mongoose.model("oauth_access_tokens", Oauth_access_tokensSchema)
+export const Oauth_access_tokens = mongoose.model("Oauth_access_tokens", Oauth_access_tokensSchema)

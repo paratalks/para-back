@@ -12,4 +12,4 @@ const mentor_occupationsSchema = new Schema({
     }
 },{timestamps: true});
 
-export const mentor_occupations = mongoose.model("mentor_occupations", mentor_occupationsSchema)
+export const Mentor_occupations = mongoose.model("Mentor_occupations", mentor_occupationsSchema)

@@ -10,7 +10,7 @@ const personal_access_tokensSchema = new Schema({
         type: String,
     },
     tokenable_id:{
-        type: Number,
+        type: Number,  //refer?
     },
     name:{
         type: String,
@@ -28,4 +28,4 @@ const personal_access_tokensSchema = new Schema({
     },
 },{timestamps: true});
 
-export const personal_access_tokens = mongoose.model("personal_access_tokens", personal_access_tokensSchema)
+export const Personal_access_tokens = mongoose.model("Personal_access_tokens", personal_access_tokensSchema)

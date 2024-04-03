@@ -8,12 +8,12 @@ const roles_permissionsSchema = new Schema({
     },
     role_id:{
         type: Schema.Types.ObjectId,
-        ref: "roles",
+        ref: "Roles",
     },
     permission_id:{
         type: Schema.Types.ObjectId,
-        ref: "permissions",
+        ref: "Permissions",
     },
 })
 
-export const roles_permissions = mongoose.model("roles_permissions", roles_permissionsSchema)
+export const Roles_permissions = mongoose.model("Roles_permissions", roles_permissionsSchema)

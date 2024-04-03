@@ -5,6 +5,7 @@ const {Schema} = mongoose;
 const FailedJobsSchema = new Schema({
     id:{
         type:Number,
+        unique:true,
         require: true
     },
     uuid:{
@@ -28,6 +29,6 @@ const FailedJobsSchema = new Schema({
     }
 })
 
-const FailedJobs = mongoose.model("failed_jobs", FailedJobsSchema)
+const Failed_jobs = mongoose.model("Failed_jobs", FailedJobsSchema)
 
-export default FailedJobs;
+export default Failed_jobs;

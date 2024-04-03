@@ -7,6 +7,7 @@ const JassCashSchema = new Schema(
   {
     id: {
       type: Number,
+      unique:true,
       required: true,
     },
     merchant_id: {
@@ -22,6 +23,6 @@ const JassCashSchema = new Schema(
   { timestamps: true }
 );
 
-const JazzCash = mongoose.model("jazzcash_merchant" ,JassCashSchema)
+const JazzCash_merchant = mongoose.model("JazzCash_merchant" ,JassCashSchema)
 
-export default JazzCash
+export default JazzCash_merchant

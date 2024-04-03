@@ -8,7 +8,7 @@ const mentor_holiday_dateSchema = new Schema({
     },
     mentor_id:{
         type: Schema.Types.ObjectId,
-        ref: "mentor",
+        ref: "Mentor",
     },
     date:{
         type: Date,
@@ -22,4 +22,4 @@ const mentor_holiday_dateSchema = new Schema({
     }
 })
 
-export const mentor_holiday_date = mongoose.model("mentor_holiday_date", mentor_holiday_dateSchema)
+export const Mentor_holiday_date = mongoose.model("Mentor_holiday_date", mentor_holiday_dateSchema)

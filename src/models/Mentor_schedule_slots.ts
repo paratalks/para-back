@@ -8,7 +8,7 @@ const mentor_schedule_slotsSchema = new Schema({
     },
     schedule_id:{
         type: Schema.Types.ObjectId,
-        ref: "mentor_schedules",
+        ref: "Mentor_schedules",
     },
     start_time:{           //types
         type: Date,
@@ -28,4 +28,4 @@ const mentor_schedule_slotsSchema = new Schema({
     }
 })
 
-export const mentor_schedule_slots = mongoose.model("mentor_schedule_slots", mentor_schedule_slotsSchema)
+export const Mentor_schedule_slots = mongoose.model("Mentor_schedule_slots", mentor_schedule_slotsSchema)

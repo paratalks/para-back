@@ -6,6 +6,7 @@ const ContactUsSchema = new Schema(
   {
     id: {
       type: Number,
+      unique:true,
       required: true,
     },
     name: {

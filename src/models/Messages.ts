@@ -11,7 +11,7 @@ const messagesSchema = new Schema({
         default: null,
     },
     sender_id: {
-        type: Number,
+        type: Number,     //type should refer to other schema
         default:null,
     },
     sender_name:{
@@ -19,7 +19,7 @@ const messagesSchema = new Schema({
         default: null,
     },
     receiver_id: {
-        type: Number,
+        type: Number,     //should refer to other schema
         default: null,
     },
     receiver_name:{

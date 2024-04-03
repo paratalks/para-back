@@ -22,4 +22,4 @@ const password_resetsSchema = new mongoose.Schema({
     }
 })
 
-export const password_resets = mongoose.model("password_resets", password_resetsSchema);
+export const Password_resets = mongoose.model("Password_resets", password_resetsSchema);

@@ -3,10 +3,12 @@ import mongoose, { Schema } from "mongoose";
 const MenteeSchema = new mongoose.Schema({
   id: {
     type: Number,
+    unique:true,
     required: true,
   },
   user_id: {
     type: Schema.Types.ObjectId, //about the type
+    ref: "Users",
     default: null,
   },
   description: {
@@ -32,6 +34,6 @@ const MenteeSchema = new mongoose.Schema({
 
 },{timestamps: true});
 
-const Mentee = mongoose.model("mentee", MenteeSchema)
+const Mentee = mongoose.model("Mentee", MenteeSchema)
 
 export default Mentee;

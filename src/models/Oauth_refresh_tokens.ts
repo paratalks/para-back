@@ -8,7 +8,7 @@ const oauth_refresh_tokensSchema = new Schema({
     },
     access_token_id:{
         type: Schema.Types.ObjectId,
-        ref: "oauth_access_tokens",  //check ref
+        ref: "Oauth_access_tokens",  //check ref
     },
     revoked:{
         type: Boolean,
@@ -20,4 +20,4 @@ const oauth_refresh_tokensSchema = new Schema({
     },
 },{timestamps: true});
 
-export const oauth_refresh_tokens = mongoose.model("oauth_refresh_tokens", oauth_refresh_tokensSchema)
+export const Oauth_refresh_tokens = mongoose.model("Oauth_refresh_tokens", oauth_refresh_tokensSchema)

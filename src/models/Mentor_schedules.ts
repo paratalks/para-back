@@ -8,11 +8,11 @@ const mentor_schedulesSchema = new Schema({
     },
     mentor_id:{
         type: Schema.Types.ObjectId,
-        ref: "mentors",
+        ref: "Mentors",
     },
     appointment_type_id:{
         type: Schema.Types.ObjectId,
-        ref: "appointment_types",
+        ref: "Appointment_types",
     },
     fee:{
         type: Number,
@@ -30,4 +30,4 @@ const mentor_schedulesSchema = new Schema({
     },
 },{timestamps: true});
 
-export const mentor_schedules = mongoose.model("mentor_schedules", mentor_schedulesSchema)
+export const Mentor_schedules = mongoose.model("Mentor_schedules", mentor_schedulesSchema)

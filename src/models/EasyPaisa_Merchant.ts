@@ -5,6 +5,7 @@ const { Schema } = mongoose;
 const EasyPaisaMerchantSchema = new Schema({
     id:{
         type:Number,
+        unique:true,
         required: true
     },
     storeid:{
@@ -16,6 +17,6 @@ const EasyPaisaMerchantSchema = new Schema({
     }
 },{timestamps : true});
 
-const EasyPaisa = mongoose.model("easypaisa_merchant", EasyPaisaMerchantSchema)
+const EasyPaisa_merchant = mongoose.model("Easypaisa_merchant", EasyPaisaMerchantSchema)
 
-export default EasyPaisa;
+export default EasyPaisa_merchant;

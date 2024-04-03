@@ -10,12 +10,12 @@ const transferSchema = new Schema({
         type: String,
     },
     from_id:{
-        type: Number,
+        type: Number,    //ref
     },
     to_type:{
         type: String,
     },
-    to_id:{
+    to_id:{              //ref
         type: Number,
     },
     status:{
@@ -26,11 +26,11 @@ const transferSchema = new Schema({
         enum:["exchange","transfer","paid","refund","gift"],
         default: null,
     },
-    deposit_id:{
+    deposit_id:{              //ref
         type: Number,
     },
     withdraw_id:{
-        type: Number,
+        type: Number,          //ref
     },
     discount:{
         type: Number,
@@ -41,8 +41,8 @@ const transferSchema = new Schema({
         default:0,
     },
     uuid:{
-        type: String,
+        type: String,              //ref
     },
 },{timestamps: true});
 
-export const transfers = mongoose.model("transfers", transferSchema)
+export const Transfers = mongoose.model("Transfers", transferSchema)

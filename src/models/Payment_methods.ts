@@ -38,4 +38,4 @@ const payment_methodsSchema = new Schema({
     }
 },{timestamps: true});
 
-export const payment_methods = mongoose.model("payment_methods", payment_methodsSchema)
+export const Payment_methods = mongoose.model("Payment_methods", payment_methodsSchema)

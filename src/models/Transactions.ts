@@ -9,10 +9,10 @@ const transactionsSchema = new Schema({
     payable_type:{
         type: String,
     },
-    payable_id:{
+    payable_id:{           //refer?
         type: Number,
     },
-    wallet_id:{
+    wallet_id:{            //refer?
         type: Number,
     },
     type:{
@@ -31,9 +31,9 @@ const transactionsSchema = new Schema({
         default: null,
     },
     uuid:{
-        type: String,
+        type: String,       //refer?
     },
     
 },{timestamps:true})
 
-export const transactions = mongoose.model("transactions", transactionsSchema)
+export const Transactions = mongoose.model("Transactions", transactionsSchema)

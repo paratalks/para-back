@@ -20,8 +20,8 @@ const payment_method_settingsSchema = new Schema({
     },
     payment_method_id:{
         type: Schema.Types.ObjectId, 
-        ref: "payment_methods",
+        ref: "Payment_methods",
     },
 }, {timestamps: true});
 
-export const payment_method_settings = mongoose.model("payment_method_settings", payment_method_settingsSchema)
+export const Payment_method_settings = mongoose.model("Payment_method_settings", payment_method_settingsSchema)

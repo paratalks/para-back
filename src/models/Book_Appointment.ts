@@ -10,12 +10,12 @@ const BookAppointmentSchema = new Schema(
     },
     mentee_id: {
       type: Schema.Types.ObjectId,
-      ref: "mentee",
+      ref: "Mentee",
       default: null,
     },
     mentor_id: {
       type: Schema.Types.ObjectId,
-      ref: "mentor",
+      ref: "Mentor",
       default: null,
     },
     date: {
@@ -64,6 +64,7 @@ const BookAppointmentSchema = new Schema(
     },
     appointment_type_id:{
         type:Schema.Types.ObjectId,
+        ref: "Appointment_types",
         default: null,
     },
     questions:{
@@ -102,7 +103,7 @@ const BookAppointmentSchema = new Schema(
   { timestamps: true }
 );
 
-const BookAppointments = mongoose.model("bookappointments", BookAppointmentSchema);
+const BookAppointments = mongoose.model("Bookappointments", BookAppointmentSchema);
 
 export default BookAppointments;
 
