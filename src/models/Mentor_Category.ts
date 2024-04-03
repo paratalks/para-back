@@ -32,6 +32,6 @@ const MentorCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const MentorCategory = mongoose.model("mentor_category", MentorCategorySchema);
+const Mentor_category = mongoose.model("Mentor_category", MentorCategorySchema);
 
-export default MentorCategory;
+export default Mentor_category;

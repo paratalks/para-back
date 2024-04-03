@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 const MentorCardDetailsSchema = new mongoose.Schema({
   id: {
     type: Number,
+    unique:true,
     required: true,
   },
   account_title: {
@@ -16,9 +17,10 @@ const MentorCardDetailsSchema = new mongoose.Schema({
   },
   mentor_id: {
     type: Schema.Types.ObjectId,
+    ref:"Mentor",
   },
 });
 
-const MentorCardDetails = mongoose.model("mentor_card_details", MentorCardDetailsSchema)
+const Mentor_card_details = mongoose.model("Mentor_card_details", MentorCardDetailsSchema)
 
-export default MentorCardDetails
+export default Mentor_card_details

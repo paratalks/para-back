@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const MentorDegreesSchema = new mongoose.Schema({
     id:{
         type:Number,
+        unique:true,
         required:true
     },
     name:{
@@ -11,6 +12,6 @@ const MentorDegreesSchema = new mongoose.Schema({
     }
 },{timestamps: true});
 
-const MentorDegrees = mongoose.model("mentor_degrees",MentorDegreesSchema)
+const Mentor_degrees = mongoose.model("Mentor_degrees",MentorDegreesSchema)
 
-export default MentorDegrees;
+export default Mentor_degrees;

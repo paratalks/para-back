@@ -4,10 +4,12 @@ const MentorEducationSchema = new mongoose.Schema(
   {
     id: {
       type: String,
+      unique:true,
       required: true,
     },
     mentor_id: {
       type: Schema.Types.ObjectId,
+      ref:"Mentor",
       default: null,
     },
     institute: {
@@ -26,9 +28,9 @@ const MentorEducationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const MentorEducation = mongoose.model(
-  "mentor_education",
+const Mentor_education = mongoose.model(
+  "Mentor_education",
   MentorEducationSchema
 );
 
-export default MentorEducation;
+export default Mentor_education;

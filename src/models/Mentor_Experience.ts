@@ -3,10 +3,12 @@ import mongoose, {Schema, mongo} from "mongoose";
 const MentorExperienceSchema = new mongoose.Schema({
     id:{
         type:Number,
+        unique:true,
         required:true,
     },
     mentor_id:{
         type:Schema.Types.ObjectId,
+        ref:"Mentor",
         default:null
     },
     company:{
@@ -27,6 +29,6 @@ const MentorExperienceSchema = new mongoose.Schema({
     }
 },{timestamps: true});
 
-const MentorExperience = mongoose.model("mentor_experince", MentorExperienceSchema)
+const Mentor_experience = mongoose.model("Mentor_experince", MentorExperienceSchema)
 
-export default MentorExperience;
+export default Mentor_experience;

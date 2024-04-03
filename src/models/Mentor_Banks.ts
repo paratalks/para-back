@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const MentorBanksSchema = new mongoose.Schema({
     id:{
         type:Number,
+        unique:true,
         required:true
     },
     name:{
@@ -11,6 +12,6 @@ const MentorBanksSchema = new mongoose.Schema({
     }
 },{timestamps: true});
 
-const MentorBanks = mongoose.model("mentor_banks",MentorBanksSchema)
+const Mentor_banks = mongoose.model("Mentor_banks",MentorBanksSchema)
 
-export default MentorBanks;
+export default Mentor_banks;
