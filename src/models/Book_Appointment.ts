@@ -103,8 +103,8 @@ const BookAppointmentSchema = new Schema(
   { timestamps: true }
 );
 
-const BookAppointments = mongoose.model("Bookappointments", BookAppointmentSchema);
+const Book_appointments = mongoose.model("Bookappointments", BookAppointmentSchema);
 
-export default BookAppointments;
+export default Book_appointments;
 
 

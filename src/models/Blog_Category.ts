@@ -21,6 +21,6 @@ const BlogCategorySchema = new Schema(
   { timestamps: true }
 );
 
-const Blog_Category = mongoose.model("Blog_category", BlogCategorySchema)
+const Blog_category = mongoose.model("Blog_category", BlogCategorySchema)
 
-export default Blog_Category;
+export default Blog_category;
