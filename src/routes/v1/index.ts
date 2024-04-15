@@ -13,7 +13,7 @@ router.use("/auth", authRoute);
 router.get("/", (req, res) => {
     return res.status(200).send({
         uptime: process.uptime(),
-        message: "Yash's API health check :: GOOD",
+        message: "Para's API health check :: GOOD",
         timestamp: Date.now(),
     });
 });

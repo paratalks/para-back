@@ -9,6 +9,8 @@ const server = app.listen(app.get("port"), () => {
     logger.info("  App is running at http://localhost:%d in %s mode", app.get("port"), app.get("env"));
     logger.info("  Press CTRL-C to stop");
 });
+
+
 // server.headersTimeout = 0;
 // server.keepAliveTimeout = 0;
 
@@ -22,7 +24,7 @@ process.on("SIGTERM", shutDown);
 process.on("SIGINT", shutDown);
 
 let connections: any = [];
-
+ 
 server.on("connection", (connection) => {
     connections.push(connection);
     connection.on("close", () => (connections = connections.filter((curr: any) => curr !== connection)));
