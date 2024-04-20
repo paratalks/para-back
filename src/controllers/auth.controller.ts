@@ -1,15 +1,10 @@
-import User from "../models/User";
+// import User from "../models/User/";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
 import { createCustomError } from "../errors/customAPIError";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-<<<<<<< Updated upstream
-=======
-import axios from "axios";
-import { OTP_Store } from "../models/OTP/otpStore.model";
->>>>>>> Stashed changes
 dotenv.config();
 
 const options = {
