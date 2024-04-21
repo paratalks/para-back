@@ -3,7 +3,7 @@ import { Document, Model, Schema, Types } from "mongoose";
 export interface paraExpertTypes {
   userId: Types.ObjectId;
   expertise: string[];
-  availability: { day: string; slots: string[] }[];
+  availability: { day: string; slots:[{startTime: string; endTime: string; booked: boolean}] }[];
   pricing: number;
   profilePicture: string;
   createdAt: Date;

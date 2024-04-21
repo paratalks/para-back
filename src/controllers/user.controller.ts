@@ -82,7 +82,7 @@ const updateParaExpertDetails = asyncHandler(
       { new: true }
     ).select("-password");
 
-    const expert = await paraExpert.findById({ user_id: req.user?._id })
+    const expert = await paraExpert.findById({ userId: req.user?._id })
 
     const updateUser = await User.findByIdAndUpdate(
         expert.userId,
