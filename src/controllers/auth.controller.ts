@@ -6,11 +6,9 @@ import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
 import { createCustomError } from "../errors/customAPIError";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-<<<<<<< Updated upstream
-=======
 import axios from "axios";
-import { OTP_Store } from "../models/OTP/otpStore.model";
->>>>>>> Stashed changes
+import { OTP } from "../models/otp/otp.model";
+//import { OTP_Store } from "../models/OTP/otpStore.model";
 dotenv.config();
 
 const options = {
@@ -19,72 +17,67 @@ const options = {
 };
 
 interface signupObject {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    phoneNumber: string;
+    name: string;
     gender: string;
-    role: string;
+    dateOfBirth:string
+    phone: string;
 }
 
 export const signup: RequestHandler = bigPromise(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {
-            firstName,
-            lastName,
-            email,
-            password,
+            name,
             gender,
-            phoneNumber,
-            role,
+            dateOfBirth,
+            phone,
         }: {
-            firstName: string;
-            lastName: string;
-            email: string;
-            password: string;
-            phoneNumber: string;
+            name: string;
             gender: string;
-            role: any;
+            dateOfBirth:string
+            phone: string;
         } = req.body;
 
         const toStore: signupObject = {
-            firstName,
-            lastName,
-            email,
-            password,
-            phoneNumber,
+            name,
             gender,
-            role,
+            dateOfBirth,
+            phone,
         };
 
-        if (!email || !firstName || !lastName || !password) {
+        if (!name || !gender || !phone) {
             return next(createCustomError("Name, Email and Password fields are required", 400));
         }
 
-        const existingUser = await User.findOne({ email, isActive: true });
+        const existingUser = await User.findOne({ phone, isActive: true });
 
-        if (existingUser) {
-            return next(createCustomError("User Already exists", 400));
-        }
+        const token = req.headers.token
 
-        const phoneNumberIsActive = await User.findOne({ phoneNumber, isActive: true });
 
-        if (phoneNumberIsActive) {
-            return next(createCustomError("This phone number is already registered.", 400));
-        }
+        const decode:any = jwt.verify(token as string, process.env.JWT_SECRET);
 
-        const user: any = await User.create(toStore);
 
-        if (role === "admin") {
-            console.log(role);
-            user.isAdmin = true;
-        }
-        user.save();
-        const data: any = { token: user.getJwtToken(), user };
 
-        const response = sendSuccessApiResponse("User Registered Successfully!", data);
-        res.status(200).cookie("token", data.token, options).send(response);
+        // if (existingUser) {
+        //     return next(createCustomError("User Already exists", 400));
+        // }
+
+        // const phoneNumberIsActive = await User.findOne({ phone, isActive: true });
+
+        // if (phoneNumberIsActive) {
+        //     return next(createCustomError("This phone number is already registered.", 400));
+        // }
+
+        // const user: any = await User.create(toStore);
+
+        // // if (role === "admin") {
+        // //     console.log(role);
+        // //     user.isAdmin = true;
+        // // }
+        // user.save();
+        // const data: any = { token: user.getJwtToken(), user };
+
+        // const response = sendSuccessApiResponse("User Registered Successfully!", data);
+        // res.status(200).cookie("token", data.token, options).send(response);
     } catch (error) {
         console.log(error);
     }
@@ -125,8 +118,6 @@ export const refreshToken: RequestHandler = bigPromise(async (req: Request, res:
 const getNewToken = async (payload: any) => {
     const isUser = payload?.id ? true : false;
     console.log(isUser);
-
-    // const isInfluencer = payload?.influencerId ? true : false;
 
     let data: any;
     if (isUser) {
@@ -177,16 +168,13 @@ export const login: RequestHandler = bigPromise(async (req: Request, res: Respon
 });
 
 export const logout = bigPromise(async (req, res, next) => {
+    try{
     res.cookie("token", null, {
         expires: new Date(Date.now()),
         httpOnly: true,
     });
 
     return res.status(200).json({
-<<<<<<< Updated upstream
-        success: true,
-        message: "Logged Out Successfully",
-=======
       success: true,
       message: "OTP send successfully",
     });
@@ -198,24 +186,72 @@ export const logout = bigPromise(async (req, res, next) => {
   }
 });
 
+export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
+    try {
+      const mobileNumber = req.body.mobileNumber;
+      const otp = Math.floor(100000 + Math.random() * 900000);
+    //   const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+    //     params: {
+    //       authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
+    //       variable_values: `Your otp is ${otp}`,
+    //       route: "otp",
+    //       numbers: "7905132659",
+    //     },
+    //   });
+
+    await OTP.create({
+        phone: mobileNumber,
+        otp: otp,
+        otpExpiration: new Date(Date.now() + 10 * 60000),
+        verified: false
+    })
+  
+      return res.status(200).json({
+        success: true,
+        message: `OTP send successfully ${otp}`,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP",
+      });
+    }
+  });
+
 export const verifyOTP = bigPromise(async (req, res, next) => {
-  const { mobileNumber, otp } = req.body;
+  const { phone, bodyotp } = req.body;
+  console.log(phone,bodyotp)
 
-  if (OTP_Store.hasOwnProperty(mobileNumber)) {
-    const { storedOTP, expirationTime } = await OTP_Store.findOne(mobileNumber);
-    const expirationTimeStamp = expirationTime.getTime();
+  try {
+    const { otp, otpExpiration } = await OTP.findOne({phone});
+    const expirationTimeStamp = otpExpiration.getTime();
+    console.log(otp===bodyotp)
+    if (bodyotp === otp && Date.now() < expirationTimeStamp) {
+        const tempUser = await User.create({
+            phone: phone,
+        });
 
-    if (storedOTP === otp && Date.now() < expirationTimeStamp) {
+        //console.log(process.env.JWT_SECRET)
+
+        const payload = {
+            userId: tempUser?._id,
+            phone
+        }
+
+        const token = jwt.sign(payload,process.env.JWT_SECRET,{
+            expiresIn: process.env.JWT_EXPIRY
+        })
+
       res
         .status(200)
-        .json({ success: true, message: "OTP verification successfull" }); //auth token jwt
+        .json({ success: true, message: "OTP verification successfull", token: token }); //auth token jwt
     } else {
       res.status(400).json({ success: true, message: "Invalid OTP" });
     }
-  } else {
-    res.status(400).json({
-      success: false,
-      message: "Mobile number not found or OTP expired",
->>>>>>> Stashed changes
+  } catch (error) {
+     res.status(400).json({
+     success: false,
+     message: "Mobile number not found or OTP expired",
     });
+  }
 });
