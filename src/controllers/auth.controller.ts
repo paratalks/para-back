@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 // import User from "../models/User/";
+=======
+//import User from "../models/User";
+import {User} from "../models/user/user.model";
+>>>>>>> 4b0b1cfbb126230c95bf9c4acf48e15b1d1609db
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";

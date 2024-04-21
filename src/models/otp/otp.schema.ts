@@ -1,20 +1,24 @@
 import mongoose from "mongoose";
 
-const OTPStoreTypes_Schema = new mongoose.Schema({
-  mobileNumber: {
+const otpSchema = new mongoose.Schema({
+  phone: {
     type: String,
     required: true,
     unique: true,
   },
-  storedOTP: {
+  otp: {
     type: String,
     required: true,
   },
-  expirationTime: {
+  otpExpiration: {
     type: Date,
     required: true,
     expires: 0,
   },
+  verified:{
+    type: Boolean,
+    default: false
+  }
 });
 
-export default OTPStoreTypes_Schema;
+export default otpSchema;

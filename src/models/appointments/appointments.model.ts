@@ -1,8 +1,8 @@
 import { model } from "mongoose";
-import { appointmentsDocuments } from "./appointments.types";
-import OTPStoreTypes_Schema from "./appointments.schema";
+import { appointmentsDocument } from "./appointments.types";
+import appointmentsSchema from "./appointments.schema";
 
-export const appointments = model<appointmentsDocuments>(
+export const appointments = model<appointmentsDocument>(
   "appointments",
   appointmentsSchema
 );
