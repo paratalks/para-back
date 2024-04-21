@@ -27,26 +27,26 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     throw new apiError(404, "ParaExpert not found");
   }
 
-  const dayAvailability = expert.availability.find((item) => item.day === date.toString());
+  // const dayAvailability = expert.availability.find((item) => item.day === date.toString());
 
-  if (!dayAvailability) {
-    throw new apiError(400, "Availability not found for the given date");
-  }
+  // if (!dayAvailability) {
+  //   throw new apiError(400, "Availability not found for the given date");
+  // }
 
-  const slotIndex = dayAvailability.slots.findIndex(slot => slot.startTime === startTime && slot.endTime === endTime && slot.booked === false);
+  // const slotIndex = dayAvailability.slots.findIndex(slot => slot.startTime === startTime && slot.endTime === endTime && slot.booked === false);
 
-  if (slotIndex === -1) {
-    throw new apiError(400, "Slot not found for the given time");
-  }
+  // if (slotIndex === -1) {
+  //   throw new apiError(400, "Slot not found for the given time");
+  // }
 
-  if (dayAvailability.slots[slotIndex].booked) {
-    throw new apiError(400, "Slot is already booked");
-  }
+  // if (dayAvailability.slots[slotIndex].booked) {
+  //   throw new apiError(400, "Slot is already booked");
+  // }
 
-  // Update availability
-  dayAvailability.slots[slotIndex].booked = true;
+  // // Update availability
+  // dayAvailability.slots[slotIndex].booked = true;
 
-  await expert.save();
+  // await expert.save();
 
   const appointment = await appointments.create({
     userId,

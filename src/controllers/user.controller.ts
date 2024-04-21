@@ -43,7 +43,7 @@ const updateUserDetails = asyncHandler(
         },
       },
       { new: true }
-    ).select("-password");
+    );
 
     return res
       .status(200)
@@ -80,7 +80,7 @@ const updateParaExpertDetails = asyncHandler(
         },
       },
       { new: true }
-    ).select("-password");
+    );
 
     const expert = await paraExpert.findById({ userId: req.user?._id })
 
