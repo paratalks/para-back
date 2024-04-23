@@ -16,16 +16,16 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     status: string;
   };
 
-  const incomingRefreshToken =  req.cookies.token || req.body.token
+  const incomingToken =  req.cookies.token || req.body.token
 
-    if (!incomingRefreshToken) {
+    if (!incomingToken) {
         throw new ApiError(401, "unauthorized request")
     }
 
     try {
-      const decodedToken = jwt.verify(
-        incomingRefreshToken as string,
-        process.env.REFRESH_TOKEN_SECRET
+      const decodedToken: any = jwt.verify(
+        incomingToken,
+        process.env.JWT_SECRET
       );
 
       const user = await User.findById(decodedToken?.userId);
