@@ -6,15 +6,15 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    dateOfBirth:{
+      type: Date,
+    },
     gender: {
       type: String,
       enum: ["male", "female", "other"],
     },
     interests: {
       type: [String],
-    },
-    dateOfBirth:{
-      type: Date,
     },
     phone:{
       type: String,

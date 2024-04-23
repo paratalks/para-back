@@ -12,6 +12,7 @@ import {
 } from "./middlewares/commonMiddleware";
 import errorHandlerMiddleware from "./middlewares/errorHandler";
 import router from "./routes";
+import { ObjectId } from "mongoose";
 
 const corsOptions: cors.CorsOptions = {
   origin: "*",
@@ -41,13 +42,12 @@ app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(cors(corsOptions));
 app.options("*", cors);
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+
+declare global{
   namespace Express {
     interface Request {
       user: {
-        userId: string;
-        role: string;
+        _id: ObjectId;
       };
     }
   }

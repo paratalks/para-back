@@ -1,5 +1,6 @@
 //import User from "../models/User";
 import { User } from "../models/user/user.model";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
