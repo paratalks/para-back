@@ -1,5 +1,6 @@
 //import User from "../models/User";
 import { User } from "../models/user/user.model";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
@@ -8,7 +9,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
-//import { OTP_Store } from "../models/OTP/otpStore.model";
+
 dotenv.config();
 
 const options = {
@@ -21,8 +22,8 @@ interface signupObject {
   gender: string;
   dateOfBirth: string;
   phone: string;
-}
-
+} // user id token and user id from token postman -- auth, book appointment
+//user-signup make of paraexpert
 export const signup: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -51,11 +52,27 @@ export const signup: RequestHandler = bigPromise(
         );
       }
 
-      const existingUser = await User.findOne({ phone, isActive: true });
-
       const token = req.headers.token;
 
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+
+      if (decode.userId) {
+        const user: any = await User.find(toStore);
+        user.save();
+        const data: any = { token: user.getJwtToken(), user };
+
+        const response = sendSuccessApiResponse(
+          "User Registered Successfully!",
+          data
+        );
+        res.status(200).cookie("token", data.token, options).send(response);
+      } else {
+        return res
+          .status(500)
+          .send({
+            message: "User not authorized to sign-up please redo otp procedure",
+          });
+      }
 
       // if (existingUser) {
       //     return next(createCustomError("User Already exists", 400));
@@ -66,23 +83,52 @@ export const signup: RequestHandler = bigPromise(
       // if (phoneNumberIsActive) {
       //     return next(createCustomError("This phone number is already registered.", 400));
       // }
-
-      // const user: any = await User.create(toStore);
-
-      // // if (role === "admin") {
-      // //     console.log(role);
-      // //     user.isAdmin = true;
-      // // }
-      // user.save();
-      // const data: any = { token: user.getJwtToken(), user };
-
-      // const response = sendSuccessApiResponse("User Registered Successfully!", data);
-      // res.status(200).cookie("token", data.token, options).send(response);
     } catch (error) {
       console.log(error);
     }
   }
 );
+
+export const paraSignup: RequestHandler = bigPromise(async (req: Request, res: Response, next: NextFunction)=> {
+    try {
+        const {
+            name,
+            gender,
+            dateOfBirth,
+            interests,
+            phone,
+            expertise,
+            availability,
+            pricing,
+            profilePicture
+        } : {
+            name: string,
+            gender: string,
+            dateOfBirth: string,
+            interests: string,
+            phone: string,
+            expertise: string,
+            availability: Object,
+            pricing: Number,
+            profilePicture: string
+        } = req.body
+
+
+        const existingUser = User.findOne({phone});
+        if(existingUser) {
+            return res.status(400).json({error: 'Phone number aready registered'})
+        }
+
+        const newUser = new User({name,gender,dateOfBirth, interests, phone})
+        await newUser.save();
+
+        const newParaExpert = new ParaExpert({user: newUser._id, expertise, availability, pricing,profilePicture});
+        await newParaExpert.save();
+        res.status(201).json({message: 'Paraexpert user created successfully'})
+    } catch (error) {
+        res.status(500).json({error: error.message});
+    }
+})
 
 export const refreshToken: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -205,14 +251,14 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
     const mobileNumber = req.body.mobileNumber;
     const otp = Math.floor(100000 + Math.random() * 900000);
-    //   const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-    //     params: {
-    //       authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
-    //       variable_values: `Your otp is ${otp}`,
-    //       route: "otp",
-    //       numbers: "7905132659",
-    //     },
-    //   });
+    /*const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+        params: {
+          authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
+          variable_values: `Your otp is ${otp}`,
+          route: "otp",
+          numbers: "7905132659",
+        },
+      });*/
 
     await OTP.create({
       phone: mobileNumber,
@@ -235,21 +281,22 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
 
 export const verifyOTP = bigPromise(async (req, res, next) => {
   const { phone, bodyotp } = req.body;
-  console.log(phone, bodyotp);
 
   try {
     const { otp, otpExpiration } = await OTP.findOne({ phone });
     const expirationTimeStamp = otpExpiration.getTime();
-    console.log(otp === bodyotp);
+    console.log(otp === bodyotp); //already exits direct login token and refresh token
     if (bodyotp === otp && Date.now() < expirationTimeStamp) {
-      const tempUser = await User.create({
-        phone: phone,
-      });
+      let user: any = User.findOne({ phone }).exec();
 
-      //console.log(process.env.JWT_SECRET)
+      if (!user) {
+        user = await User.create({
+          phone: phone,
+        });
+      }
 
       const payload = {
-        userId: tempUser?._id,
+        userId: user?._id,
         phone,
       };
 
@@ -270,7 +317,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: "Mobile number not found or OTP expired",
+      message: "Internal server error",
     });
   }
 });

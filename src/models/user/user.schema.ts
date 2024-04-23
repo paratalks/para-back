@@ -18,7 +18,11 @@ const userSchema = new mongoose.Schema(
     },
     phone:{
       type: String,
+      required: true
     },
+    refreshToken:{
+      type:String,
+    }
   },
   { timestamps: true }
 );
