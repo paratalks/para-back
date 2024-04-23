@@ -4,6 +4,7 @@ import { getBookedAppointment } from "../../controllers/appointment.controller";
 
 const router = experss.Router();
 
-router.route("/:userId/book-appointment").post(bookAppointment);
-router.route("/:userId/getAppointments").get(getBookedAppointment);
+router.route("/:paraExpertId/book-appointment").post(bookAppointment);
+router.route("/:userId/get-appointments").get(getBookedAppointment);
 
+export default router;
