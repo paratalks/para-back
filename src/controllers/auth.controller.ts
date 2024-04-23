@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
+import { Schema } from "mongoose";
 
 dotenv.config();
 
@@ -53,11 +54,22 @@ export const signup: RequestHandler = bigPromise(
       }
 
       const token = req.headers.token;
+      console.log("tokkk", token);
 
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
 
       if (decode.userId) {
-        const user: any = await User.find(toStore);
+        // const existingUser = await User.findOne({ phone, isActive: true });
+
+        // if (existingUser) {
+        //   return next(createCustomError("User Already exists", 400));
+        // }
+
+        const user: any = await User.findOneAndUpdate(
+          { _id: decode.userId },
+          toStore,
+          { new: true, runValidators: true }
+        );
         user.save();
         const data: any = { token: user.getJwtToken(), user };
 
@@ -67,11 +79,9 @@ export const signup: RequestHandler = bigPromise(
         );
         res.status(200).cookie("token", data.token, options).send(response);
       } else {
-        return res
-          .status(500)
-          .send({
-            message: "User not authorized to sign-up please redo otp procedure",
-          });
+        return res.status(500).send({
+          message: "User not authorized to sign-up please redo otp procedure",
+        });
       }
 
       // if (existingUser) {
@@ -89,46 +99,70 @@ export const signup: RequestHandler = bigPromise(
   }
 );
 
-export const paraSignup: RequestHandler = bigPromise(async (req: Request, res: Response, next: NextFunction)=> {
+export const paraSignup: RequestHandler = bigPromise(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {
-            name,
-            gender,
-            dateOfBirth,
-            interests,
-            phone,
-            expertise,
-            availability,
-            pricing,
-            profilePicture
-        } : {
-            name: string,
-            gender: string,
-            dateOfBirth: string,
-            interests: string,
-            phone: string,
-            expertise: string,
-            availability: Object,
-            pricing: Number,
-            profilePicture: string
-        } = req.body
+      const {
+        name,
+        gender,
+        dateOfBirth,
+        //interests,
+        phone,
+        expertise,
+        availability,
+        pricing,
+      }: //profilePicture
+      {
+        name: string;
+        gender: string;
+        dateOfBirth: string;
+        //interests: string,
+        phone: string;
+        expertise: string;
+        availability: Object;
+        pricing: Number;
+        //profilePicture: string
+      } = req.body;
 
+      const toStore: signupObject = {
+        name,
+        gender,
+        dateOfBirth,
+        phone,
+      };
+      const token = req.headers.token;
+      const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+      console.log(decode);
 
-        const existingUser = User.findOne({phone});
-        if(existingUser) {
-            return res.status(400).json({error: 'Phone number aready registered'})
-        }
-
-        const newUser = new User({name,gender,dateOfBirth, interests, phone})
+      if (decode.userId) {
+        const newUser = await User.findOneAndUpdate(
+          { _id: decode.userId },
+          toStore,
+          { new: true, runValidators: true }
+        );
         await newUser.save();
+        console.log(newUser._id);
 
-        const newParaExpert = new ParaExpert({user: newUser._id, expertise, availability, pricing,profilePicture});
+        const newParaExpert = new ParaExpert({
+          userId: newUser._id as Schema.Types.ObjectId,
+          expertise,
+          availability,
+          pricing,
+        });
         await newParaExpert.save();
-        res.status(201).json({message: 'Paraexpert user created successfully'})
+        res
+          .status(201)
+          .json({ message: "Paraexpert user created successfully" });
+      } else {
+        return res.status(500).send({
+          message: "User not authorized to sign-up please redo otp procedure",
+        });
+      }
     } catch (error) {
-        res.status(500).json({error: error.message});
+      res.status(500).json({ error: error.message });
     }
-})
+  }
+);
 
 export const refreshToken: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -287,7 +321,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     const expirationTimeStamp = otpExpiration.getTime();
     console.log(otp === bodyotp); //already exits direct login token and refresh token
     if (bodyotp === otp && Date.now() < expirationTimeStamp) {
-      let user: any = User.findOne({ phone }).exec();
+      let user: any = await User.findOne({ phone });
 
       if (!user) {
         user = await User.create({
@@ -304,13 +338,11 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         expiresIn: process.env.JWT_EXPIRY,
       });
 
-      res
-        .status(200)
-        .json({
-          success: true,
-          message: "OTP verification successfull",
-          token: token,
-        }); //auth token jwt
+      res.status(200).json({
+        success: true,
+        message: "OTP verification successfull",
+        token: token,
+      }); //auth token jwt
     } else {
       res.status(400).json({ success: true, message: "Invalid OTP" });
     }
