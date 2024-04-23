@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import { apiError } from "../util/apiError";
+import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
-import { apiResponse } from "../util/apiResponse";
-import { appointments } from "../models/appointments/appointments.model";
-import { paraExpert } from "../models/paraExpert/paraExpert.model";
+import { ApiResponse } from "../util/apiResponse";
+import { Appointments } from "../models/appointments/appointments.model";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
+import {User} from "../models/user/user.model";
 import { ObjectId } from "mongoose";
+import jwt from "jsonwebtoken";
 
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const { date, startTime, endTime, status } = req.body as {
@@ -14,17 +16,49 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     status: string;
   };
 
+  const incomingRefreshToken =  req.cookies.token || req.body.token
+
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "unauthorized request")
+    }
+
+    try {
+      const decodedToken = jwt.verify(
+        incomingRefreshToken as string,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+
+      const user = await User.findById(decodedToken?.userId);
+
+      if (!user) {
+        throw new ApiError(401, "Invalid refresh token");
+      }
+    } catch (error) {
+      throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
+
   const { userId } = req.params;
-  const { paraExpertId } = req.query;
+  const { paraExpertId } = req.params;
 
   if (!userId || !paraExpertId || !date || !startTime || !endTime || !status) {
-    throw new apiError(400, "All fields are required");
+    throw new ApiError(400, "All fields are required");
   }
 
-  const expert = await paraExpert.findById(paraExpertId);
+  const expert = await ParaExpert.findById(paraExpertId);
 
   if (!expert) {
-    throw new apiError(404, "ParaExpert not found");
+    throw new ApiError(404, "ParaExpert not found");
+  }
+
+  const bookedSlot = await Appointments.findOne({
+    paraExpertId,
+    userId,
+    date,
+    startTime,
+  })
+
+  if(bookedSlot){
+    throw new ApiError(400, "Slot already booked.");
   }
 
   // const dayAvailability = expert.availability.find((item) => item.day === date.toString());
@@ -48,7 +82,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
   // await expert.save();
 
-  const appointment = await appointments.create({
+  const appointment = await Appointments.create({
     userId,
     paraExpertId,
     date,
@@ -58,18 +92,18 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   });
 
   if (!appointment) {
-    throw new apiError(400, "Failed to create appointment");
+    throw new ApiError(400, "Failed to create appointment");
   }
 
   return res.status(200).json(
-    new apiResponse(200, appointment, "Appointment created successfully")
+    new ApiResponse(200, appointment, "Appointment created successfully")
   );
 });
 
 const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-    let query = appointments.find({userId});;
+    let query = Appointments.find({userId});;
     const {status} = req.query;
 
     if(status){
@@ -81,7 +115,7 @@ const getBookedAppointment = asyncHandler(
     return res
       .status(200)
       .json(
-        new apiResponse(200, appointment, "Appointmnet created successfully")
+        new ApiResponse(200, appointment, "Appointmnet created successfully")
       );
   }
 );

@@ -1,4 +1,4 @@
-class apiError extends Error {
+class ApiError extends Error {
   public statusCode: number;
   public data: any | null;
   public success: boolean;
@@ -25,4 +25,4 @@ class apiError extends Error {
   }
 }
 
-export { apiError };
+export { ApiError };
