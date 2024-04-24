@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { apiError } from "../util/apiError";
+import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user/user.model";
@@ -15,7 +15,7 @@ export const verifyJWT = asyncHandler(
         req.header("Authorization")?.replace("Bearer ", "");
 
       if (!token) {
-        throw new apiError(401, "Unauthorized request");
+        throw new ApiError(401, "Unauthorized request");
       }
 
       const decodedToken: any = jwt.verify(
@@ -28,13 +28,13 @@ export const verifyJWT = asyncHandler(
       );
 
       if (!user) {
-        throw new apiError(401, "Invalid Access Token");
+        throw new ApiError(401, "Invalid Access Token");
       }
 
       req.user = user;
       next();
     } catch (error: any) {
-      throw new apiError(401, error?.message || "Invalid access token");
+      throw new ApiError(401, error?.message || "Invalid access token");
     }
   }
 );

@@ -17,10 +17,18 @@ const options = {
   httpOnly: true,
 };
 
+interface paraSignUpObject {
+  expertise: [string];
+  availability: [{ day: string; slots: [string] }];
+  pricing: Number;
+  profilePicture: string;
+}
+
 interface signupObject {
   name: string;
   gender: string;
-  dateOfBirth: string;
+  dateOfBirth: Date;
+  interests: [string];
   phone: string;
 } // user id token and user id from token postman -- auth, book appointment
 //user-signup make of paraexpert
@@ -31,11 +39,13 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
+        interests,
         phone,
       }: {
         name: string;
         gender: string;
-        dateOfBirth: string;
+        dateOfBirth: Date;
+        interests: [string];
         phone: string;
       } = req.body;
 
@@ -43,6 +53,7 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
+        interests,
         phone,
       };
 
@@ -57,8 +68,12 @@ export const signup: RequestHandler = bigPromise(
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
 
       if (decode.userId) {
-        const user: any = await User.find(toStore);
-        user.save();
+        const user: any = await User.findOneAndUpdate(
+          { phone },
+          { $set: toStore },
+          { new: true }
+        );
+        // user.save();
         const data: any = { token: user.getJwtToken(), user };
 
         const response = sendSuccessApiResponse(
@@ -67,11 +82,9 @@ export const signup: RequestHandler = bigPromise(
         );
         res.status(200).cookie("token", data.token, options).send(response);
       } else {
-        return res
-          .status(500)
-          .send({
-            message: "User not authorized to sign-up please redo otp procedure",
-          });
+        return res.status(500).send({
+          message: "User not authorized to sign-up please redo otp procedure",
+        });
       }
 
       // if (existingUser) {
@@ -89,46 +102,117 @@ export const signup: RequestHandler = bigPromise(
   }
 );
 
-export const paraSignup: RequestHandler = bigPromise(async (req: Request, res: Response, next: NextFunction)=> {
+export const paraSignup: RequestHandler = bigPromise(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {
-            name,
-            gender,
-            dateOfBirth,
-            interests,
-            phone,
-            expertise,
-            availability,
-            pricing,
-            profilePicture
-        } : {
-            name: string,
-            gender: string,
-            dateOfBirth: string,
-            interests: string,
-            phone: string,
-            expertise: string,
-            availability: Object,
-            pricing: Number,
-            profilePicture: string
-        } = req.body
+      const {
+        name,
+        gender,
+        dateOfBirth,
+        interests,
+        phone,
+        expertise,
+        availability,
+        pricing,
+        profilePicture,
+      }: {
+        name: string;
+        gender: string;
+        dateOfBirth: Date;
+        interests: [string];
+        phone: string;
+        expertise: [string];
+        availability: [{ day: string; slots: [string] }];
+        pricing: Number;
+        profilePicture: string;
+      } = req.body;
 
+      const toStoreUser: signupObject = {
+        name,
+        gender,
+        dateOfBirth,
+        interests,
+        phone,
+      };
+      const toStorePara: paraSignUpObject = {
+        expertise,
+        availability,
+        pricing,
+        profilePicture,
+      };
 
-        const existingUser = User.findOne({phone});
-        if(existingUser) {
-            return res.status(400).json({error: 'Phone number aready registered'})
-        }
+      // console.log(phone)
+      // const existingUser =await User.findOne({phone});
+      // if(existingUser) {
+      //     return res.status(400).json({error: 'Phone number aready registered'})
+      // }
 
-        const newUser = new User({name,gender,dateOfBirth, interests, phone})
-        await newUser.save();
+      // const newUser = new User({name,gender,dateOfBirth, interests, phone})
+      // await newUser.save();
 
-        const newParaExpert = new ParaExpert({user: newUser._id, expertise, availability, pricing,profilePicture});
+      // console.log(newUser._id)
+
+      // const newParaExpert = new ParaExpert({userId: newUser._id, expertise, availability, pricing,profilePicture});
+      // await newParaExpert.save();
+      // res.status(201).json({message: 'Paraexpert user created successfully'})
+
+      if (
+        !name ||
+        !gender ||
+        !dateOfBirth ||
+        !interests ||
+        !phone ||
+        !expertise ||
+        !availability ||
+        !pricing ||
+        !profilePicture
+      ) {
+        return next(createCustomError("All fields are required", 400));
+      }
+
+      const token = req.headers.token;
+
+      const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+
+      if (decode.userId) {
+        const user: any = await User.findOneAndUpdate(
+          { phone },
+          { $set: toStoreUser },
+          { new: true }
+        );
+        // user.save();
+        console.log("hi")
+        console.log(user)
+        
+        const newParaExpert = new ParaExpert({
+          userId: user._id,
+          expertise,
+          availability,
+          pricing,
+          profilePicture,
+        });
+
         await newParaExpert.save();
-        res.status(201).json({message: 'Paraexpert user created successfully'})
+
+        console.log(newParaExpert)
+        
+        const data: any = { token: user.getJwtToken(), user };
+
+        const response = sendSuccessApiResponse(
+          "Para Expert Registered Successfully!",
+          data
+        );
+        res.status(200).cookie("token", data.token, options).send(response);
+      } else {
+        return res.status(500).send({
+          message: "User not authorized to sign-up please redo otp procedure",
+        });
+      }
     } catch (error) {
-        res.status(500).json({error: error.message});
+      res.status(500).json({ error: error.message });
     }
-})
+  }
+);
 
 export const refreshToken: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -280,19 +364,23 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
 });
 
 export const verifyOTP = bigPromise(async (req, res, next) => {
-  const { phone, bodyotp } = req.body;
+  const { bodyotp, requestId } = req.body;
 
   try {
-    const { otp, otpExpiration } = await OTP.findOne({ phone });
+    const { otp, otpExpiration, phone } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
-    console.log(otp === bodyotp); //already exits direct login token and refresh token
+    //already exits direct login token and refresh token
     if (bodyotp === otp && Date.now() < expirationTimeStamp) {
-      let user: any = User.findOne({ phone }).exec();
+      let isNewUser = false;
+      let user: any = await User.findOne({ phone });
 
       if (!user) {
         user = await User.create({
           phone: phone,
         });
+        isNewUser = true;
+      } else {
+        isNewUser = false;
       }
 
       const payload = {
@@ -304,13 +392,12 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         expiresIn: process.env.JWT_EXPIRY,
       });
 
-      res
-        .status(200)
-        .json({
-          success: true,
-          message: "OTP verification successfull",
-          token: token,
-        }); //auth token jwt
+      res.status(200).json({
+        success: true,
+        message: "OTP verification successfull",
+        token: token,
+        isNewUser: isNewUser,
+      }); //auth token jwt
     } else {
       res.status(400).json({ success: true, message: "Invalid OTP" });
     }

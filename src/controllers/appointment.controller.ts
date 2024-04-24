@@ -17,14 +17,15 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   };
   console.log(req.body)
 
-  const incomingToken =  req.cookies.token || req.body.token
+  // const incomingToken =  req.cookies.token || req.body.token
+  const incomingToken =  req.headers.token
 
   try {
     if (!incomingToken) {
       throw new ApiError(401, "unauthorized request");
     }
 
-    const decodedToken: any = jwt.verify(incomingToken, process.env.JWT_SECRET);
+    const decodedToken: any = jwt.verify(incomingToken as string, process.env.JWT_SECRET);
 
     const user = await User.findById(decodedToken?.userId);
     const userId = user._id;

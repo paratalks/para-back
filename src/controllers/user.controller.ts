@@ -1,11 +1,10 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 import { Request, Response } from "express";
-import { apiError } from "../util/apiError";
+import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import { User } from "../models/user/user.model";
-import { paraExpert } from "../models/paraExpert/paraExpert.model";
-import { apiResponse } from "../util/apiResponse";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
+import { ApiResponse } from "../util/apiResponse";
 import {
   userSchemaDocument,
   userSchemaModel,
@@ -28,11 +27,11 @@ const updateUserDetails = asyncHandler(
     };
 
     if (!name || !gender || !dateOfBirth || !interests || !phone) {
-      throw new apiError(400, "All fields are required");
+      throw new ApiError(400, "All fields are required");
     }
 
     const user = await User.findByIdAndUpdate(
-      req.user?._id,
+      req.params.userId,
       {
         $set: {
           name,
@@ -47,7 +46,7 @@ const updateUserDetails = asyncHandler(
 
     return res
       .status(200)
-      .json(new apiResponse(200, user, "User details updated successfully"));
+      .json(new ApiResponse(200, user, "User details updated successfully"));
   }
 );
 
@@ -66,11 +65,13 @@ const updateParaExpertDetails = asyncHandler(
     };
 
     if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !pricing || !profilePicture) {
-      throw new apiError(400, "All fields are required");
+      throw new ApiError(400, "All fields are required");
     }
 
-    const user = await paraExpert.findByIdAndUpdate(
-      req.user?._id,
+    const paraExpertId = req.params;
+
+    const user = await ParaExpert.findByIdAndUpdate(
+      req.params.paraExpertId,
       {
         $set: {
           expertise,
@@ -82,7 +83,7 @@ const updateParaExpertDetails = asyncHandler(
       { new: true }
     );
 
-    const expert = await paraExpert.findById({ userId: req.user?._id })
+    const expert = await ParaExpert.findById( req.params.paraExpertId );
 
     const updateUser = await User.findByIdAndUpdate(
         expert.userId,
@@ -100,7 +101,7 @@ const updateParaExpertDetails = asyncHandler(
 
     return res
       .status(200)
-      .json(new apiResponse(200, user, "Para Expert details updated successfully"));
+      .json(new ApiResponse(200, user, "Para Expert details updated successfully"));
   }
 );
 
