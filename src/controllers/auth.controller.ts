@@ -10,6 +10,8 @@ import jwt from "jsonwebtoken";
 import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
 import { Schema } from "mongoose";
+import httpContext from "express-http-context";
+import { string } from "zod";
 
 dotenv.config();
 
@@ -152,6 +154,7 @@ export const paraSignup: RequestHandler = bigPromise(
         await newParaExpert.save();
         res
           .status(201)
+          .cookie("token",token,options)
           .json({ message: "Paraexpert user created successfully" });
       } else {
         return res.status(500).send({
@@ -168,7 +171,7 @@ export const refreshToken: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
-      const message = "Unauthenticaded No Bearer";
+      const message = "Unauthenticated No Bearer";
       return next(createCustomError(message, 401));
     }
 
@@ -283,8 +286,9 @@ export const logout = bigPromise(async (req, res, next) => {
 
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
-    const mobileNumber = req.body.mobileNumber;
+    const phone = req.body.phone;
     const otp = Math.floor(100000 + Math.random() * 900000);
+    const requestID = httpContext.get("requestId");
     /*const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
@@ -295,16 +299,18 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       });*/
 
     await OTP.create({
-      phone: mobileNumber,
+      phone: phone,
       otp: otp,
       otpExpiration: new Date(Date.now() + 10 * 60000),
       verified: false,
+      requestId: requestID
     });
 
     return res.status(200).json({
       success: true,
       message: `OTP send successfully ${otp}`,
-    });
+      requestID: requestID,
+    })
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -314,19 +320,23 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
 });
 
 export const verifyOTP = bigPromise(async (req, res, next) => {
-  const { phone, bodyotp } = req.body;
+  const {bodyotp, requestId } = req.body;
 
   try {
-    const { otp, otpExpiration } = await OTP.findOne({ phone });
+    const { otp, otpExpiration,phone } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
-    console.log(otp === bodyotp); //already exits direct login token and refresh token
+    //already exits direct login token and refresh token
     if (bodyotp === otp && Date.now() < expirationTimeStamp) {
+      let isNewUser = false;
       let user: any = await User.findOne({ phone });
 
       if (!user) {
         user = await User.create({
-          phone: phone,
+          phone: phone, 
         });
+        isNewUser = true;
+      }else{
+        isNewUser = false;
       }
 
       const payload = {
@@ -342,6 +352,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         success: true,
         message: "OTP verification successfull",
         token: token,
+        isNewUser: isNewUser,
       }); //auth token jwt
     } else {
       res.status(400).json({ success: true, message: "Invalid OTP" });

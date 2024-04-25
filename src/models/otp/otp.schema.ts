@@ -15,6 +15,9 @@ const otpSchema = new mongoose.Schema({
     required: true,
     expires: 0,
   },
+  requestId:{
+    type:String
+  },
   verified:{
     type: Boolean,
     default: false
