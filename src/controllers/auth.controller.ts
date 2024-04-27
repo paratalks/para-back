@@ -9,6 +9,9 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
+import { Schema } from "mongoose";
+import httpContext from "express-http-context";
+// import { string } from "zod";
 
 dotenv.config();
 
@@ -17,18 +20,10 @@ const options = {
   httpOnly: true,
 };
 
-interface paraSignUpObject {
-  expertise: [string];
-  availability: [{ day: string; slots: [string] }];
-  pricing: Number;
-  profilePicture: string;
-}
-
 interface signupObject {
   name: string;
   gender: string;
-  dateOfBirth: Date;
-  interests: [string];
+  dateOfBirth: string;
   phone: string;
 } // user id token and user id from token postman -- auth, book appointment
 //user-signup make of paraexpert
@@ -39,13 +34,11 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        interests,
         phone,
       }: {
         name: string;
         gender: string;
-        dateOfBirth: Date;
-        interests: [string];
+        dateOfBirth: string;
         phone: string;
       } = req.body;
 
@@ -53,7 +46,6 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        interests,
         phone,
       };
 
@@ -64,16 +56,23 @@ export const signup: RequestHandler = bigPromise(
       }
 
       const token = req.headers.token;
+      console.log("tokkk", token);
 
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
 
       if (decode.userId) {
+        // const existingUser = await User.findOne({ phone, isActive: true });
+
+        // if (existingUser) {
+        //   return next(createCustomError("User Already exists", 400));
+        // }
+
         const user: any = await User.findOneAndUpdate(
-          { phone },
-          { $set: toStore },
-          { new: true }
+          { _id: decode.userId },
+          toStore,
+          { new: true, runValidators: true }
         );
-        // user.save();
+        user.save();
         const data: any = { token: user.getJwtToken(), user };
 
         const response = sendSuccessApiResponse(
@@ -109,100 +108,54 @@ export const paraSignup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        interests,
+        //interests,
         phone,
         expertise,
         availability,
         pricing,
-        profilePicture,
-      }: {
+      }: //profilePicture
+      {
         name: string;
         gender: string;
-        dateOfBirth: Date;
-        interests: [string];
+        dateOfBirth: string;
+        //interests: string,
         phone: string;
-        expertise: [string];
-        availability: [{ day: string; slots: [string] }];
+        expertise: string;
+        availability: Object;
         pricing: Number;
-        profilePicture: string;
+        //profilePicture: string
       } = req.body;
 
-      const toStoreUser: signupObject = {
+      const toStore: signupObject = {
         name,
         gender,
         dateOfBirth,
-        interests,
         phone,
       };
-      const toStorePara: paraSignUpObject = {
-        expertise,
-        availability,
-        pricing,
-        profilePicture,
-      };
-
-      // console.log(phone)
-      // const existingUser =await User.findOne({phone});
-      // if(existingUser) {
-      //     return res.status(400).json({error: 'Phone number aready registered'})
-      // }
-
-      // const newUser = new User({name,gender,dateOfBirth, interests, phone})
-      // await newUser.save();
-
-      // console.log(newUser._id)
-
-      // const newParaExpert = new ParaExpert({userId: newUser._id, expertise, availability, pricing,profilePicture});
-      // await newParaExpert.save();
-      // res.status(201).json({message: 'Paraexpert user created successfully'})
-
-      if (
-        !name ||
-        !gender ||
-        !dateOfBirth ||
-        !interests ||
-        !phone ||
-        !expertise ||
-        !availability ||
-        !pricing ||
-        !profilePicture
-      ) {
-        return next(createCustomError("All fields are required", 400));
-      }
-
       const token = req.headers.token;
-
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+      console.log(decode);
 
       if (decode.userId) {
-        const user: any = await User.findOneAndUpdate(
-          { phone },
-          { $set: toStoreUser },
-          { new: true }
+        const newUser = await User.findOneAndUpdate(
+          { _id: decode.userId },
+          toStore,
+          { new: true, runValidators: true }
         );
-        // user.save();
-        console.log("hi")
-        console.log(user)
-        
+        await newUser.save();
+        console.log(newUser._id);
+
         const newParaExpert = new ParaExpert({
-          userId: user._id,
+          userId: newUser._id as Schema.Types.ObjectId,
           expertise,
           availability,
           pricing,
-          profilePicture,
         });
-
         await newParaExpert.save();
-
-        console.log(newParaExpert)
-        
-        const data: any = { token: user.getJwtToken(), user };
-
-        const response = sendSuccessApiResponse(
-          "Para Expert Registered Successfully!",
-          data
-        );
-        res.status(200).cookie("token", data.token, options).send(response);
+        res
+          .status(201)
+          .cookie("token", token, options)
+          .json({ message: "Paraexpert user created successfully" });
       } else {
         return res.status(500).send({
           message: "User not authorized to sign-up please redo otp procedure",
@@ -218,7 +171,7 @@ export const refreshToken: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
-      const message = "Unauthenticaded No Bearer";
+      const message = "Unauthenticated No Bearer";
       return next(createCustomError(message, 401));
     }
 
@@ -333,8 +286,9 @@ export const logout = bigPromise(async (req, res, next) => {
 
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
-    const mobileNumber = req.body.mobileNumber;
+    const phone = req.body.phone;
     const otp = Math.floor(100000 + Math.random() * 900000);
+    const requestID = httpContext.get("requestId");
     /*const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
@@ -345,15 +299,17 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       });*/
 
     await OTP.create({
-      phone: mobileNumber,
+      phone: phone,
       otp: otp,
       otpExpiration: new Date(Date.now() + 10 * 60000),
       verified: false,
+      requestId: requestID,
     });
 
     return res.status(200).json({
       success: true,
       message: `OTP send successfully ${otp}`,
+      requestID: requestID,
     });
   } catch (error) {
     return res.status(500).json({
