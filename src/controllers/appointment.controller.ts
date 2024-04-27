@@ -7,8 +7,24 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ObjectId } from "mongoose";
 import { object } from "zod";
 
+interface Slot {
+  startTime: string;
+  endTime: string;
+}
 
-const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+interface BookedSlots {
+  [key: string]: Slot[];
+}
+
+const weekday = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const { date, startTime, endTime, status } = req.body as {
@@ -92,7 +108,6 @@ const getBookedAppointment = asyncHandler(
   }
 );
 
-
 //on Friday non-reviewed by myself
 const getParaExpertTimeSlot = asyncHandler(
   async (req: Request, res: Response) => {
@@ -104,7 +119,8 @@ const getParaExpertTimeSlot = asyncHandler(
   }
 );
 
-const getParaExpertAvailability = asyncHandler( // test in postman
+const getParaExpertAvailability = asyncHandler(
+  // test in postman
   async (req: Request, res: Response) => {
     try {
       const { paraExpertId, startDate, endDate } = req.query;
@@ -130,51 +146,49 @@ const getParaExpertAvailability = asyncHandler( // test in postman
         },
       });
 
-      const bookedSlots = appointments.reduce((acc: any, appointment) => {
-        const { date, startTime, endTime } = appointment;
-        const formattedDate = date.toISOString().split("T")[0];
+      const bookedSlots: BookedSlots = appointments.reduce(
+        (acc: BookedSlots, appointment) => {
+          const { date, startTime, endTime } = appointment;
+          const formattedDate = date.toISOString().split("T")[0];
+          const dayOfWeek = weekday[date.getDay()];
 
-        acc[formattedDate] = acc[formattedDate] || [];
-        acc[formattedDate].push({ startTime, endTime });
+          acc[dayOfWeek] = acc[dayOfWeek] || [];
+          acc[dayOfWeek].push({ startTime, endTime });
 
-        return acc;
-      }, {});
+          //acc[formattedDate] = acc[formattedDate] || [];
+          //acc[formattedDate].push({ startTime, endTime });
 
-      const availableSlots = paraExpert.availability.reduce(
-        (acc: any, availability) => {
-          const { day, slots } = availability;
-
-
-          // check where we will get the day?? date range of 1 week
-          let formattedDay = new Date(startDateObj)
-            .toISOString()
-            .split("T")[0];
-          const endDay = new Date(endDateObj).toISOString().split("T")[0];
-
-          while (formattedDay <= endDay) {
-            const bookedSlotsForDay = bookedSlots[formattedDay] || [];
-            const availableSlotsForDay = slots.filter(
-              (slot) =>
-                !bookedSlotsForDay.some(() => bookedSlots.startTime == slot)
-            );
-
-            if (availableSlotsForDay.length > 0) {
-              acc[formattedDay] = acc[formattedDay] || [];
-              acc[formattedDay].push(...availableSlotsForDay);
-            }
-    
-            const nextDay = new Date(formattedDay);
-            nextDay.setDate(nextDay.getDate() + 1);
-            formattedDay = nextDay.toISOString().split('T')[0];
-          }
           return acc;
         },
         {}
       );
 
-      res.status(200).json({availableSlots})
+      const availableSlots = paraExpert.availability.reduce(
+        (acc: { [key: string]: string[] }, availability) => {
+          const { day, slots } = availability;
+
+          //@ts-ignore
+          const bookedSlotsForDay = bookedSlots[day] || [];
+          const availableSlotsForDay = slots.filter(
+            (slot) =>
+              !bookedSlotsForDay.some(
+                (bookedSlot: { startTime: String; }) => bookedSlot.startTime === slot
+              )
+          );
+
+          if (availableSlotsForDay.length > 0) {
+            //@ts-ignore
+            acc[day] = availableSlotsForDay;
+          }
+
+          return acc;
+        },
+        {}
+      );
+
+      res.status(200).json({ availableSlots });
     } catch (error) {}
   }
 );
 
-export { bookAppointment, getBookedAppointment };
+export { bookAppointment, getBookedAppointment, getParaExpertAvailability };
