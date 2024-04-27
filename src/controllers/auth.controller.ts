@@ -108,22 +108,23 @@ export const paraSignup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        //interests,
+        interests,
         phone,
         expertise,
         availability,
         pricing,
-      }: //profilePicture
+        profilePicture
+      }: 
       {
         name: string;
         gender: string;
         dateOfBirth: string;
-        //interests: string,
+        interests: string,
         phone: string;
         expertise: string;
         availability: Object;
         pricing: Number;
-        //profilePicture: string
+        profilePicture: string
       } = req.body;
 
       const toStore: signupObject = {
@@ -146,15 +147,18 @@ export const paraSignup: RequestHandler = bigPromise(
         console.log(newUser._id);
 
         const newParaExpert = new ParaExpert({
-          userId: newUser._id as Schema.Types.ObjectId,
+          userId: newUser?._id as Schema.Types.ObjectId,
+          interests,
           expertise,
           availability,
           pricing,
+          profilePicture
         });
         await newParaExpert.save();
+
         res
           .status(201)
-          .cookie("token", token, options)
+          .cookie("token",token,options)
           .json({ message: "Paraexpert user created successfully" });
       } else {
         return res.status(500).send({
@@ -199,7 +203,6 @@ export const refreshToken: RequestHandler = bigPromise(
         return next(createCustomError(message, 401));
       }
     }
-
     res
       .status(200)
       .json(sendSuccessApiResponse("Refresh Token Generated", data, 200));
@@ -303,14 +306,14 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       otp: otp,
       otpExpiration: new Date(Date.now() + 10 * 60000),
       verified: false,
-      requestId: requestID,
+      requestId: requestID
     });
 
     return res.status(200).json({
       success: true,
-      message: `OTP send successfully ${otp}`,
+      message: `OTP send successfully ${otp}`, //checkout
       requestID: requestID,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -319,11 +322,11 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   }
 });
 
-export const verifyOTP = bigPromise(async (req, res, next) => {
+export const verifyOTP = bigPromise(async (req, res, next) => { //token needed for limit security issue, 
   const { bodyotp, requestId } = req.body;
 
   try {
-    const { otp, otpExpiration, phone } = await OTP.findOne({ requestId });
+    const { otp, otpExpiration,phone } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
     //already exits direct login token and refresh token
     if (bodyotp === otp && Date.now() < expirationTimeStamp) {
@@ -332,11 +335,9 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
 
       if (!user) {
         user = await User.create({
-          phone: phone,
+          phone: phone, 
         });
-        isNewUser = true;
-      } else {
-        isNewUser = false;
+        isNewUser = true;   // signup
       }
 
       const payload = {
@@ -352,7 +353,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         success: true,
         message: "OTP verification successfull",
         token: token,
-        isNewUser: isNewUser,
+        isNewUser: isNewUser, // look for it in frontend
       }); //auth token jwt
     } else {
       res.status(400).json({ success: true, message: "Invalid OTP" });
@@ -364,3 +365,6 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     });
   }
 });
+
+
+// new para signup slots verify otp

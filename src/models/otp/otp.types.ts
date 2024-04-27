@@ -4,6 +4,7 @@ export interface otpTypes {
     phone: String,
     otp: String,
     otpExpiration: Date,
+    requestId: String,
     verified: Boolean
 }
 
