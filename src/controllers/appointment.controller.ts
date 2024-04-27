@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 
 const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
+//user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const { date, startTime, endTime, status } = req.body as {
     date: string,
@@ -160,9 +161,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
+//user
 const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
-    const { userId } = req.params;
+   try{
+     const { userId } = req.params;
     let query = Appointments.find({ userId });
     const { status } = req.query;
 
@@ -177,10 +180,11 @@ const getBookedAppointment = asyncHandler(
       .json(
         new ApiResponse(200, appointment, "Appointmnet fetched successfully")
       );
+   }catch (error){}
   }
 );
 
-
+//paraexpert
 //on Friday non-reviewed by myself
 const getParaExpertTimeSlot = asyncHandler(
   async (req: Request, res: Response) => {
@@ -192,6 +196,7 @@ const getParaExpertTimeSlot = asyncHandler(
   }
 );
 
+//paraexpert
 const getParaExpertAvailability = asyncHandler( // test in postman
   async (req: Request, res: Response) => {
     try {
@@ -264,5 +269,50 @@ const getParaExpertAvailability = asyncHandler( // test in postman
     } catch (error) {}
   }
 );
+
+//paraexpert
+const setAvailability = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      // const { paraExpertId } = req.params;
+
+      const {availability} = req.body as {
+        availability:[{day: string, slots: [string]}]
+      };
+
+      if(!availability){
+        throw new ApiError(400, "All fields are required");
+      };
+
+      const paraExpert = await ParaExpert.findByIdAndUpdate(
+        req.params.paraExpertId, {
+        $set:{
+          availability
+        }
+      },
+      { new: true}
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, paraExpert, "ParaExpert availability updated successfully"));
+
+    }catch (error) {}
+  }
+)
+
+//paraexpert
+const getBookings = asyncHandler(
+  async (req: Request, res: Response) => {
+    try{
+      const {paraExpertId} = req.params;
+  const appointments = await Appointments.find({paraExpertId})
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, appointments, "Appointmnet fetched successfully")
+    ); 
+    } catch (error) {}  
+})
 
 export { bookAppointment, getBookedAppointment };
