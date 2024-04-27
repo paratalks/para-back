@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { apiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import { User } from "../models/user/user.model";
-import { paraExpert } from "../models/paraExpert/paraExpert.model";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { apiResponse } from "../util/apiResponse";
 import {
   userSchemaDocument,
@@ -69,7 +69,7 @@ const updateParaExpertDetails = asyncHandler(
       throw new apiError(400, "All fields are required");
     }
 
-    const user = await paraExpert.findByIdAndUpdate(
+    const user = await ParaExpert.findByIdAndUpdate(
       req.user?._id,
       {
         $set: {
@@ -82,7 +82,7 @@ const updateParaExpertDetails = asyncHandler(
       { new: true }
     );
 
-    const expert = await paraExpert.findById({ userId: req.user?._id })
+    const expert = await ParaExpert.findById({ userId: req.user?._id })
 
     const updateUser = await User.findByIdAndUpdate(
         expert.userId,

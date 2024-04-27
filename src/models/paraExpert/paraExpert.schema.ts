@@ -15,20 +15,20 @@ const paraExpertSchema = new mongoose.Schema(
           type: String,
         },
         slots:[String],
-        // slots: [
-        //   {
-        //     startTime: {
-        //       type: String,
-        //     },
-        //     endTime: {
-        //       type: String,
-        //     },
-        //     booked: {
-        //       type: Boolean,
-        //       default: false,
-        //     },
-        //   },
-        // ],
+        /*slots: [
+          {
+            startTime: {
+              type: String,
+            },
+            endTime: {
+              type: String,
+            },
+            booked: {
+              type: Boolean,
+              default: false,
+            },
+          },
+        ],*/
       },
     ],
     pricing: {
