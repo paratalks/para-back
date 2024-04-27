@@ -315,4 +315,4 @@ const getBookings = asyncHandler(
     } catch (error) {}  
 })
 
-export { bookAppointment, getBookedAppointment };
+export { bookAppointment, getBookedAppointment, setAvailability, getBookings };
