@@ -226,59 +226,88 @@ const getParaExpertAvailability = asyncHandler(
       const startDateObj = new Date(startDate as string);
       const endDateObj = new Date(endDate as string);
 
-      const paraExpert = await ParaExpert.findById({ paraExpertId });
+      const paraExpert = await ParaExpert.findById( req.query.paraExpertId );
 
       if (!paraExpert) {
         return res.status(400).json({ error: "Missing required parameters" });
       }
 
-      const appointments = await Appointments.find({
-        paraExpertId,
-        date: {
-          $gte: startDateObj,
-          $lte: endDateObj,
-        },
-      });
+      let availableSlots : {date: string, slots: String[]}[]=[] ; 
 
-      const bookedSlots: BookedSlots = appointments.reduce(
-        (acc: BookedSlots, appointment) => {
-          const { date, startTime, endTime } = appointment;
-          const formattedDate = date.toISOString().split("T")[0];
-          const dayOfWeek = weekday[date.getDay()];
+      let loop = new Date(startDateObj);
+      while(loop <= endDateObj) {
 
-          acc[dayOfWeek] = acc[dayOfWeek] || [];
-          acc[dayOfWeek].push({ startTime, endTime });
+        const day:string=weekday[loop.getDay()];
+        
+        const availables = paraExpert.availability.find((item) => item.day === day);
+        const available_slots = availables?.slots ;
 
-          //acc[formattedDate] = acc[formattedDate] || [];
-          //acc[formattedDate].push({ startTime, endTime });
+        if(available_slots){
+        const appointments = await Appointments.find({
+          paraExpertId,
+          date:loop,
+        })
 
-          return acc;
-        },
-        {}
-      );
+        const slots : String[] = available_slots.filter((slot) => 
+          !appointments.some(
+            (appointment: { startTime: String; }) => appointment.startTime === slot?.split("-")[0]
+          )
+        );
 
-      const availableSlots = paraExpert.availability.reduce(
-        (acc: { [key: string]: string[] }, availability) => {
-          const { day, slots } = availability;
+        const slots2 = { date: loop.toISOString().split("T")[0],
+          slots: slots
+         };
+         
+         availableSlots=[...availableSlots, slots2];
+      }
+      
+        let newDate = loop.setDate(loop.getDate() + 1);
+        loop = new Date(newDate);
+      }
+      
+      // const appointments = await Appointments.find({
+      //   paraExpertId,
+      //   date: {
+      //     $gte: startDateObj,
+      //     $lte: endDateObj,
+      //   },
+      // });
 
-          //@ts-ignore
-          const bookedSlotsForDay = bookedSlots[day] || [];
-          const availableSlotsForDay = slots.filter(
-            (slot) =>
-              !bookedSlotsForDay.some(
-                (bookedSlot: { startTime: String; }) => bookedSlot.startTime === slot
-              )
-          );
+      // const bookedSlots: BookedSlots = appointments.reduce(
+      //   (acc: BookedSlots, appointment) => {
+      //     const { date, startTime, endTime } = appointment;
+          
+      //     const dayOfWeek = weekday[date.getDay()];
 
-          if (availableSlotsForDay.length > 0) {
-            //@ts-ignore
-            acc[day] = availableSlotsForDay;
-          }
+      //     acc[dayOfWeek] = acc[dayOfWeek] || [];
+      //     acc[dayOfWeek].push({ startTime, endTime });
+      //     return acc;
+      //   },
+      //   {}
+      // );
 
-          return acc;
-        },
-        {}
-      );
+      // const availableSlots = paraExpert.availability.reduce(
+      //   (acc: { [key: string]: string[] }, availability) => {
+      //     const { day, slots } = availability;
+
+      //     //@ts-ignore
+      //     const bookedSlotsForDay = bookedSlots[day] || [];
+      //     const availableSlotsForDay = slots.filter(
+      //       (slot) =>
+      //         !bookedSlotsForDay.some(
+      //           (bookedSlot: { startTime: String; }) => bookedSlot.startTime === slot.split("-")[0]
+      //         )
+      //     );
+
+      //     if (availableSlotsForDay.length > 0) {
+      //       //@ts-ignore
+      //       acc[day] = availableSlotsForDay;
+      //     }
+
+      //     return acc;
+      //   },
+      //   {}
+      // );
 
       res.status(200).json({ availableSlots });
     } catch (error) {}
