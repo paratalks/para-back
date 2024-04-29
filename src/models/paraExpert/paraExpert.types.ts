@@ -4,7 +4,7 @@ export interface paraExpertTypes {
   userId: Schema.Types.ObjectId;
   expertise: [String];
   //availability: { day: string; slots:[{startTime: string; endTime: string; booked: boolean}] }[];
-  availability: [{ day: String, slots:[String]}]
+  availability: [{ day: number, slots:[String]}]
   pricing: number;
   profilePicture: string;
   createdAt: Date;

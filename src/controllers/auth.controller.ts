@@ -11,6 +11,8 @@ import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
 import { Schema } from "mongoose";
 import httpContext from "express-http-context";
+import { ApiError } from "../util/apiError";
+import { ApiResponse } from "../util/apiResponse";
 // import { string } from "zod";
 
 dotenv.config();
@@ -50,15 +52,20 @@ export const signup: RequestHandler = bigPromise(
       };
 
       if (!name || !gender || !phone) {
-        return next(
-          createCustomError("Name, Email and Password fields are required", 400)
-        );
+          throw new ApiError(400,"Name, Email and Password fields are required");
       }
 
       const token = req.headers.token;
       console.log("tokkk", token);
 
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+
+      const user = await User.findOne({ _id: decode.userId });
+
+      // if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
+      //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+      //   throw new ApiError(400, "User already exist");
+      // }
 
       if (decode.userId) {
         // const existingUser = await User.findOne({ phone, isActive: true });
@@ -79,11 +86,9 @@ export const signup: RequestHandler = bigPromise(
           "User Registered Successfully!",
           data
         );
-        res.status(200).cookie("token", data.token, options).send(response);
+        res.status(200).cookie("token", data.token, options).json(new ApiResponse(200, response));
       } else {
-        return res.status(500).send({
-          message: "User not authorized to sign-up please redo otp procedure",
-        });
+        throw new ApiError(500, "User not authorized to sign-up please redo otp procedure");
       }
 
       // if (existingUser) {
@@ -135,7 +140,17 @@ export const paraSignup: RequestHandler = bigPromise(
       };
       const token = req.headers.token;
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
-      console.log(decode);
+      // console.log(decode);
+
+      const user = await User.findOne({ _id: decode.userId });
+      console.log(user);
+
+      if (user && user.name!="" && user.gender!="" && user.dateOfBirth && user.phone) {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, { message: "User already exist" }));
+        throw new ApiError(400,"User already exist");
+      }
 
       if (decode.userId) {
         const newUser = await User.findOneAndUpdate(
@@ -144,7 +159,7 @@ export const paraSignup: RequestHandler = bigPromise(
           { new: true, runValidators: true }
         );
         await newUser.save();
-        console.log(newUser._id);
+        // console.log(newUser._id);
 
         const newParaExpert = new ParaExpert({
           userId: newUser?._id as Schema.Types.ObjectId,
@@ -154,19 +169,27 @@ export const paraSignup: RequestHandler = bigPromise(
           pricing,
           profilePicture
         });
+        
         await newParaExpert.save();
 
         res
           .status(201)
-          .cookie("token",token,options)
-          .json({ message: "Paraexpert user created successfully" });
+          .cookie("token", token, options)
+          .json(
+            new ApiResponse(
+              200,
+              newParaExpert,
+              "Paraexpert user created successfully"
+            )
+          );
       } else {
-        return res.status(500).send({
-          message: "User not authorized to sign-up please redo otp procedure",
-        });
+        throw new ApiError(
+          401,
+          "User not authorized to sign-up please redo otp procedure"
+        );
       }
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      throw new ApiError(500, error?.message);
     }
   }
 );
@@ -176,7 +199,7 @@ export const refreshToken: RequestHandler = bigPromise(
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
       const message = "Unauthenticated No Bearer";
-      return next(createCustomError(message, 401));
+      throw new ApiError(401,message);
     }
 
     let data: any;
@@ -196,16 +219,16 @@ export const refreshToken: RequestHandler = bigPromise(
 
         if (!data) {
           const message = "Authentication failed invalid JWT";
-          return next(createCustomError(message, 401));
+          throw new ApiError(401, message);
         }
       } else {
         const message = "Authentication failed invalid JWT";
-        return next(createCustomError(message, 401));
+        throw new ApiError(401, message);
       }
     }
     res
       .status(200)
-      .json(sendSuccessApiResponse("Refresh Token Generated", data, 200));
+      .json(new ApiResponse(200, data, "Refresh Token Generated"));
   }
 );
 
@@ -237,9 +260,7 @@ export const login: RequestHandler = bigPromise(
     } = req.body;
 
     if (!(email && password)) {
-      return next(
-        createCustomError("Email and Password fields are required", 400)
-      );
+      throw new ApiError(400, "Email and Password fields are required");
     }
 
     const userExists: any = await User.findOne(
@@ -254,16 +275,16 @@ export const login: RequestHandler = bigPromise(
       );
 
       if (!isPasswordCorrect) {
-        return next(createCustomError("Incorrect Password", 401));
+        throw new ApiError(400, "Incorrect Password");
       }
       userExists.password = undefined;
       const data: any = { token: userExists.getJwtToken(), userExists };
 
       return res
         .cookie("token", data.token, options)
-        .send(sendSuccessApiResponse("User LoggedIn Successfully!", data, 201));
+        .json(new ApiResponse(201, data, "User LoggedIn Successfully!"));
     } else {
-      return next(createCustomError("You're not registered in our app", 400));
+      throw new ApiError(400, "You're not registered in our app");
     }
   }
 );
@@ -275,15 +296,9 @@ export const logout = bigPromise(async (req, res, next) => {
       httpOnly: true,
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "OTP send successfully",
-    });
+    return res.status(200).json(new ApiResponse(200,"OTP send successfully"));
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to send OTP",
-    });
+    return res.status(500).json(new ApiResponse(500, "OTP send successfully"));
   }
 });
 
@@ -309,27 +324,21 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       requestId: requestID
     });
 
-    return res.status(200).json({
-      success: true,
-      message: `OTP send successfully ${otp}`, //checkout
-      requestID: requestID,
-    })
+    return res.status(200).json(new ApiResponse(200, requestID, `OTP send successfully ${otp}`));
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to send OTP",
-    });
+    console.log(error)
+    return res.status(500).json(new ApiResponse(500, "Failed to send OTP"));
   }
 });
 
 export const verifyOTP = bigPromise(async (req, res, next) => { //token needed for limit security issue, 
-  const { bodyotp, requestId } = req.body;
+  const { requestId } = req.body;
 
   try {
     const { otp, otpExpiration,phone } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
     //already exits direct login token and refresh token
-    if (bodyotp === otp && Date.now() < expirationTimeStamp) {
+    if (req.body.otp === otp && Date.now() < expirationTimeStamp) {
       let isNewUser = false;
       let user: any = await User.findOne({ phone });
 
@@ -349,20 +358,12 @@ export const verifyOTP = bigPromise(async (req, res, next) => { //token needed f
         expiresIn: process.env.JWT_EXPIRY,
       });
 
-      res.status(200).json({
-        success: true,
-        message: "OTP verification successfull",
-        token: token,
-        isNewUser: isNewUser, // look for it in frontend
-      }); //auth token jwt
+      res.status(200).json(new ApiResponse(200, {token, isNewUser}, "OTP verification successfull")); //auth token jwt
     } else {
-      res.status(400).json({ success: true, message: "Invalid OTP" });
+      res.status(400).json(new ApiResponse(400, "Invalid OTP"));
     }
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: "Internal server error",
-    });
+    res.status(400).json(new ApiResponse(400, "Internal server error"));
   }
 });
 

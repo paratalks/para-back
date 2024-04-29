@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import bigPromise from "./bigPromise";
-import User from "../models/user";
+import {User} from "../models/user/user.model";
 import jwt from "jsonwebtoken";
 import { createCustomError } from "../errors/customAPIError";
 
