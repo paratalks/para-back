@@ -1,4 +1,4 @@
-import { Request, Response, query } from "express";
+import { Request, Response } from "express";
 import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import { ApiResponse } from "../util/apiResponse";
