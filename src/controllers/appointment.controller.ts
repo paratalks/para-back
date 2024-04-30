@@ -7,6 +7,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { ObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
+import { getAvailability } from "../util/getAvailability";
 // import { object } from "zod";
 
 interface Slot {
@@ -70,51 +71,39 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError(400, "All fields are required");
     }
 
-    const expert = await ParaExpert.findById(paraExpertId);
+    // const expert = await ParaExpert.findById(paraExpertId);
 
-    if (!expert) {
-      throw new ApiError(404, "ParaExpert not found");
+    // if (!expert) {
+    //   throw new ApiError(404, "ParaExpert not found");
+    // }
+    
+    // const bookedSlot = await Appointments.findOne({
+    //   paraExpertId,
+    //   userId,
+    //   date,
+    //   startTime,
+    // });
+
+    // if (bookedSlot) {
+    //   throw new ApiError(400, "Slot already booked.");
+    // }
+
+    // const d=new Date(date)
+    // const day: number = d.getDay();
+
+    // const availablility = expert.availability.find((item)=>item.day===day)
+    const d = new Date(date);
+    const availability:String[] = await getAvailability(paraExpertId, d);
+    const slots = availability?.find((slot)=>slot.split("-")[0]===startTime && slot.split("-")[1]===endTime)
+
+    if(!slots){
+      throw new ApiError(400, "Availability not found for the given date");
     }
 
-    const bookedSlot = await Appointments.findOne({
-      paraExpertId,
-      userId,
-      date,
-      startTime,
-    });
-
-    if (bookedSlot) {
-      throw new ApiError(400, "Slot already booked.");
-    }
-
-    //---------------------------------------
-
-    // const dayAvailability = expert.availability.find((item) => item.day === date.toString());
-
-    // if (!dayAvailability) {
-    //   throw new apiError(400, "Availability not found for the given date");
-    // }
-
-    // const slotIndex = dayAvailability.slots.findIndex(slot => slot.startTime === startTime && slot.endTime === endTime && slot.booked === false);
-
-    // if (slotIndex === -1) {
-    //   throw new apiError(400, "Slot not found for the given time");
-    // }
-
-    // if (dayAvailability.slots[slotIndex].booked) {
-    //   throw new apiError(400, "Slot is already booked");
-    // }
-
-    // // Update availability
-    // dayAvailability.slots[slotIndex].booked = true;
-
-    // await expert.save();
-
-    const d=new Date(new Date(date as string).setHours(0,0,0,0));
     const appointment = await Appointments.create({
       userId,
       paraExpertId,
-      date:d,
+      date,
       startTime,
       endTime,
       status,
@@ -229,43 +218,46 @@ const getParaExpertAvailability = asyncHandler(
       const startDateObj = new Date(startDate as string);
       const endDateObj = new Date(endDate as string);
 
-      const paraExpert = await ParaExpert.findById(req.query.paraExpertId);
+      // const paraExpert = await ParaExpert.findById(req.query.paraExpertId);
 
-      if (!paraExpert) {
-        return res.status(400).json({ error: "Missing required parameters" });
-      }
+      // if (!paraExpert) {
+      //   return res.status(400).json(new ApiResponse(400, "Missing required parameters") );
+      // }
 
       let availableSlots: { date: string; slots: String[] }[] = [];
 
       let loop = new Date(startDateObj);
       while (loop <= endDateObj) {
-        const day: number = loop.getDay();
+        // const day: number = loop.getDay();
 
-        const availables = paraExpert.availability.find(
-          (item) => item.day === day
-        );
+        // const availables = paraExpert.availability.find(
+        //   (item) => item.day === day
+        // );
         
-        const available_slots = availables?.slots;
+        // const available_slots = availables?.slots;
         
-        if (available_slots) {
-          const appointments = await Appointments.find({
-            paraExpertId,
-            date: {
-        $gte: new Date(new Date(loop).setHours(0, 0, 0)),
-        $lte: new Date(new Date(loop).setHours(23, 59, 59))
-         },
-          });
-          console.log(paraExpertId)
-          console.log(appointments)
+        // if (available_slots) {
+        //   const appointments = await Appointments.find({
+        //     paraExpertId,
+        //     date: {
+        // $gte: new Date(new Date(loop).setHours(0, 0, 0)),
+        // $lte: new Date(new Date(loop).setHours(23, 59, 59))
+        //  },
+        //   });
+        //   console.log(paraExpertId)
+        //   console.log(appointments)
 
-          const slots: String[] = available_slots.filter(
-            (slot) =>
-              !appointments.some(
-                (appointment: { startTime: String }) =>
-                  appointment.startTime === slot?.split("-")[0]
-              )
-          );
+        //   const slots: String[] = available_slots.filter(
+        //     (slot) =>
+        //       !appointments.some(
+        //         (appointment: { startTime: String }) =>
+        //           appointment.startTime === slot?.split("-")[0]
+        //       )
+        //   );
 
+        const slots:String[] = await getAvailability(paraExpertId, loop);
+
+        if(slots){
           const slots2 = {
             date: loop.toISOString().split("T")[0],
             slots: slots,
