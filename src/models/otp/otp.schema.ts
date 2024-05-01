@@ -4,6 +4,7 @@ const otpSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
+    match: [/^([+][9][1]){0,1}([6-9]{1})([0-9]{9})$/, "Please provide valid phone number"],
   },
   otp: {
     type: String,
@@ -14,13 +15,13 @@ const otpSchema = new mongoose.Schema({
     required: true,
     expires: 0,
   },
-  requestId:{
-    type:String
+  requestId: {
+    type: String,
   },
-  verified:{
+  verified: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 export default otpSchema;

@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: true,
+      match: [
+        /^([+][9][1]){0,1}([6-9]{1})([0-9]{9})$/,
+        "Please provide valid phone number",
+      ],
     },
     refreshToken: {
       type: String,
@@ -33,7 +37,6 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.methods.getJwtToken = function () {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const tokenMap: any = { userId: this._id, phone: this.phone };
   console.log(tokenMap);
 
