@@ -62,10 +62,10 @@ export const signup: RequestHandler = bigPromise(
 
       const user = await User.findOne({ _id: decode.userId });
 
-      // if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
-      //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
-      //   throw new ApiError(400, "User already exist");
-      // }
+      if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
+        return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+        throw new ApiError(400, "User already exist");
+      }
 
       if (decode.userId) {
         // const existingUser = await User.findOne({ phone, isActive: true });
@@ -145,7 +145,7 @@ export const paraSignup: RequestHandler = bigPromise(
       const user = await User.findOne({ _id: decode.userId });
       console.log(user);
 
-      if (user && user.name!="" && user.gender!="" && user.dateOfBirth && user.phone) {
+      if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
         return res
           .status(400)
           .json(new ApiResponse(400, { message: "User already exist" }));
@@ -159,7 +159,6 @@ export const paraSignup: RequestHandler = bigPromise(
           { new: true, runValidators: true }
         );
         await newUser.save();
-        // console.log(newUser._id);
 
         const newParaExpert = new ParaExpert({
           userId: newUser?._id as Schema.Types.ObjectId,
@@ -315,16 +314,31 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
           numbers: "7905132659",
         },
       });*/
+      if(await OTP.findOne({phone})){
+        const newotp = await OTP.findOneAndUpdate(
+          { phone },
+          {
+            otp: otp,
+            otpExpiration: new Date(Date.now() + 10 * 60000),
+            verified: false,
+            requestId: requestID,
+          },
+          {new:true}
+        );
+      }
+      else{
+        await OTP.create({
+          phone: phone,
+          otp: otp,
+          otpExpiration: new Date(Date.now() + 10 * 60000),
+          verified: false,
+          requestId: requestID,
+        });
+      }
 
-    await OTP.create({
-      phone: phone,
-      otp: otp,
-      otpExpiration: new Date(Date.now() + 10 * 60000),
-      verified: false,
-      requestId: requestID
-    });
+    
 
-    return res.status(200).json(new ApiResponse(200, requestID, `OTP send successfully ${otp}`));
+    return res.status(200).json(new ApiResponse(200, {requestID}, `OTP send successfully ${otp}`));
   } catch (error) {
     console.log(error)
     return res.status(500).json(new ApiResponse(500, "Failed to send OTP"));
@@ -335,10 +349,10 @@ export const verifyOTP = bigPromise(async (req, res, next) => { //token needed f
   const { requestId } = req.body;
 
   try {
-    const { otp, otpExpiration,phone } = await OTP.findOne({ requestId });
+    const { otp, otpExpiration,phone, verified } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
     //already exits direct login token and refresh token
-    if (req.body.otp === otp && Date.now() < expirationTimeStamp) {
+    if (req.body.otp === otp && Date.now() < expirationTimeStamp && !verified) {
       let isNewUser = false;
       let user: any = await User.findOne({ phone });
 
@@ -357,6 +371,12 @@ export const verifyOTP = bigPromise(async (req, res, next) => { //token needed f
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRY,
       });
+
+      const updateotp = await OTP.findOneAndUpdate(
+        { requestId },
+        { $set: { verified: true } },
+        { new: true }
+      );
 
       res.status(200).json(new ApiResponse(200, {token, isNewUser}, "OTP verification successfull")); //auth token jwt
     } else {
