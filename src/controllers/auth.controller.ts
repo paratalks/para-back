@@ -1,19 +1,15 @@
-//import User from "../models/User";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
-import { createCustomError } from "../errors/customAPIError";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import axios from "axios";
 import { OTP } from "../models/otp/otp.model";
 import { Schema } from "mongoose";
 import httpContext from "express-http-context";
 import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
-// import { string } from "zod";
 
 dotenv.config();
 
@@ -27,8 +23,8 @@ interface signupObject {
   gender: string;
   dateOfBirth: string;
   phone: string;
-} // user id token and user id from token postman -- auth, book appointment
-//user-signup make of paraexpert
+} 
+
 export const signup: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -36,22 +32,15 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        phone,
       }: {
         name: string;
         gender: string;
         dateOfBirth: string;
-        phone: string;
       } = req.body;
 
-      const toStore: signupObject = {
-        name,
-        gender,
-        dateOfBirth,
-        phone,
-      };
+      
 
-      if (!name || !gender || !phone) {
+      if (!name || !gender) {
           throw new ApiError(400,"Name, Email and Password fields are required");
       }
 
@@ -62,17 +51,19 @@ export const signup: RequestHandler = bigPromise(
 
       const user = await User.findOne({ _id: decode.userId });
 
-      if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
+      /* if (user && user.name && user.gender && user.dateOfBirth ) {
         return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
         throw new ApiError(400, "User already exist");
-      }
+      }*/
+
+      const toStore: signupObject = {
+        name,
+        gender,
+        dateOfBirth,
+        phone:user.phone as string,
+      };
 
       if (decode.userId) {
-        // const existingUser = await User.findOne({ phone, isActive: true });
-
-        // if (existingUser) {
-        //   return next(createCustomError("User Already exists", 400));
-        // }
 
         const user: any = await User.findOneAndUpdate(
           { _id: decode.userId },
@@ -86,22 +77,12 @@ export const signup: RequestHandler = bigPromise(
           "User Registered Successfully!",
           data
         );
-        res.status(200).cookie("token", data.token, options).json(new ApiResponse(200, response));
+        res.cookie("token", data.token, options).json(new ApiResponse(200, response));
       } else {
         throw new ApiError(500, "User not authorized to sign-up please redo otp procedure");
       }
-
-      // if (existingUser) {
-      //     return next(createCustomError("User Already exists", 400));
-      // }
-
-      // const phoneNumberIsActive = await User.findOne({ phone, isActive: true });
-
-      // if (phoneNumberIsActive) {
-      //     return next(createCustomError("This phone number is already registered.", 400));
-      // }
     } catch (error) {
-      console.log(error);
+      throw new ApiError(401,error?.message ||"Failure in User registration")
     }
   }
 );
@@ -114,43 +95,44 @@ export const paraSignup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
-        phone,
         expertise,
         availability,
         pricing,
-        profilePicture
-      }: 
-      {
+        profilePicture,
+      }: {
         name: string;
         gender: string;
         dateOfBirth: string;
-        interests: string,
-        phone: string;
+        interests: string;
         expertise: string;
-        availability: Object;
+        availability: { day: number; slots: String }[];
         pricing: Number;
-        profilePicture: string
+        profilePicture: string;
       } = req.body;
 
-      const toStore: signupObject = {
-        name,
-        gender,
-        dateOfBirth,
-        phone,
-      };
       const token = req.headers.token;
       const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
       // console.log(decode);
 
       const user = await User.findOne({ _id: decode.userId });
-      console.log(user);
 
-      if (user && user.name && user.gender && user.dateOfBirth && user.phone) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, { message: "User already exist" }));
-        throw new ApiError(400,"User already exist");
+      // if (user && user.name && user.gender && user.dateOfBirth ) {
+      //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+      //   throw new ApiError(400, "User already exist");
+      // }
+
+      if (
+        availability.filter((item) => item.day < 0 || item.day > 6).length > 0
+      ) {
+        return res.json(new ApiResponse(400, "Invalid day"));
       }
+
+      const toStore: signupObject = {
+        name,
+        gender,
+        dateOfBirth,
+        phone: user.phone as string,
+      };
 
       if (decode.userId) {
         const newUser = await User.findOneAndUpdate(
@@ -158,7 +140,6 @@ export const paraSignup: RequestHandler = bigPromise(
           toStore,
           { new: true, runValidators: true }
         );
-        await newUser.save();
 
         const newParaExpert = new ParaExpert({
           userId: newUser?._id as Schema.Types.ObjectId,
@@ -166,17 +147,16 @@ export const paraSignup: RequestHandler = bigPromise(
           expertise,
           availability,
           pricing,
-          profilePicture
+          profilePicture,
         });
-        
+
         await newParaExpert.save();
 
         res
-          .status(201)
           .cookie("token", token, options)
           .json(
             new ApiResponse(
-              200,
+              201,
               newParaExpert,
               "Paraexpert user created successfully"
             )
@@ -226,7 +206,6 @@ export const refreshToken: RequestHandler = bigPromise(
       }
     }
     res
-      .status(200)
       .json(new ApiResponse(200, data, "Refresh Token Generated"));
   }
 );
@@ -295,9 +274,9 @@ export const logout = bigPromise(async (req, res, next) => {
       httpOnly: true,
     });
 
-    return res.status(200).json(new ApiResponse(200,"OTP send successfully"));
+    return res.json(new ApiResponse(200,"OTP send successfully"));
   } catch (error) {
-    return res.status(500).json(new ApiResponse(500, "OTP send successfully"));
+    return res.json(new ApiResponse(500, "OTP send successfully"));
   }
 });
 
@@ -306,14 +285,7 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
     const phone = req.body.phone;
     const otp = Math.floor(100000 + Math.random() * 900000);
     const requestID = httpContext.get("requestId");
-    /*const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-        params: {
-          authorization: "rRwh74DHTn0VLYt5nLuwwSc2Ym7yAHDg66kwcsh5thNiBT4DGRyOOm7NWOkW",
-          variable_values: `Your otp is ${otp}`,
-          route: "otp",
-          numbers: "7905132659",
-        },
-      });*/
+    
       if(await OTP.findOne({phone})){
         const newotp = await OTP.findOneAndUpdate(
           { phone },
@@ -336,22 +308,19 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
         });
       }
 
-    
-
-    return res.status(200).json(new ApiResponse(200, {requestID}, `OTP send successfully ${otp}`));
+    return res.json(new ApiResponse(200, {requestID}, `OTP send successfully ${otp}`));
   } catch (error) {
     console.log(error)
-    return res.status(500).json(new ApiResponse(500, "Failed to send OTP"));
+    return res.json(new ApiResponse(500, "Failed to send OTP"));
   }
 });
 
-export const verifyOTP = bigPromise(async (req, res, next) => { //token needed for limit security issue, 
+export const verifyOTP = bigPromise(async (req, res, next) => { 
   const { requestId } = req.body;
 
   try {
     const { otp, otpExpiration,phone, verified } = await OTP.findOne({ requestId });
     const expirationTimeStamp = otpExpiration.getTime();
-    //already exits direct login token and refresh token
     if (req.body.otp === otp && Date.now() < expirationTimeStamp && !verified) {
       let isNewUser = false;
       let user: any = await User.findOne({ phone });
@@ -378,14 +347,13 @@ export const verifyOTP = bigPromise(async (req, res, next) => { //token needed f
         { new: true }
       );
 
-      res.status(200).json(new ApiResponse(200, {token, isNewUser}, "OTP verification successfull")); //auth token jwt
+      res.json(new ApiResponse(200, {token, isNewUser}, "OTP verification successfull")); //auth token jwt
     } else {
-      res.status(400).json(new ApiResponse(400, "Invalid OTP"));
+      res.json(new ApiResponse(400, "Invalid OTP"));
     }
   } catch (error) {
-    res.status(400).json(new ApiResponse(400, "Internal server error"));
+    res.json(new ApiResponse(400, "Internal server error"));
   }
 });
 
 
-// new para signup slots verify otp

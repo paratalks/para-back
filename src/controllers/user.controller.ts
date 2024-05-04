@@ -5,16 +5,6 @@ import { asyncHandler } from "../util/asyncHandler";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiResponse } from "../util/apiResponse";
-import {
-  userSchemaDocument,
-  userSchemaModel,
-  userTypes,
-} from "../models/user/user.types";
-// import { paraExpertSchemaDocument } from "../models/paraExpert/paraExpert.types";
-
-// interface UpdateUserDetailsRequest extends Request {
-//   body: userSchemaDocument, paraExpertSchemaDocument;
-// }
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -45,7 +35,6 @@ const updateUserDetails = asyncHandler(
     );
 
     return res
-      .status(200)
       .json(new ApiResponse(200, user, "User details updated successfully"));
   }
 );
@@ -100,7 +89,6 @@ const updateParaExpertDetails = asyncHandler(
     )
 
     return res
-      .status(200)
       .json(new ApiResponse(200, user, "Para Expert details updated successfully"));
   }
 );

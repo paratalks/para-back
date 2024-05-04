@@ -8,7 +8,6 @@ import { User } from "../models/user/user.model";
 export const verifyJWT = asyncHandler(
   async (req: Request , res: Response, next: NextFunction) => {
 
-
     try {
       const token =
         req.cookies?.accessToken ||
