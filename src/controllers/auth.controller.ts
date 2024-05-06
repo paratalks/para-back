@@ -144,6 +144,7 @@ export const paraSignup: RequestHandler = bigPromise(
           toStore,
           { new: true, runValidators: true }
         );
+        await newUser.save();
 
         const newParaExpert = new ParaExpert({
           userId: newUser?._id as Schema.Types.ObjectId,

@@ -1,4 +1,4 @@
-import { Request, Response, query } from "express";
+import type { Request, Response } from "express";
 import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import { ApiResponse } from "../util/apiResponse";
@@ -33,7 +33,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
   if (!incomingToken) {
     throw new ApiError(401, "unauthorized request");
-  }
+  }  // const incomingToken =  req.cookies.token || req.body.token
 
   const decodedToken: any = jwt.verify(
     incomingToken as string,
