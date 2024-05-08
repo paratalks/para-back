@@ -1,5 +1,5 @@
 import express from "express";
-import { generateRTCToken, generateRTEToken, generateRTMToken, ping, nocache } from "../../controllers/generate_token.controller";
+import { generateRTCToken, generateRTEToken, generateRTMToken, ping, nocache } from "../../controllers/generateToken.controller";
 
 const router = express.Router();
 //need to upgrade the req data and some changes in controller

@@ -8,11 +8,15 @@ import { User } from "../models/user/user.model";
 import { ObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 import { getAvailability } from "../util/getAvailability";
-// import { object } from "zod";
-
+import { ResponseStatusCode } from "../constants/constants";
 interface Slot {
   startTime: string;
   endTime: string;
+}
+
+interface Query {
+  userId: string;
+  status?: string;
 }
 
 interface BookedSlots {
@@ -32,8 +36,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const incomingToken = req.headers.token;
 
   if (!incomingToken) {
-    throw new ApiError(401, "unauthorized request");
-  }  // const incomingToken =  req.cookies.token || req.body.token
+    throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "unauthorized request");
+  }
 
   const decodedToken: any = jwt.verify(
     incomingToken as string,
@@ -43,7 +47,10 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(decodedToken?.userId);
   const userId = user._id;
   if (!user) {
-    throw new ApiError(401, "Invalid refresh token");
+    throw new ApiError(
+      ResponseStatusCode.UNAUTHORIZED,
+      "Invalid refresh token"
+    );
   }
 
   const { paraExpertId } = req.params;
@@ -56,15 +63,27 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       !endTime ||
       !status
     ) {
-      throw new ApiError(400, "All fields are required");
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "All fields are required"
+      );
     }
 
-    const d = new Date(date);
-    const availability:String[] = await getAvailability(paraExpertId, d);
-    const slots = availability?.find((slot)=>slot.split("-")[0]===startTime && slot.split("-")[1]===endTime)
+    const requestedDate = new Date(date);
+    const availability: String[] = await getAvailability(
+      paraExpertId,
+      requestedDate
+    );
+    const slots = availability?.find(
+      (slot) =>
+        slot.split("-")[0] === startTime && slot.split("-")[1] === endTime
+    );
 
-    if(!slots){
-      throw new ApiError(400, "Availability not found for the given date");
+    if (!slots) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Availability not found for the given date"
+      );
     }
 
     const appointment = await Appointments.create({
@@ -77,15 +96,21 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (!appointment) {
-      throw new ApiError(400, "Failed to create appointment");
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create appointment"
+      );
     }
 
-    return res
-      .json(
-        new ApiResponse(200, appointment, "Appointment created successfully")
-      );
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        appointment,
+        "Appointment created successfully"
+      )
+    );
   } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid refresh token");
+    throw new ApiError(ResponseStatusCode.UNAUTHORIZED, error?.message);
   }
 });
 
@@ -94,20 +119,25 @@ const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
-      let query = Appointments.find({ userId });
-      const { status } = req.query;
+      const { status }:{status?:string} = req.query;
+      const queryObj: Query = { userId };
+      status && (queryObj.status = status);
 
-      if (status) {
-        query = query.find({ status: status });
-      }
+      const appointment = await Appointments.find(queryObj);
 
-      const appointment = await query.exec();
-
-      return res
-        .json(
-          new ApiResponse(200, appointment, "Appointmnet fetched successfully")
-        );
-    } catch (error) {}
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          appointment,
+          "Appointmnet fetched successfully"
+        )
+      );
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
+      );
+    }
   }
 );
 
@@ -129,7 +159,12 @@ const getParaExpertAvailability = asyncHandler(
       const { paraExpertId, startDate, endDate } = req.query;
 
       if (!paraExpertId || !startDate || !endDate) {
-        return res.json(new ApiResponse(400,"Missing required parameters"));
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.BAD_REQUEST,
+            "Missing required parameters"
+          )
+        );
       }
 
       const startDateObj = new Date(startDate as string);
@@ -139,9 +174,9 @@ const getParaExpertAvailability = asyncHandler(
 
       let loop = new Date(startDateObj);
       while (loop <= endDateObj) {
-        const slots:String[] = await getAvailability(paraExpertId, loop);
+        const slots: String[] = await getAvailability(paraExpertId, loop);
 
-        if(slots){
+        if (slots) {
           const slots2 = {
             date: loop.toISOString().split("T")[0],
             slots: slots,
@@ -154,8 +189,13 @@ const getParaExpertAvailability = asyncHandler(
         loop = new Date(newDate);
       }
 
-      res.json(new ApiResponse(200, availableSlots ));
-    } catch (error) {}
+      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, availableSlots));
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
+      );
+    }
   }
 );
 
@@ -167,13 +207,18 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     };
 
     if (!availability) {
-      throw new ApiError(400, "All fields are required");
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "All fields are required"
+      );
     }
 
     if (
       availability.filter((item) => item.day < 0 || item.day > 6).length > 0
     ) {
-      return res.json(new ApiResponse(400, "Invalid day"));
+      return res.json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid day")
+      );
     }
 
     const paraExpert = await ParaExpert.findByIdAndUpdate(
@@ -186,15 +231,19 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
       { new: true }
     );
 
-    return res
-      .json(
-        new ApiResponse(
-          200,
-          paraExpert,
-          "ParaExpert availability updated successfully"
-        )
-      );
-  } catch (error) {}
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        paraExpert,
+        "ParaExpert availability updated successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
 });
 
 //paraexpert
@@ -202,11 +251,19 @@ const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { paraExpertId } = req.params;
     const appointments = await Appointments.find({ paraExpertId });
-    return res
-      .json(
-        new ApiResponse(200, appointments, "Appointmnet fetched successfully")
-      );
-  } catch (error) {}
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        appointments,
+        "Appointmnet fetched successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
 });
 
 export {

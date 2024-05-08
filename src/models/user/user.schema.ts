@@ -38,7 +38,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.methods.getJwtToken = function () {
   const tokenMap: any = { userId: this._id, phone: this.phone };
-  console.log(tokenMap);
 
   return jwt.sign(tokenMap, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRY,

@@ -5,6 +5,7 @@ import { asyncHandler } from "../util/asyncHandler";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiResponse } from "../util/apiResponse";
+import { ResponseStatusCode } from "../constants/constants";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -17,7 +18,7 @@ const updateUserDetails = asyncHandler(
     };
 
     if (!name || !gender || !dateOfBirth || !interests || !phone) {
-      throw new ApiError(400, "All fields are required");
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "All fields are required");
     }
 
     const user = await User.findByIdAndUpdate(
@@ -34,8 +35,13 @@ const updateUserDetails = asyncHandler(
       { new: true }
     );
 
-    return res
-      .json(new ApiResponse(200, user, "User details updated successfully"));
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        user,
+        "User details updated successfully"
+      )
+    );
   }
 );
 
@@ -54,7 +60,10 @@ const updateParaExpertDetails = asyncHandler(
     };
 
     if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !pricing || !profilePicture) {
-      throw new ApiError(400, "All fields are required");
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "All fields are required"
+      );
     }
 
     const paraExpertId = req.params;
@@ -88,8 +97,13 @@ const updateParaExpertDetails = asyncHandler(
         {new:true}
     )
 
-    return res
-      .json(new ApiResponse(200, user, "Para Expert details updated successfully"));
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        user,
+        "Para Expert details updated successfully"
+      )
+    );
   }
 );
 
