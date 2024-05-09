@@ -6,6 +6,14 @@ export interface userTypes {
     gender: String,
     interests: [String],
     phone:String,
+    refreshToken:String,
+    fcm:{
+        notification:{
+            title:String,
+            body:String,
+        },
+        data:String,
+    },
 };
 
 export interface userSchemaDocument extends userTypes , Document {}

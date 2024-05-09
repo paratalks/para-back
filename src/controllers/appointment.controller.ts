@@ -8,7 +8,7 @@ import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
 import { Notifications } from "../models/notification/notification.model";
 import type { ObjectId } from "mongoose";
-import { notification } from "../util/notification.util";
+import { notification, setFcm } from "../util/notification.util";
 
 interface Query {
   userId: string;
@@ -100,6 +100,12 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     if(!createNotification){
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to send notification");
+    }
+
+    const userWithFcm = setFcm(user._id);
+
+    if(!userWithFcm){
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to set FCM");
     }
 
     return res.json(
