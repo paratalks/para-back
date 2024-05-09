@@ -8,16 +8,16 @@ import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
 import { Notifications } from "../models/notification/notification.model";
 import type { ObjectId } from "mongoose";
+import { notification } from "../util/notification.util";
 
 interface Query {
   userId: string;
   status?: string;
 }
 
-
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { date, startTime, endTime, status,title,description,referrer,referrerId,image } = req.body as {
+  const { date, startTime, endTime, status,image } = req.body as {
     date: Date;
     startTime: string;
     endTime: string;
@@ -92,14 +92,15 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    //function in utility for anywhere we want to book
-    const notification =  await Notifications.create({
-      title,
-      description,
-      referrer,
-      referrerId, 
+    const createNotification =  notification(
+      paraExpertId,
+      appointment._id, 
       image
-    })
+    )
+
+    if(!createNotification){
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to send notification");
+    }
 
     return res.json(
       new ApiResponse(
