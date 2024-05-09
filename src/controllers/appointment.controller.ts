@@ -7,15 +7,22 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import jwt from "jsonwebtoken";
 import { getAvailability } from "../util/getAvailability";
+import { Notifications } from "../models/notification/notification.model";
+import type { ObjectId } from "mongoose";
 
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { date, startTime, endTime, status } = req.body as {
+  const { date, startTime, endTime, status,title,description,referrer,referrerId,image } = req.body as {
     date: string;
     startTime: string;
     endTime: string;
     status: string;
+    title:string, //constant
+    description:string, //particular time vagerah jab book hua
+    referrer:string, //appointment
+    referrerId: ObjectId,  // appointmentId
+    image:string// paraImage
   };
 
   const incomingToken = req.headers.token;
@@ -65,9 +72,22 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       status,
     });
 
+
+
+
     if (!appointment) {
       throw new ApiError(400, "Failed to create appointment");
     }
+
+    //function in utility for anywhere we want to book
+    const notification =  await Notifications.create({
+      title,
+      description,
+      referrer,
+      referrerId, 
+      image
+    })
+
 
     return res
       .json(
