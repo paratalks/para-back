@@ -2,15 +2,14 @@ import express from "express";
 const router = express.Router();
 
 // import controllers
-import { signup, login, logout, refreshToken, verifyOTP, sendOTP, paraSignup } from "../../controllers/auth.controller";
+import { signup, logout, refreshToken, verifyOTP, sendOTP, paraSignup } from "../../controllers/auth.controller";
 
 // import middlwares
-import { isLoggedIn } from "../../middlewares/authorization";
+import { verifyJWT } from "../../middlewares/auth.middleware";
 
 router.route("/refresh-token").get(refreshToken);
-router.route("/signup").post(signup);
-router.route("/paraexpert/signup").post(paraSignup)
-router.route("/login").post(login);
+router.route("/signup").post(verifyJWT,signup);
+router.route("/paraexpert/signup").post(verifyJWT,paraSignup)
 router.route("/logout").get(logout);
 router.route("/send-otp").post(sendOTP);
 router.route("/verify-otp").post(verifyOTP);

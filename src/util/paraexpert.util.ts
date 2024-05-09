@@ -1,9 +1,8 @@
-import { ObjectId } from "mongoose";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiError } from "./apiError";
 import { Appointments } from "../models/appointments/appointments.model";
 
-export const getAvailability = async (paraExpertId: any, date: Date) => {
+export const getAvailableSlots = async (paraExpertId: any, date: Date) => {
   const paraExpert = await ParaExpert.findById(paraExpertId);
 
   if (!paraExpert) {
@@ -33,5 +32,23 @@ export const getAvailability = async (paraExpertId: any, date: Date) => {
 
     return Promise.resolve(slots);
   }
-  return ;
+  return;
+};
+
+
+export const getSlotAvailability = async (
+  paraExpertId: any,
+  date: Date,
+  startTime: string,
+  endTime: string
+) => {
+  const availability: String[] = await getAvailableSlots(paraExpertId, date);
+  const slots = availability?.find(
+    (slot) => slot.split("-")[0] === startTime && slot.split("-")[1] === endTime
+  );
+  if (slots) {
+    return true;
+  } else {
+    return false;
+  }
 };

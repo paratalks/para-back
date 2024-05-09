@@ -7,8 +7,9 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { ObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
-import { getAvailability } from "../util/getAvailability";
+import { getAvailableSlots } from "../util/paraexpert.util";
 import { ResponseStatusCode } from "../constants/constants";
+import { getSlotAvailability } from "../util/paraexpert.util";
 interface Slot {
   startTime: string;
   endTime: string;
@@ -26,25 +27,27 @@ interface BookedSlots {
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const { date, startTime, endTime, status } = req.body as {
-    date: string;
+    date: Date;
     startTime: string;
     endTime: string;
     status: string;
   };
   console.log(req.body);
 
-  const incomingToken = req.headers.token;
+  // const incomingToken = req.headers.token;
 
-  if (!incomingToken) {
-    throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "unauthorized request");
-  }
+  // if (!incomingToken) {
+  //   throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "unauthorized request");
+  // }
 
-  const decodedToken: any = jwt.verify(
-    incomingToken as string,
-    process.env.JWT_SECRET
-  );
+  // const decodedToken: any = jwt.verify(
+  //   incomingToken as string,
+  //   process.env.JWT_SECRET
+  // );
 
-  const user = await User.findById(decodedToken?.userId);
+  // const user = await User.findById(decodedToken?.userId);
+
+  const user=req.user
   const userId = user._id;
   if (!user) {
     throw new ApiError(
@@ -69,17 +72,9 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const requestedDate = new Date(date);
-    const availability: String[] = await getAvailability(
-      paraExpertId,
-      requestedDate
-    );
-    const slots = availability?.find(
-      (slot) =>
-        slot.split("-")[0] === startTime && slot.split("-")[1] === endTime
-    );
+    const isSlotAvailable = getSlotAvailability(paraExpertId, date, startTime, endTime);
 
-    if (!slots) {
+    if (!isSlotAvailable) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Availability not found for the given date"
@@ -174,7 +169,7 @@ const getParaExpertAvailability = asyncHandler(
 
       let loop = new Date(startDateObj);
       while (loop <= endDateObj) {
-        const slots: String[] = await getAvailability(paraExpertId, loop);
+        const slots: String[] = await getAvailableSlots(paraExpertId, loop);
 
         if (slots) {
           const slots2 = {
@@ -200,53 +195,6 @@ const getParaExpertAvailability = asyncHandler(
 );
 
 //paraexpert
-const setAvailability = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { availability } = req.body as {
-      availability: [{ day: number; slots: [string] }];
-    };
-
-    if (!availability) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "All fields are required"
-      );
-    }
-
-    if (
-      availability.filter((item) => item.day < 0 || item.day > 6).length > 0
-    ) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid day")
-      );
-    }
-
-    const paraExpert = await ParaExpert.findByIdAndUpdate(
-      req.params.paraExpertId,
-      {
-        $set: {
-          availability,
-        },
-      },
-      { new: true }
-    );
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        paraExpert,
-        "ParaExpert availability updated successfully"
-      )
-    );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
-  }
-});
-
-//paraexpert
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { paraExpertId } = req.params;
@@ -269,7 +217,6 @@ const getBookings = asyncHandler(async (req: Request, res: Response) => {
 export {
   bookAppointment,
   getBookedAppointment,
-  setAvailability,
   getBookings,
   getParaExpertAvailability,
 };

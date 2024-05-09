@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.use("/auth", authRoute);
 router.use("/booking",bookingRoute);
-router.use("/user",userRoute);
+router.use("/profile-update",userRoute);
 router.use("/para",paraRoute);
 
 router.get("/", (req, res) => {

@@ -10,28 +10,12 @@ import httpContext from "express-http-context";
 import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
+import {signupObject, parasignupObject} from "../constants/types"
 
 const options = {
   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
   httpOnly: true,
 };
-
-interface signupObject {
-  name: string;
-  gender: string;
-  dateOfBirth: Date;
-} 
-
-interface parasignupObject {
-  name: string;
-  gender: string;
-  dateOfBirth: Date;
-  interests: string;
-  expertise: string;
-  availability: { day: number; slots: String }[];
-  pricing: Number;
-  profilePicture: string;
-}
 
 export const signup: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -51,12 +35,11 @@ export const signup: RequestHandler = bigPromise(
           );
       }
 
-      const token = req.headers.token;
-      console.log("tokkk", token);
+      // const token = req.headers.token;
+      // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+      // const user = await User.findOne({ _id: decode.userId });
 
-      const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
-
-      const user = await User.findOne({ _id: decode.userId });
+      const user= req.user;
 
       // if (user && user.name && user.gender && user.dateOfBirth ) {
       //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
@@ -69,15 +52,17 @@ export const signup: RequestHandler = bigPromise(
         dateOfBirth,
       };
 
-      if (decode.userId) {
 
-        const user: any = await User.findOneAndUpdate(
-          { _id: decode.userId },
+
+      if (user) {
+
+        const updatedUser: any = await User.findOneAndUpdate(
+          { _id:user._id },
           toStore,
           { new: true, runValidators: true }
         );
-        user.save();
-        const data: any = { token: user.getJwtToken(), user };
+        await updatedUser.save();
+        const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
         const response = sendSuccessApiResponse(
           "User Registered Successfully!",
@@ -110,11 +95,11 @@ export const paraSignup: RequestHandler = bigPromise(
         profilePicture,
       }: parasignupObject = req.body;
 
-      const token = req.headers.token;
-      const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
-      // console.log(decode);
+      // const token = req.headers.token;
+      // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
+      // const user = await User.findOne({ _id: decode.userId });
 
-      const user = await User.findOne({ _id: decode.userId });
+      const user=req.user;
 
       // if (user && user.name && user.gender && user.dateOfBirth ) {
       //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
@@ -135,13 +120,14 @@ export const paraSignup: RequestHandler = bigPromise(
         dateOfBirth,
       };
 
-      if (decode.userId) {
-        const newUser = await User.findOneAndUpdate(
-          { _id: decode.userId },
+      if (user) {
+        const newUser:any = await User.findOneAndUpdate(
+          { _id: user._id },
           toStore,
           { new: true, runValidators: true }
         );
         await newUser.save();
+        const token: any = newUser.getJwtToken();
 
         const paraExpert = new ParaExpert({
           userId: newUser?._id as Schema.Types.ObjectId,
@@ -153,7 +139,7 @@ export const paraSignup: RequestHandler = bigPromise(
         });
 
         await paraExpert.save();
-
+        
         res
           .cookie("token", token, options)
           .json(
