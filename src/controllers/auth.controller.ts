@@ -43,10 +43,10 @@ export const signup: RequestHandler = bigPromise(
 
       const user= req.user;
 
-      // if (user && user.name && user.gender && user.dateOfBirth ) {
-      //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
-      //   throw new ApiError(400, "User already exist");
-      // }
+      /* if (user && user.name && user.gender && user.dateOfBirth ) {
+        return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+        throw new ApiError(400, "User already exist");
+      }*/
 
       const toStore: signupObject = {
         name,
@@ -78,7 +78,7 @@ export const signup: RequestHandler = bigPromise(
         );
       }
     } catch (error) {
-      console.log(error);
+      throw new ApiError(401,error?.message ||"Failure in User registration")
     }
   }
 );

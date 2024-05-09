@@ -1,4 +1,4 @@
-import { Document, Model, ObjectId } from "mongoose";
+import type { Document, Model, ObjectId } from "mongoose";
 
 export interface appointmentsTypes {
   userId: ObjectId;

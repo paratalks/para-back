@@ -16,6 +16,7 @@ const paraExpertSchema = new mongoose.Schema(
           enum:[0,1,2,3,4,5,6],
         },
         slots:[String],
+        _id:false,
       },
     ],
     pricing: {
