@@ -15,3 +15,16 @@ export const enum ResponseStatusCode{
     NOT_FOUND= 404,
     INTERNAL_SERVER_ERROR= 500,
 }
+
+export const categories = [
+  "Meditation",
+  "Saadhna",
+  "Yoga",
+  "Spirituality ",
+  "Spiritual Psychologists",
+  "Religious Gurus",
+  "Saadhna Healing",
+  "Spiritual Therapy ",
+  "Astrology",
+  "Tarro Card",
+];

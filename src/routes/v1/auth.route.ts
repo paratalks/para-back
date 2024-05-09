@@ -1,11 +1,8 @@
 import express from "express";
-const router = express.Router();
-
-// import controllers
 import { signup, logout, refreshToken, verifyOTP, sendOTP, paraSignup } from "../../controllers/auth.controller";
-
-// import middlwares
 import { verifyJWT } from "../../middlewares/auth.middleware";
+
+const router = express.Router();
 
 router.route("/refresh-token").get(refreshToken);
 router.route("/signup").post(verifyJWT,signup);

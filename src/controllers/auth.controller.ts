@@ -3,6 +3,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
 import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { OTP } from "../models/otp/otp.model";
 import { Schema } from "mongoose";
@@ -11,6 +12,7 @@ import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import {signupObject, parasignupObject} from "../constants/types"
+dotenv.config()
 
 const options = {
   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
