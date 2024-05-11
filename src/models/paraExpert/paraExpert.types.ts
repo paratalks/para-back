@@ -1,4 +1,4 @@
-import { Document, Model, Schema} from "mongoose";
+import type { Document, Model, Schema} from "mongoose";
 
 export interface paraExpertTypes {
   userId: Schema.Types.ObjectId;
