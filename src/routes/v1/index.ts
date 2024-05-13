@@ -5,6 +5,7 @@ import bookingRoute from "./appointment.route"
 import userRoute from "./user.route";
 import paraRoute from "./para.route"
 import homeRoute from "./home.route"
+import paymentRoute from "./payment.route"
 const router = express.Router();
 
 /**
@@ -16,6 +17,7 @@ router.use("/booking",bookingRoute);
 router.use("/profile-update",userRoute);
 router.use("/para",paraRoute);
 router.use("/home",homeRoute);
+router.use("/payment",paymentRoute)
 
 router.get("/", (req, res) => {
     return res.status(200).send({
