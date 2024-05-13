@@ -83,7 +83,7 @@ const updateParaExpertDetails = asyncHandler(
 
     const expert = await ParaExpert.findById( req.params.paraExpertId );
 
-    const updateUser = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
         expert.userId,
         {
             $set: {

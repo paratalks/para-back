@@ -22,25 +22,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     startTime: string;
     endTime: string;
     status: string;
-    title:string, //constant
-    description:string, //particular time vagerah jab book hua
-    referrer:string, //appointment
-    referrerId: ObjectId,  // appointmentId
-    image:string// paraImage
+    image:string
   };
-
-  // const incomingToken = req.headers.token;
-
-  // if (!incomingToken) {
-  //   throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "unauthorized request");
-  // }
-
-  // const decodedToken: any = jwt.verify(
-  //   incomingToken as string,
-  //   process.env.JWT_SECRET
-  // );
-
-  // const user = await User.findById(decodedToken?.userId);
 
   const user=req.user
   const userId = user._id;
@@ -128,7 +111,7 @@ const getBookedAppointment = asyncHandler(
       const { userId } = req.params;
       const { status }:{status?:string} = req.query;
       const queryObj: Query = { userId };
-      status && (queryObj.status = status);
+      status && (queryObj.status === status);
 
       const appointment = await Appointments.find(queryObj);
 

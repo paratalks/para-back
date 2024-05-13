@@ -32,9 +32,6 @@ export const getSearchResults = asyncHandler(
         ],
       });
 
-    //   if(paraExperts.countDocuments()>10){
-    //     paraExperts = paraExperts.limit(10);
-    //   }
 
       return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
     } catch (error) {
