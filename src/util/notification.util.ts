@@ -3,6 +3,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { Appointments } from "../models/appointments/appointments.model";
 import { Notifications } from "../models/notification/notification.model";
 import { ObjectId } from "mongoose";
+const PushNotifications = require("@pusher/push-notifications-server");
 
 export const notification = async (
   paraExpertId: string,
@@ -51,3 +52,26 @@ export const setFcm = async (userId: ObjectId, data?: string) => {
     return;
   }
 };
+
+export const fcm = ()=>{
+  let beamsClient = new PushNotifications({
+    instanceId: "YOUR_INSTANCE_ID_HERE",
+    secretKey: "YOUR_SECRET_KEY_HERE",
+  });
+
+  beamsClient
+    .publish(["hello"], {
+      fcm: {
+        notification: {
+          title: "Hello",
+          body: "Hello, world!",
+        },
+      },
+    })
+    .then((publishResponse) => {
+      return publishResponse.publishId;
+    })
+    .catch((error) => {
+      return;
+    });
+}
