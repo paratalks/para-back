@@ -5,7 +5,7 @@ import { verifyJWT } from "../../middlewares/auth.middleware";
 
 const router = experss.Router();
 
-router.route("/:paraExpertId/book-appointment").post(verifyJWT,bookAppointment);
+router.route("/:paraExpertId/book-appointment").post(bookAppointment);
 router.route("/:userId/get-appointments").get(getBookedAppointment);
 
 export default router;

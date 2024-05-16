@@ -47,7 +47,17 @@ const updateUserDetails = asyncHandler(
 
 const updateParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, gender, dateOfBirth, interests, phone, expertise, availability, pricing, profilePicture } = req.body as {
+    const {
+      name,
+      gender,
+      dateOfBirth,
+      interests,
+      phone,
+      expertise,
+      availability,
+      packageOption,
+      profilePicture,
+    } = req.body as {
       name: String;
       gender: String;
       dateOfBirth: Date;
@@ -55,11 +65,15 @@ const updateParaExpertDetails = asyncHandler(
       phone: String;
       expertise: String[];
       availability: [{ day: string; slots: string[] }];
-      pricing: number;
+      packageOption: {
+        title: string;
+        type: string;
+        amount: number;
+      }[];
       profilePicture: String;
     };
 
-    if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !pricing || !profilePicture) {
+    if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !packageOption || !profilePicture) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "All fields are required"
@@ -74,7 +88,7 @@ const updateParaExpertDetails = asyncHandler(
         $set: {
           expertise,
           availability,
-          pricing,
+          packageOption,
           profilePicture,
         },
       },

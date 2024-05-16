@@ -1,7 +1,6 @@
 import app from "./app";
 import logger from "./util/logger";
 import * as socketio from "socket.io";
-import Razorpay from "razorpay"
 /**
  * Start Express server.
  */
@@ -18,13 +17,6 @@ const server = app.listen(app.get("port"), () => {
 //     });
 // }, 10000);
 
-
-
-//Razorpay
-export const instance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-})
 
 process.on("SIGTERM", shutDown);
 process.on("SIGINT", shutDown);

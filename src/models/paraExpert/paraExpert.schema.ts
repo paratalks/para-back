@@ -19,9 +19,18 @@ const paraExpertSchema = new mongoose.Schema(
         _id:false,
       },
     ],
-    pricing: {
-      type: Number,
-    },
+    package: [{
+      title:{
+        type:String,
+      },
+      type:{
+        type:String,
+        enum:["online","offline"],
+      },
+      amount:{
+        type:Number,
+      },
+    }],
     profilePicture: {
       type: String,
     },

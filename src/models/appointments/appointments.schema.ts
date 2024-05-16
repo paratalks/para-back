@@ -23,6 +23,13 @@ const appointmentsSchema = new mongoose.Schema({
       enum:["scheduled","cancelled","completed"],
       default:"scheduled",
   },
+  appointmentMode:{
+    type:String,
+    enum:["online","offline"],
+  },
+  callToken:{
+    type:String,
+  },
 },{timestamps: true});
 
 export default appointmentsSchema;

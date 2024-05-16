@@ -11,6 +11,10 @@ export interface parasignupObject {
   interests: string;
   expertise: string;
   availability: { day: number; slots: String }[];
-  pricing: Number;
+  packageOption: {
+    title: string;
+    type: string
+    amount: number
+  }[];
   profilePicture: string;
 }

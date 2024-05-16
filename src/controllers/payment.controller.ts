@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
-import { instance } from "../server";
+import { instance } from "../config/payment";
 import crypto from "node:crypto";
 import { Payment } from "../models/payment/payment.model";
-import Razorpay from "razorpay";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 
@@ -14,10 +13,7 @@ export const checkout = async (req: Request, res: Response) => {
 
   const order = await instance.orders.create(options);
 
-  res.status(200).json({
-    success: true,
-    order,
-  });
+  res.json(new ApiResponse(200,order));
 };
 
 //redirect url

@@ -33,15 +33,11 @@ export const notification = async (
   }
 };
 
-export const setFcm = async (userId: ObjectId, data?: string) => {
+export const setFcm = async (userId: ObjectId, fcmToken: string) => {
   try {
     const user = await User.findById(userId);
     const fcm = {
-      notification: {
-        title: `Appointment successfully booked with ${user.name}`,
-        body: `Appointment booked for ${user.dateOfBirth} from ${user.gender}`,
-      },
-      data,
+      fcmToken,
     };
     const updatedUser = await User.findByIdAndUpdate(user._id, {
       fcm,

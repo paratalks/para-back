@@ -9,6 +9,7 @@ import { getSlotAvailability } from "../util/paraexpert.util";
 import { Notifications } from "../models/notification/notification.model";
 import type { ObjectId } from "mongoose";
 import { notification, setFcm } from "../util/notification.util";
+import axios from "axios";
 
 interface Query {
   userId: string;
@@ -17,12 +18,14 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { date, startTime, endTime, status,image } = req.body as {
+  const { date, startTime, endTime, status,image, amount, appointmentMode } = req.body as {
     date: Date;
     startTime: string;
     endTime: string;
     status: string;
-    image:string
+    image:string;
+    amount:number;
+    appointmentMode:string
   };
 
   const user=req.user
@@ -42,7 +45,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       !date ||
       !startTime ||
       !endTime ||
-      !status
+      !status ||
+      !appointmentMode
     ) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -66,6 +70,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       startTime,
       endTime,
       status,
+      appointmentMode,
     });
 
     if (!appointment) {
@@ -85,7 +90,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to send notification");
     }
 
-    const userWithFcm = setFcm(user._id);
+    const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
 
     if(!userWithFcm){
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to set FCM");

@@ -32,12 +32,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    fcm:{
-      notification:{
-        title:String,
-        body:String
-      },
-      data:String,
+    fcmToken:{//remove, add token
+      type:String,
     },
   },
   { timestamps: true }

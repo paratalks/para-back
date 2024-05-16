@@ -93,7 +93,7 @@ export const paraSignup: RequestHandler = bigPromise(
         interests,
         expertise,
         availability,
-        pricing,
+        packageOption,
         profilePicture,
       }: parasignupObject = req.body;
 
@@ -136,7 +136,7 @@ export const paraSignup: RequestHandler = bigPromise(
           interests,
           expertise,
           availability,
-          pricing,
+          package:packageOption,
           profilePicture,
         });
 

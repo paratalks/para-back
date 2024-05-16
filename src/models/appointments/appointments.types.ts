@@ -7,6 +7,13 @@ export interface appointmentsTypes {
   startTime: string;
   endTime: string;
   status: string;
+  appointmentMode: {
+    type: String;
+    enum: ["online", "offline"];
+  };
+  callToken: {
+    type: String;
+  };
 }
 
 export interface appointmentsDocument
