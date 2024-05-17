@@ -12,6 +12,7 @@ import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import {signupObject, parasignupObject} from "../constants/types"
+import axios from "axios";
 dotenv.config()
 
 const options = {
@@ -241,10 +242,25 @@ export const logout = bigPromise(async (req, res, next) => {
 
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
-    const phone = req.body.phone;
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    const requestID = httpContext.get("requestId");
-    
+    const phone:number = req.body.phone;
+    const otp:number = Math.floor(100000 + Math.random() * 900000);
+    const requestID = httpContext.get("requestId");    
+
+    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+      params: {
+        authorization:
+          "kktG8zKC8TuBevEUVJMKUuyKbcbnudM2UPe6hOuZFoGwvdvtOjYKEcDHw7Yd",
+        variables_values: otp,
+        route: "otp",
+        numbers: phone,
+      },
+    });
+    console.log("------------------------------------------------------------------------------------")
+    console.log("------------------------------------------------------------------------------------")
+    console.log("------------------------------------------------------------------------------------")
+    console.log("------------------------------------------------------------------------------------")
+    console.log(response)
+
       if(await OTP.findOne({phone})){
         const newotp = await OTP.findOneAndUpdate(
           { phone },
@@ -279,7 +295,7 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   } catch (error) {
     console.log(error)
     return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Failed to send OTP")
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Failed to send OTP",error.message)
     );
   }
 });
