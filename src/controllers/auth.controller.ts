@@ -249,17 +249,12 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
     const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
       params: {
         authorization:
-          "kktG8zKC8TuBevEUVJMKUuyKbcbnudM2UPe6hOuZFoGwvdvtOjYKEcDHw7Yd",
+          process.env.FAST2SMS_API_KEY,
         variables_values: otp,
         route: "otp",
         numbers: phone,
       },
     });
-    console.log("------------------------------------------------------------------------------------")
-    console.log("------------------------------------------------------------------------------------")
-    console.log("------------------------------------------------------------------------------------")
-    console.log("------------------------------------------------------------------------------------")
-    console.log(response)
 
       if(await OTP.findOne({phone})){
         const newotp = await OTP.findOneAndUpdate(
