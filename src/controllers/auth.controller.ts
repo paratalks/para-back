@@ -248,15 +248,15 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
     const otp:number = Math.floor(100000 + Math.random() * 900000);
     const requestID = httpContext.get("requestId");    
 
-    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-      params: {
-        authorization:
-          process.env.FAST2SMS_API_KEY,
-        variables_values: otp,
-        route: "otp",
-        numbers: phone,
-      },
-    });
+    // const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+    //   params: {
+    //     authorization:
+    //       process.env.FAST2SMS_API_KEY,
+    //     variables_values: otp,
+    //     route: "otp",
+    //     numbers: phone,
+    //   },
+    // });
 
       if(await OTP.findOne({phone})){
         const newotp = await OTP.findOneAndUpdate(
