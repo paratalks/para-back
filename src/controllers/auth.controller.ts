@@ -69,11 +69,7 @@ export const signup: RequestHandler = bigPromise(
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
-        const response = sendSuccessApiResponse(
-          "User Registered Successfully!",
-          data
-        );
-        res.json(new ApiResponse(200, response));
+        res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {
         throw new ApiError(
           ResponseStatusCode.INTERNAL_SERVER_ERROR,
@@ -123,6 +119,7 @@ export const paraSignup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
+        interests
       };
 
       if (user) {
