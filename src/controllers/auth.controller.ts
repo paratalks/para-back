@@ -57,8 +57,6 @@ export const signup: RequestHandler = bigPromise(
         interests,
       };
 
-
-
       if (user) {
 
         const updatedUser: any = await User.findOneAndUpdate(
@@ -69,11 +67,7 @@ export const signup: RequestHandler = bigPromise(
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
-        const response = sendSuccessApiResponse(
-          "User Registered Successfully!",
-          data
-        );
-        res.json(new ApiResponse(200, response));
+        res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {
         throw new ApiError(
           ResponseStatusCode.INTERNAL_SERVER_ERROR,
