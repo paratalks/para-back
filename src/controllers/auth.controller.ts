@@ -57,8 +57,6 @@ export const signup: RequestHandler = bigPromise(
         interests,
       };
 
-
-
       if (user) {
 
         const updatedUser: any = await User.findOneAndUpdate(
