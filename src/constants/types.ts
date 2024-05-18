@@ -2,6 +2,7 @@ export interface signupObject {
   name: string;
   gender: string;
   dateOfBirth: Date;
+  interests:[string];
 }
 
 export interface parasignupObject {

@@ -27,11 +27,12 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
+        interests,
       }: signupObject = req.body;
 
       
 
-      if (!name || !gender) {
+      if (!name || !gender || !dateOfBirth || !interests) {
           throw new ApiError(
             ResponseStatusCode.BAD_REQUEST,
             "All fields are required"
@@ -53,6 +54,7 @@ export const signup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
+        interests,
       };
 
 
