@@ -22,7 +22,7 @@ router.use("/payment",paymentRoute)
 router.get("/", (req, res) => {
     return res.status(200).send({
         uptime: process.uptime(),
-        message: "Yash's API health check :: GOOD",
+        message: "Paratalks API health check :: GOOD",
         timestamp: Date.now(),
     });
 });

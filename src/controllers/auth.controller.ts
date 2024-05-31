@@ -241,6 +241,9 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
     const phone:number = req.body.phone;
   
+
+
+    //for testing
     const otp:number = phone === 999999999 ? (123456): (Math.floor(100000 + Math.random() * 900000));
     const requestID = httpContext.get("requestId");    
     
