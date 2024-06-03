@@ -15,9 +15,9 @@ const router = express.Router();
 //     .route("/") //
 //     .get(authorization, getAllUsers);
 
-router.route("/:paraExpertId/set-availability").patch(verifyJWT,setAvailability);
-router.route("/:userId/update-user").patch(verifyJWT,updateUserDetails);
-router.route("/:paraExpertId/update-para").patch(verifyJWT,updateParaExpertDetails);
+router.route("/set-availability").patch(verifyJWT,setAvailability);
+router.route("/update-user").patch(verifyJWT,updateUserDetails);
+router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 
 
 export default router;

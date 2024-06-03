@@ -41,3 +41,17 @@ export const getSearchResults = asyncHandler(
     }
   }
 );
+
+export const getAll = asyncHandler(
+  async(req:Request, res:Response)=>{
+    try{
+      const categories = listCategories();
+      const paraExperts:any = await ParaExpert.find().limit(10) 
+      return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, {categories, paraExperts}));
+    } catch(error){
+      return res.json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+      );
+    }
+  }
+)

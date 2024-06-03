@@ -22,7 +22,7 @@ const updateUserDetails = asyncHandler(
     }
 
     const user = await User.findByIdAndUpdate(
-      req.params.userId,
+      req.user._id,
       {
         $set: {
           name,
@@ -80,10 +80,10 @@ const updateParaExpertDetails = asyncHandler(
       );
     }
 
-    const paraExpertId = req.params;
+    const paraExpertId = req.user._id;
 
     const user = await ParaExpert.findByIdAndUpdate(
-      req.params.paraExpertId,
+      paraExpertId,
       {
         $set: {
           expertise,
@@ -95,7 +95,7 @@ const updateParaExpertDetails = asyncHandler(
       { new: true }
     );
 
-    const expert = await ParaExpert.findById( req.params.paraExpertId );
+    const expert = await ParaExpert.findById( paraExpertId );
 
     await User.findByIdAndUpdate(
         expert.userId,
@@ -144,7 +144,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const paraExpert = await ParaExpert.findByIdAndUpdate(
-      req.params.paraExpertId,
+      req.user._id,
       {
         $set: {
           availability,

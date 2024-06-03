@@ -4,7 +4,7 @@ import { verifyJWT } from "../../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.route("/:paraExpertId/get-bookings").get(verifyJWT,getBookings)
+router.route("/get-bookings").get(verifyJWT,getBookings)
 router.route("/get-available-slots").get(getParaExpertAvailability);
 
 

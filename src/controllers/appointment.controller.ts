@@ -12,7 +12,7 @@ import { notification, setFcm } from "../util/notification.util";
 import axios from "axios";
 
 interface Query {
-  userId: string;
+  userId: ObjectId;
   status?: string;
 }
 
@@ -113,7 +113,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { userId } = req.params;
+      const userId = req.user._id;
       const { status }:{status?:string} = req.query;
       const queryObj: Query = { userId };
       status && (queryObj.status === status);
@@ -197,7 +197,7 @@ const getParaExpertAvailability = asyncHandler(
 //paraexpert
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { paraExpertId } = req.params;
+    const paraExpertId = req.user._id;
     const appointments = await Appointments.find({ paraExpertId });
     return res.json(
       new ApiResponse(

@@ -10,8 +10,8 @@ export interface parasignupObject {
   gender: string;
   dateOfBirth: Date;
   interests: [string];
-  expertise: string;
-  availability: { day: number; slots: String }[];
+  expertise: [string];
+  availability: { day: number; slots: String[] }[];
   packageOption: {
     title: string;
     type: string
