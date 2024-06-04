@@ -2,7 +2,6 @@ import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import bigPromise from "../middlewares/bigPromise";
-import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { OTP } from "../models/otp/otp.model";
@@ -13,7 +12,6 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import {signupObject, parasignupObject} from "../constants/types"
 import axios from "axios";
-import { userTypes } from "../models/user/user.types";
 dotenv.config()
 
 const options = {
@@ -45,7 +43,7 @@ export const signup: RequestHandler = bigPromise(
       // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
       // const user = await User.findOne({ _id: decode.userId });
 
-      const user:userTypes= req.user;
+      const user:any= req.user;
 
       if (user && user.name && user.gender && user.dateOfBirth ) {
         return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
@@ -99,7 +97,7 @@ export const paraSignup: RequestHandler = bigPromise(
       }: parasignupObject = req.body;
 
 
-      const user:userTypes=req.user;
+      const user:any=req.user;
 
       if (user && user.name && user.gender && user.dateOfBirth ) {
         return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
