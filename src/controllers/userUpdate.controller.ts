@@ -9,13 +9,13 @@ import { ResponseStatusCode } from "../constants/constants";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, gender, dateOfBirth, interests, phone } = req.body as {
+    const { name, gender, interests, phone } = req.body as {
       name: String;
       gender: String;
-      dateOfBirth: Date;
       interests: [String];
       phone: String;
     };
+    const dateOfBirth = new Date(req.body.dateOfBirth)
 
     if (!name || !gender || !dateOfBirth || !interests || !phone) {
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "All fields are required");
@@ -50,7 +50,6 @@ const updateParaExpertDetails = asyncHandler(
     const {
       name,
       gender,
-      dateOfBirth,
       interests,
       phone,
       expertise,
@@ -60,7 +59,6 @@ const updateParaExpertDetails = asyncHandler(
     } = req.body as {
       name: String;
       gender: String;
-      dateOfBirth: Date;
       interests: [String];
       phone: String;
       expertise: String[];
@@ -73,6 +71,8 @@ const updateParaExpertDetails = asyncHandler(
       profilePicture: String;
     };
 
+    const dateOfBirth=new Date(req.body.dateOfBirth)
+    
     if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !packageOption || !profilePicture) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -80,10 +80,11 @@ const updateParaExpertDetails = asyncHandler(
       );
     }
 
-    const paraExpertId = req.user._id;
+    const paraExpert = req.user;
+    const paraExpertId=paraExpert._id
 
-    const user = await ParaExpert.findByIdAndUpdate(
-      paraExpertId,
+    const user = await ParaExpert.findOneAndUpdate(
+      {userId:paraExpertId},
       {
         $set: {
           expertise,
@@ -98,7 +99,7 @@ const updateParaExpertDetails = asyncHandler(
     const expert = await ParaExpert.findById( paraExpertId );
 
     await User.findByIdAndUpdate(
-        expert.userId,
+        paraExpertId,
         {
             $set: {
                 name,
@@ -128,6 +129,11 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
       availability: [{ day: number; slots: [string] }];
     };
 
+    const user = req.user;
+    const userId = user._id;
+    const para = await ParaExpert.findOne({ userId });
+    const paraExpertId = para._id;
+
     if (!availability) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -144,7 +150,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const paraExpert = await ParaExpert.findByIdAndUpdate(
-      req.user._id,
+      paraExpertId,
       {
         $set: {
           availability,

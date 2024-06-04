@@ -10,6 +10,7 @@ import { Notifications } from "../models/notification/notification.model";
 import type { ObjectId } from "mongoose";
 import { notification, setFcm } from "../util/notification.util";
 import axios from "axios";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 
 interface Query {
   userId: ObjectId;
@@ -18,8 +19,7 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { date, startTime, endTime, status,image, amount, appointmentMode } = req.body as {
-    date: Date;
+  const { startTime, endTime, status,image, amount, appointmentMode } = req.body as {
     startTime: string;
     endTime: string;
     status: string;
@@ -27,6 +27,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     amount:number;
     appointmentMode:string
   };
+
+  const date = new Date(req.body.date)
 
   const user=req.user
   const userId = user._id;
@@ -113,7 +115,9 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const userId = req.user._id;
+      const user = req.user;
+      console.log("user",user)
+      const userId=user._id;
       const { status }:{status?:string} = req.query;
       const queryObj: Query = { userId };
       status && (queryObj.status === status);
@@ -197,8 +201,11 @@ const getParaExpertAvailability = asyncHandler(
 //paraexpert
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const paraExpertId = req.user._id;
-    const appointments = await Appointments.find({ paraExpertId });
+    const user = req.user;
+    const userId=user._id
+    const paraExpert=await ParaExpert.findOne({userId})
+    const paraExpertId=paraExpert._id
+    const appointments = await Appointments.find({ paraExpertId});
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
