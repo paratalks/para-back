@@ -53,7 +53,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "All fields are required"
       );
     }
-
+    console.log(typeof(date))
     const isSlotAvailable = getSlotAvailability(paraExpertId, date, startTime, endTime);
 
     if (!isSlotAvailable) {
