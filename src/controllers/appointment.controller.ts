@@ -92,11 +92,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to send notification");
     }
 
-    const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
+    // const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
 
-    if(!userWithFcm){
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to set FCM");
-    }
+    // if(!userWithFcm){
+    //   throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to set FCM");
+    // }
 
     return res.json(
       new ApiResponse(

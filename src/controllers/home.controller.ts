@@ -6,6 +6,7 @@ import { ResponseStatusCode } from "../constants/constants";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { paraExpertTypes } from "../models/paraExpert/paraExpert.types";
+import { userTypes } from "../models/user/user.types";
 
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
@@ -47,7 +48,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
     const categories = listCategories();
     const paraExperts: paraExpertTypes[] = await ParaExpert.find().limit(10);
 
-    const paraExpertUsers: { expertDetails: paraExpertTypes; userDetails: UserTypes }[] =
+    const paraExpertUsers: { expertDetails: paraExpertTypes; userDetails: userTypes }[] =
       await Promise.all(
         paraExperts.map(async (paraExpert) => {
           const user = await User.findById(paraExpert.userId);

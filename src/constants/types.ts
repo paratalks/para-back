@@ -3,6 +3,7 @@ export interface signupObject {
   gender: string;
   dateOfBirth: Date;
   interests:[string];
+  fcmToken:string;
 }
 
 export interface parasignupObject {
@@ -10,12 +11,13 @@ export interface parasignupObject {
   gender: string;
   dateOfBirth: Date;
   interests: [string];
+  fcmToken: string;
   expertise: [string];
   availability: { day: number; slots: String[] }[];
   packageOption: {
     title: string;
-    type: string
-    amount: number
+    type: string;
+    amount: number;
   }[];
   profilePicture: string;
 }

@@ -13,6 +13,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import {signupObject, parasignupObject} from "../constants/types"
 import axios from "axios";
+import { userTypes } from "../models/user/user.types";
 dotenv.config()
 
 const options = {
@@ -28,11 +29,12 @@ export const signup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
+        fcmToken
       }: signupObject = req.body;
 
       
 
-      if (!name || !gender || !dateOfBirth || !interests) {
+      if (!name || !gender || !dateOfBirth || !interests || !fcmToken) {
           throw new ApiError(
             ResponseStatusCode.BAD_REQUEST,
             "All fields are required"
@@ -43,18 +45,19 @@ export const signup: RequestHandler = bigPromise(
       // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
       // const user = await User.findOne({ _id: decode.userId });
 
-      const user= req.user;
+      const user:userTypes= req.user;
 
-      /* if (user && user.name && user.gender && user.dateOfBirth ) {
+      if (user && user.name && user.gender && user.dateOfBirth ) {
         return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
         throw new ApiError(400, "User already exist");
-      }*/
+      }
 
       const toStore: signupObject = {
         name,
         gender,
         dateOfBirth,
         interests,
+        fcmToken
       };
 
       if (user) {
@@ -88,22 +91,20 @@ export const paraSignup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
+        fcmToken,
         expertise,
         availability,
         packageOption,
         profilePicture,
       }: parasignupObject = req.body;
 
-      // const token = req.headers.token;
-      // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
-      // const user = await User.findOne({ _id: decode.userId });
 
-      const user=req.user;
+      const user:userTypes=req.user;
 
-      // if (user && user.name && user.gender && user.dateOfBirth ) {
-      //   return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
-      //   throw new ApiError(400, "User already exist");
-      // }
+      if (user && user.name && user.gender && user.dateOfBirth ) {
+        return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+        throw new ApiError(400, "User already exist");
+      }
 
       if (
         availability.filter((item) => item.day < 0 || item.day > 6).length > 0
@@ -117,7 +118,8 @@ export const paraSignup: RequestHandler = bigPromise(
         name,
         gender,
         dateOfBirth,
-        interests
+        interests,
+        fcmToken
       };
 
       if (user) {

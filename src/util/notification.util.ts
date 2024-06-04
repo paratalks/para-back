@@ -3,7 +3,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { Appointments } from "../models/appointments/appointments.model";
 import { Notifications } from "../models/notification/notification.model";
 import { ObjectId } from "mongoose";
-// const PushNotifications = require("@pusher/push-notifications-server");
+const PushNotifications = require("@pusher/push-notifications-server");
 
 export const notification = async (
   paraExpertId: string,
@@ -64,10 +64,10 @@ export const fcm = ()=>{
         },
       },
     })
-    .then((publishResponse) => {
+    .then((publishResponse: { publishId: any; }) => {
       return publishResponse.publishId;
     })
-    .catch((error) => {
+    .catch((error:any) => {
       return;
     });
 }
