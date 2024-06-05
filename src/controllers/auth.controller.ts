@@ -92,8 +92,13 @@ export const paraSignup: RequestHandler = bigPromise(
         fcmToken,
         expertise,
         availability,
-        packageOption,
+        packages,
         profilePicture,
+        ratings,
+        bio,
+        basedOn,
+        qualifications,
+        reviews,
       }: parasignupObject = req.body;
 
 
@@ -134,8 +139,13 @@ export const paraSignup: RequestHandler = bigPromise(
           interests,
           expertise,
           availability,
-          package:packageOption,
+          packages,
           profilePicture,
+          ratings,
+          bio,
+          basedOn,
+          qualifications,
+          reviews,
         });
 
         await paraExpert.save();
@@ -245,12 +255,12 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
 
     //for testing
     const otp: number =
-      phone === 9999999999||8888888888
+      phone === 9999999999||8888888888||6666666666
         ? 123456
         : Math.floor(100000 + Math.random() * 900000);
     const requestID = httpContext.get("requestId");    
     
-    if (phone !== 9999999999 || 8888888888) {
+    if (phone !== 9999999999 || 8888888888 || 6666666666) {
       const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: process.env.FAST2SMS_API_KEY,

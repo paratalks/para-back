@@ -7,13 +7,7 @@ export interface userTypes {
     interests: [String],
     phone:String,
     refreshToken:String,
-    fcm:{
-        notification:{
-            title:String,
-            body:String,
-        },
-        data:String,
-    },
+    fcmToken:String,
 };
 
 export interface userSchemaDocument extends userTypes , Document {}

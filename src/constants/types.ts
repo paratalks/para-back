@@ -14,10 +14,53 @@ export interface parasignupObject {
   fcmToken: string;
   expertise: [string];
   availability: { day: number; slots: String[] }[];
-  packageOption: {
+  packages: {
     title: string;
-    type: string;
+    type: {
+      type: String;
+      enum: ["online", "offline"];
+    };
+    description: String;
     amount: number;
   }[];
   profilePicture: string;
+  ratings: Number;
+  bio: String;
+  basedOn: String;
+  qualifications: [
+    {
+      title: String;
+      certificateUrls: [String];
+    }
+  ];
+  reviews: [string];
+}
+
+export interface paraUpdateObject {
+  name: String;
+  gender: String;
+  interests: [String];
+  phone: String;
+  expertise: String[];
+  availability: [{ day: string; slots: string[] }];
+  packages: {
+    title: string;
+    type: {
+      type: String;
+      enum: ["online", "offline"];
+    };
+    description: String;
+    amount: number;
+  }[];
+  profilePicture: String;
+  ratings: Number;
+  bio: String;
+  basedOn: String;
+  qualifications: [
+    {
+      title: String;
+      certificateUrls: [String];
+    }
+  ];
+  reviews: [string];
 }

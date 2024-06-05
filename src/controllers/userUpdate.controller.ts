@@ -6,6 +6,8 @@ import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
+import { paraUpdateObject } from "../constants/types";
+import { ObjectId } from "mongoose";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -54,26 +56,18 @@ const updateParaExpertDetails = asyncHandler(
       phone,
       expertise,
       availability,
-      packageOption,
+      packages,
       profilePicture,
-    } = req.body as {
-      name: String;
-      gender: String;
-      interests: [String];
-      phone: String;
-      expertise: String[];
-      availability: [{ day: string; slots: string[] }];
-      packageOption: {
-        title: string;
-        type: string;
-        amount: number;
-      }[];
-      profilePicture: String;
-    };
+      ratings,
+      bio,
+      basedOn,
+      qualifications,
+      reviews,
+    }:paraUpdateObject = req.body 
 
     const dateOfBirth=new Date(req.body.dateOfBirth)
     
-    if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !packageOption || !profilePicture) {
+    if (!name || !gender || !dateOfBirth || !interests || !phone || !expertise || !availability || !packages || !profilePicture) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "All fields are required"
@@ -84,17 +78,23 @@ const updateParaExpertDetails = asyncHandler(
     const paraExpertId=paraExpert._id
 
     const user = await ParaExpert.findOneAndUpdate(
-      {userId:paraExpertId},
+      { userId: paraExpertId },
       {
         $set: {
           expertise,
           availability,
-          packageOption,
+          packages,
           profilePicture,
+          ratings,
+          bio,
+          basedOn,
+          qualifications,
+          reviews,
         },
       },
       { new: true }
     );
+    console.log(user)
 
     const expert = await ParaExpert.findById( paraExpertId );
 

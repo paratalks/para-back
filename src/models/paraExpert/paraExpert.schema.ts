@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { title } from "node:process";
 
 const paraExpertSchema = new mongoose.Schema(
   {
@@ -19,7 +20,7 @@ const paraExpertSchema = new mongoose.Schema(
         _id:false,
       },
     ],
-    package: [{
+    packages: [{
       title:{
         type:String,
       },
@@ -27,12 +28,35 @@ const paraExpertSchema = new mongoose.Schema(
         type:String,
         enum:["online","offline"],
       },
+      description:{
+        type:String,
+      },
       amount:{
         type:Number,
       },
     }],
     profilePicture: {
       type: String,
+    },
+    ratings:{
+      type:Number,
+    },
+    bio:{
+      type:String,
+    },
+    basedOn:{
+      type:String,
+    },
+    qualifications:[{
+      title:{
+        type:String,
+      },
+      certificateUrls:{
+        type:[String],
+      }
+    }],
+    reviews:{
+      type:[String],
     },
   },
   { timestamps: true }
