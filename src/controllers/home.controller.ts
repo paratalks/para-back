@@ -9,6 +9,7 @@ import { paraExpertTypes } from "../models/paraExpert/paraExpert.types";
 import { ObjectId } from "mongoose";
 
 interface paraSearch {
+  name:String;
   bio: String;
   basedOn: String;
   qualifications: [
@@ -90,8 +91,8 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
   try {
     const { id } = req.params;
     const paraExpert = await ParaExpert.findById(id);
-    console.log(paraExpert)
-    const result:paraSearch={bio:paraExpert.bio,basedOn:paraExpert.basedOn,qualifications:paraExpert.qualifications,packages:paraExpert.packages,reviews:paraExpert.reviews}
+    const user = await User.findById(paraExpert.userId);
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );
