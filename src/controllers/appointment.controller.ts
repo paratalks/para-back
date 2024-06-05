@@ -11,6 +11,8 @@ import type { ObjectId } from "mongoose";
 import { notification, setFcm } from "../util/notification.util";
 import axios from "axios";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
+import { generateRtcToken } from "../util/token.util";
+import { User } from "../models/user/user.model";
 
 interface Query {
   userId: ObjectId;
@@ -19,18 +21,19 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { startTime, endTime, status,image, amount, appointmentMode } = req.body as {
-    startTime: string;
-    endTime: string;
-    status: string;
-    image:string;
-    amount:number;
-    appointmentMode:string
-  };
+  const { startTime, endTime, status, image, amount, appointmentMode } =
+    req.body as {
+      startTime: string;
+      endTime: string;
+      status: string;
+      image: string;
+      amount: number;
+      appointmentMode: string;
+    };
 
-  const date = new Date(req.body.date)
+  const date = new Date(req.body.date);
 
-  const user=req.user
+  const user = req.user;
   const userId = user._id;
   if (!user) {
     throw new ApiError(
@@ -55,13 +58,26 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "All fields are required"
       );
     }
-    console.log(typeof(date))
-    const isSlotAvailable = getSlotAvailability(paraExpertId, date, startTime, endTime);
+    const isSlotAvailable = getSlotAvailability(
+      paraExpertId,
+      date,
+      startTime,
+      endTime
+    );
 
     if (!isSlotAvailable) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Availability not found for the given date"
+      );
+    }
+
+    const callToken = generateRtcToken();
+
+    if (!callToken) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create token"
       );
     }
 
@@ -73,6 +89,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       endTime,
       status,
       appointmentMode,
+      callToken,
     });
 
     if (!appointment) {
@@ -82,14 +99,17 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const createNotification =  notification(
+    const createNotification = notification(
       paraExpertId,
-      appointment._id, 
+      appointment._id,
       image
-    )
+    );
 
-    if(!createNotification){
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to send notification");
+    if (!createNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to send notification"
+      );
     }
 
     // const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
@@ -105,7 +125,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Appointment created successfully"
       )
     );
-    
   } catch (error) {
     throw new ApiError(ResponseStatusCode.UNAUTHORIZED, error?.message);
   }
@@ -116,11 +135,11 @@ const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
-      console.log("user",user)
-      const userId=user._id;
-      const { status }:{status?:string} = req.query;
+      console.log("user", user);
+      const userId = user._id;
+      const { status }: { status?: string } = req.query;
       const queryObj: Query = { userId };
-      status && (queryObj.status === status);
+      status && queryObj.status === status;
 
       const appointment = await Appointments.find(queryObj);
 
@@ -202,15 +221,63 @@ const getParaExpertAvailability = asyncHandler(
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
     const user = req.user;
-    const userId=user._id
-    const paraExpert=await ParaExpert.findOne({userId})
-    const paraExpertId=paraExpert._id
-    const appointments = await Appointments.find({ paraExpertId});
+    const userId = user._id;
+    const paraExpert = await ParaExpert.findOne({ userId });
+    const paraExpertId = paraExpert._id;
+    const appointments = await Appointments.find({ paraExpertId });
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         appointments,
         "Appointmnet fetched successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+});
+
+const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { id, status, startTime, endTime, appointmentMode } = req.body;
+
+    const date = new Date(req.body.date);
+
+    const appointment = await Appointments.findByIdAndUpdate(
+      id,
+      { $set: { date, startTime, endTime, status, appointmentMode } },
+      { new: true }
+    );
+
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        appointment,
+        "Appointment updates successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+});
+
+const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointments.findById(id);
+    const paraExpert = await ParaExpert.findById(appointment.paraExpertId);
+    const user = await User.findById(appointment.userId)
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        { appointment, paraExpert, user },
+        "Appointment fetched successfully"
       )
     );
   } catch (error) {
@@ -227,4 +294,6 @@ export {
   getBookings,
   getParaExpertTimeSlot,
   getParaExpertAvailability,
+  updateAppointment,
+  getAppointmentById,
 };
