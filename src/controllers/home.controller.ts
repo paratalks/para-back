@@ -88,7 +88,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
 
 export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)=>{
   try {
-    const { id } = req.body;
+    const { id } = req.params;
     const paraExpert = await ParaExpert.findById(id);
     console.log(paraExpert)
     const result:paraSearch={bio:paraExpert.bio,basedOn:paraExpert.basedOn,qualifications:paraExpert.qualifications,packages:paraExpert.packages,reviews:paraExpert.reviews}
