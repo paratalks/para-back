@@ -143,10 +143,16 @@ const getBookedAppointment = asyncHandler(
 
       const appointment = await Appointments.find(queryObj);
 
+      const result = await Promise.all( appointment.map(async(item)=>{
+        const expert = await ParaExpert.findById(item.paraExpertId)
+        const paraUser = await User.findById(expert.userId)
+        return{appointment:item, paraExpertName:paraUser.name, paraExpert:expert}
+      }))
+
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          appointment,
+          result,
           "Appointmnet fetched successfully"
         )
       );
@@ -272,11 +278,12 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const appointment = await Appointments.findById(id);
     const paraExpert = await ParaExpert.findById(appointment.paraExpertId);
+    const paraUser = await User.findById(paraExpert.userId);
     const user = await User.findById(appointment.userId)
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        { appointment, paraExpert, user },
+        { appointment, paraExpertName:paraUser.name, paraExpert, user },
         "Appointment fetched successfully"
       )
     );

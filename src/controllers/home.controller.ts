@@ -28,6 +28,7 @@ interface paraSearch {
     amount: Number;
   }[];
   reviews: [string];
+  image:string;
 }
 
 export const getCategories = asyncHandler(
@@ -92,7 +93,7 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
     const { id } = req.params;
     const paraExpert = await ParaExpert.findById(id);
     const user = await User.findById(paraExpert.userId);
-    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews}
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews, image:paraExpert.profilePicture}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );
