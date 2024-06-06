@@ -174,4 +174,4 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
-export { updateUserDetails, updateParaExpertDetails, setAvailability, updatep };
+export { updateUserDetails, updateParaExpertDetails, setAvailability };
