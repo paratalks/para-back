@@ -121,7 +121,6 @@ const updateParaExpertDetails = asyncHandler(
     );
   }
 );
-
 //paraexpert
 const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -175,4 +174,4 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
-export { updateUserDetails, updateParaExpertDetails, setAvailability };
+export { updateUserDetails, updateParaExpertDetails, setAvailability, updatep };
