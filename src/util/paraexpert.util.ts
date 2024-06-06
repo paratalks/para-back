@@ -44,7 +44,7 @@ export const getSlotAvailability = async (
 ) => {
   const availability: String[] = await getAvailableSlots(paraExpertId, date);
   const slots = availability?.find(
-    (slot) => slot.split("-")[0] === startTime && slot.split("-")[1] === endTime
+    (slot) => slot.split("-")[0] === startTime //&& slot.split("-")[1] === endTime
   );
   if (slots) {
     return true;

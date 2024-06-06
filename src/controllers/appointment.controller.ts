@@ -6,10 +6,8 @@ import { Appointments } from "../models/appointments/appointments.model";
 import { getAvailableSlots } from "../util/paraexpert.util";
 import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
-import { Notifications } from "../models/notification/notification.model";
 import type { ObjectId } from "mongoose";
-import { notification, setFcm } from "../util/notification.util";
-import axios from "axios";
+import { notification } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
@@ -35,7 +33,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
   const user = req.user;
   const userId = user._id;
-  if (!user) {
+  if (!userId) {
     throw new ApiError(
       ResponseStatusCode.UNAUTHORIZED,
       "Invalid refresh token"
@@ -58,7 +56,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "All fields are required"
       );
     }
-    const isSlotAvailable = getSlotAvailability(
+    const isSlotAvailable = await getSlotAvailability(
       paraExpertId,
       date,
       startTime,

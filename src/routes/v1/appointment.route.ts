@@ -6,8 +6,8 @@ import { verifyJWT } from "../../middlewares/auth.middleware";
 const router = experss.Router();
 
 router
-  .route("/book-appointment/:paraExpertId")
-  .post(verifyJWT, bookAppointment);
+  .route("/book-appointment/:paraExpertId/:userId")
+  .post(verifyJWT,bookAppointment);
 router.route("/get-appointments").get(verifyJWT,getBookedAppointment);
 router.route("/update-appointments").patch(updateAppointment);
 router.route("/appointment/:id").get(getAppointmentById);
