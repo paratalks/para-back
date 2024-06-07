@@ -12,6 +12,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import {signupObject, parasignupObject} from "../constants/types"
 import axios from "axios";
+import { notification } from "../util/notification.util";
 dotenv.config()
 
 const options = {
@@ -39,10 +40,6 @@ export const signup: RequestHandler = bigPromise(
           );
       }
 
-      // const token = req.headers.token;
-      // const decode: any = jwt.verify(token as string, process.env.JWT_SECRET);
-      // const user = await User.findOne({ _id: decode.userId });
-
       const user:any= req.user;
 
       if (user && user.name && user.gender && user.dateOfBirth ) {
@@ -67,6 +64,20 @@ export const signup: RequestHandler = bigPromise(
         );
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
+
+        const createNotification = notification(
+          "Welcome to Paratalks",
+          "Open the doors to a world of peace and serenity!",
+          null,
+          null
+        );
+
+        if (!createNotification) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Failed to send notification"
+          );
+        }
 
         res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {
@@ -149,6 +160,20 @@ export const paraSignup: RequestHandler = bigPromise(
         });
 
         await paraExpert.save();
+
+        const createNotification = notification(
+          "Welcome to Paratalks",
+          "Open the doors to a world of peace and serenity!",
+          null,
+          null
+        );
+
+        if (!createNotification) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Failed to send notification"
+          );
+        }
         
         res
           .cookie("token", token, options)

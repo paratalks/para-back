@@ -30,6 +30,12 @@ const appointmentsSchema = new mongoose.Schema({
   callToken:{
     type:String,
   },
+  problem:{
+    type:[String],
+  },
+  reason:{
+    type:String,
+  }
 },{timestamps: true});
 
 export default appointmentsSchema;

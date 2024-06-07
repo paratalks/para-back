@@ -11,6 +11,7 @@ import { notification } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
+import { title } from "node:process";
 
 interface Query {
   userId: ObjectId;
@@ -19,7 +20,7 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { startTime, endTime, status, image, amount, appointmentMode } =
+  const { startTime, endTime, status, image, amount, appointmentMode, problem } =
     req.body as {
       startTime: string;
       endTime: string;
@@ -27,6 +28,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       image: string;
       amount: number;
       appointmentMode: string;
+      problem: string[];
     };
 
   const date = new Date(req.body.date);
@@ -49,7 +51,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       !startTime ||
       !endTime ||
       !status ||
-      !appointmentMode
+      !appointmentMode ||
+      !problem
     ) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -88,6 +91,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       status,
       appointmentMode,
       callToken,
+      problem,
     });
 
     if (!appointment) {
@@ -97,11 +101,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const createNotification = notification(
-      paraExpertId,
-      appointment._id,
-      image
-    );
+    const createNotification = notification("Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
 
     if (!createNotification) {
       throw new ApiError(
@@ -246,15 +246,36 @@ const getBookings = asyncHandler(async (req: Request, res: Response) => {
 
 const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { id, status, startTime, endTime, appointmentMode } = req.body;
+    const { id, status, startTime, endTime, appointmentMode, problem, reason } = req.body;
 
     const date = new Date(req.body.date);
 
     const appointment = await Appointments.findByIdAndUpdate(
       id,
-      { $set: { date, startTime, endTime, status, appointmentMode } },
+      { $set: { date, startTime, endTime, status, appointmentMode, problem, reason } },
       { new: true }
     );
+
+    if(!appointment){
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Appointment not found"
+      );
+    }
+
+    const createNotification = notification(
+      "Appointment updated successfully",
+      `Appointment ${status}`,
+      "appointment",
+      appointment._id
+    );
+
+    if (!createNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to send notification"
+      );
+    }
 
     return res.json(
       new ApiResponse(

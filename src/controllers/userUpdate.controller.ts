@@ -173,5 +173,26 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+const getUserById =  asyncHandler(async (req: Request, res: Response) => {
+  try{
+    const {userId} = req.params
+    const user = await User.findById(userId)
+    if(!user){
+      return res.json(new ApiResponse(ResponseStatusCode.NOT_FOUND,{},"user not found"))
+    }
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS,user,"user found successfully"))
+  }catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+})
 
-export { updateUserDetails, updateParaExpertDetails, setAvailability };
+
+export {
+  updateUserDetails,
+  updateParaExpertDetails,
+  setAvailability,
+  getUserById,
+};

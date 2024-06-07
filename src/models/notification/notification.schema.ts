@@ -8,14 +8,11 @@ const notificationSchema =new Schema({
         type:String,
     },
     referrer:{
-        
+        type:String,
     },
     referrerId:{
         type: mongoose.Schema.Types.ObjectId
     },
-    image:{
-        type:String,
-    }
 },{timestamps: true})
 
 export default notificationSchema;

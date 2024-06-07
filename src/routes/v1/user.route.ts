@@ -1,6 +1,11 @@
 import express from "express";
 import { verifyJWT } from "../../middlewares/auth.middleware";
-import { setAvailability, updateUserDetails, updateParaExpertDetails } from "../../controllers/userUpdate.controller";
+import {
+  setAvailability,
+  updateUserDetails,
+  updateParaExpertDetails,
+  getUserById,
+} from "../../controllers/userUpdate.controller";
 
 
 // /**
@@ -18,6 +23,7 @@ const router = express.Router();
 router.route("/set-availability").patch(verifyJWT,setAvailability);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
+router.route("/:userId").get(getUserById);
 
 
 export default router;

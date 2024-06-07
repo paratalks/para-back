@@ -14,6 +14,8 @@ export interface appointmentsTypes {
   callToken: {
     type: String;
   };
+  problem:string[];
+  reason:string;
 }
 
 export interface appointmentsDocument
