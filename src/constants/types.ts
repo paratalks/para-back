@@ -2,8 +2,9 @@ export interface signupObject {
   name: string;
   gender: string;
   dateOfBirth: Date;
-  interests:[string];
-  fcmToken:string;
+  interests: [string];
+  profilePicture: string;
+  fcmToken: string;
 }
 
 export interface parasignupObject {

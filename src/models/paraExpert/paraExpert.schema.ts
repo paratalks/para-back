@@ -35,9 +35,6 @@ const paraExpertSchema = new mongoose.Schema(
         type:Number,
       },
     }],
-    profilePicture: {
-      type: String,
-    },
     ratings:{
       type:Number,
     },

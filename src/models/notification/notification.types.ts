@@ -1,6 +1,7 @@
 import type { Document,Model,ObjectId } from "mongoose";
 
 export interface notifocationTypes {
+    userId:ObjectId,
     title: string,
     description:string,
     referrer: string,

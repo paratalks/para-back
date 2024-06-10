@@ -15,7 +15,6 @@ export interface paraExpertTypes {
       amount: Number;
     }
   ];
-  profilePicture: string;
   ratings: Number;
   bio: String;
   basedOn: String;

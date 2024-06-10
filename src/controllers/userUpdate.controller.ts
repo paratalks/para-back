@@ -8,13 +8,15 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { paraUpdateObject } from "../constants/types";
 import { ObjectId } from "mongoose";
+import { Notifications } from "../models/notification/notification.model";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, gender, interests, phone } = req.body as {
+    const { name, gender, interests, profilePicture, phone } = req.body as {
       name: String;
       gender: String;
       interests: [String];
+      profilePicture: String;
       phone: String;
     };
     const dateOfBirth = new Date(req.body.dateOfBirth)
@@ -31,6 +33,7 @@ const updateUserDetails = asyncHandler(
           gender,
           dateOfBirth,
           interests,
+          profilePicture,
           phone,
         },
       },
@@ -84,7 +87,6 @@ const updateParaExpertDetails = asyncHandler(
           expertise,
           availability,
           packages,
-          profilePicture,
           ratings,
           bio,
           basedOn,
@@ -99,18 +101,19 @@ const updateParaExpertDetails = asyncHandler(
     const expert = await ParaExpert.findById( paraExpertId );
 
     await User.findByIdAndUpdate(
-        paraExpertId,
-        {
-            $set: {
-                name,
-                gender,
-                dateOfBirth,
-                interests,
-                phone,
-            },
+      paraExpertId,
+      {
+        $set: {
+          name,
+          gender,
+          dateOfBirth,
+          interests,
+          profilePicture,
+          phone,
         },
-        {new:true}
-    )
+      },
+      { new: true }
+    );
 
     return res.json(
       new ApiResponse(
@@ -189,10 +192,30 @@ const getUserById =  asyncHandler(async (req: Request, res: Response) => {
   }
 })
 
+const getNotifications = asyncHandler(async(req:Request, res:Response)=>{
+  try {
+    const user:any = req.user
+    const userId = user._id
+    const notifications = await Notifications.find({userId})
+    if(!notifications){
+      return res.json(
+        new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "notification not found")
+      );
+    }
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, notifications,"notifications found successfully"))
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+})
+
 
 export {
   updateUserDetails,
   updateParaExpertDetails,
   setAvailability,
   getUserById,
+  getNotifications,
 };

@@ -1,6 +1,10 @@
 import mongoose , {Mongoose, Schema} from "mongoose";
 
 const notificationSchema =new Schema({
+    userId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+    },
     title:{
         type: String
     },

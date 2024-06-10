@@ -75,7 +75,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
       await Promise.all(
         paraExperts.map(async (paraExpert) => {
           const user = await User.findById(paraExpert.userId);
-          return { id:paraExpert._id, name:user.name, expertise:paraExpert.expertise, image:paraExpert.profilePicture, ratings:paraExpert.ratings };
+          return { id:paraExpert._id, name:user.name, expertise:paraExpert.expertise, image:user.profilePicture, ratings:paraExpert.ratings };
         })
       );
     return res.json(
@@ -93,7 +93,7 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
     const { id } = req.params;
     const paraExpert = await ParaExpert.findById(id);
     const user = await User.findById(paraExpert.userId);
-    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews, image:paraExpert.profilePicture}
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews, image:user.profilePicture}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );

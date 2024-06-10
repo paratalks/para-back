@@ -7,6 +7,7 @@ import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
 
 export const notification = async (
+  userId:ObjectId,
   title:string,
   description:string,
   referrer: string,
@@ -15,6 +16,7 @@ export const notification = async (
   try {
 
     const createNotification = await Notifications.create({
+      userId,
       title,
       description,
       referrer,

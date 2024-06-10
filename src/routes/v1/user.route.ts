@@ -5,6 +5,7 @@ import {
   updateUserDetails,
   updateParaExpertDetails,
   getUserById,
+  getNotifications,
 } from "../../controllers/userUpdate.controller";
 
 
@@ -24,6 +25,7 @@ router.route("/set-availability").patch(verifyJWT,setAvailability);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/:userId").get(getUserById);
+router.route("/get-notifications").get(verifyJWT, getNotifications)
 
 
 export default router;

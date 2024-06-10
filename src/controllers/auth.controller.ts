@@ -10,10 +10,10 @@ import httpContext from "express-http-context";
 import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
-import {signupObject, parasignupObject} from "../constants/types"
+import { signupObject, parasignupObject } from "../constants/types";
 import axios from "axios";
 import { notification } from "../util/notification.util";
-dotenv.config()
+dotenv.config();
 
 const options = {
   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -28,22 +28,23 @@ export const signup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
-        fcmToken
+        profilePicture,
+        fcmToken,
       }: signupObject = req.body;
 
-      
-
       if (!name || !gender || !dateOfBirth || !interests || !fcmToken) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "All fields are required"
-          );
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "All fields are required"
+        );
       }
 
-      const user:any= req.user;
+      const user: any = req.user;
 
-      if (user && user.name && user.gender && user.dateOfBirth ) {
-        return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+      if (user && user.name && user.gender && user.dateOfBirth) {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, { message: "User already exist" }));
         throw new ApiError(400, "User already exist");
       }
 
@@ -52,13 +53,13 @@ export const signup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
-        fcmToken
+        profilePicture,
+        fcmToken,
       };
 
       if (user) {
-
         const updatedUser: any = await User.findOneAndUpdate(
-          { _id:user._id },
+          { _id: user._id },
           toStore,
           { new: true, runValidators: true }
         );
@@ -66,6 +67,7 @@ export const signup: RequestHandler = bigPromise(
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
         const createNotification = notification(
+          user._id,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
           null,
@@ -87,7 +89,7 @@ export const signup: RequestHandler = bigPromise(
         );
       }
     } catch (error) {
-      throw new ApiError(401,error?.message ||"Failure in User registration")
+      throw new ApiError(401, error?.message || "Failure in User registration");
     }
   }
 );
@@ -112,11 +114,12 @@ export const paraSignup: RequestHandler = bigPromise(
         reviews,
       }: parasignupObject = req.body;
 
+      const user: any = req.user;
 
-      const user:any=req.user;
-
-      if (user && user.name && user.gender && user.dateOfBirth ) {
-        return res.status(400).json( new ApiResponse(400, {message: "User already exist"}))
+      if (user && user.name && user.gender && user.dateOfBirth) {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, { message: "User already exist" }));
         throw new ApiError(400, "User already exist");
       }
 
@@ -133,11 +136,12 @@ export const paraSignup: RequestHandler = bigPromise(
         gender,
         dateOfBirth,
         interests,
-        fcmToken
+        profilePicture,
+        fcmToken,
       };
 
       if (user) {
-        const newUser:any = await User.findOneAndUpdate(
+        const newUser: any = await User.findOneAndUpdate(
           { _id: user._id },
           toStore,
           { new: true, runValidators: true }
@@ -151,7 +155,6 @@ export const paraSignup: RequestHandler = bigPromise(
           expertise,
           availability,
           packages,
-          profilePicture,
           ratings,
           bio,
           basedOn,
@@ -162,6 +165,7 @@ export const paraSignup: RequestHandler = bigPromise(
         await paraExpert.save();
 
         const createNotification = notification(
+          newUser._id,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
           null,
@@ -174,7 +178,7 @@ export const paraSignup: RequestHandler = bigPromise(
             "Failed to send notification"
           );
         }
-        
+
         res
           .cookie("token", token, options)
           .json(
@@ -185,13 +189,20 @@ export const paraSignup: RequestHandler = bigPromise(
             )
           );
       } else {
-        res.json(new ApiResponse(
-          ResponseStatusCode.UNAUTHORIZED,
-          "User not authorized to sign-up please redo otp procedure"
-        ));
+        res.json(
+          new ApiResponse(
+            ResponseStatusCode.UNAUTHORIZED,
+            "User not authorized to sign-up please redo otp procedure"
+          )
+        );
       }
     } catch (error) {
-      res.json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error?.message));
+      res.json(
+        new ApiResponse(
+          ResponseStatusCode.INTERNAL_SERVER_ERROR,
+          error?.message
+        )
+      );
     }
   }
 );
@@ -201,7 +212,7 @@ export const refreshToken: RequestHandler = bigPromise(
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer")) {
       const message = "Unauthenticated No Bearer";
-      throw new ApiError(401,message);
+      throw new ApiError(401, message);
     }
 
     let data: any;
@@ -267,26 +278,27 @@ export const logout = bigPromise(async (req, res, next) => {
     );
   } catch (error) {
     return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "OTP send successfully")
+      new ApiResponse(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        "OTP send successfully"
+      )
     );
   }
 });
 
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
-    const phone:number = req.body.phone;
-  
-
+    const phone: number = req.body.phone;
 
     // for testing
     const otp: number =
-      phone === (9999999999||8888888888||6666666666)
+      phone === (9999999999 || 8888888888 || 6666666666)
         ? 123456
         : Math.floor(100000 + Math.random() * 900000);
     // const otp:number = 123456
-    const requestID = httpContext.get("requestId");    
+    const requestID = httpContext.get("requestId");
     if (phone !== 9999999999) {
-      console.log("hi")
+      console.log("hi");
       const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: process.env.FAST2SMS_API_KEY,
@@ -297,29 +309,26 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       });
     }
 
-      if(await OTP.findOne({phone})){
-        const newotp = await OTP.findOneAndUpdate(
-          { phone },
-          {
-            otp: otp,
-            otpExpiration: new Date(Date.now() + 10 * 60000),
-            verified: false,
-            requestId: requestID,
-          },
-          {new:true}
-        );
-      }
-      else{
-        await OTP.create({
-          phone: phone,
+    if (await OTP.findOne({ phone })) {
+      const newotp = await OTP.findOneAndUpdate(
+        { phone },
+        {
           otp: otp,
           otpExpiration: new Date(Date.now() + 10 * 60000),
           verified: false,
           requestId: requestID,
-        });
-      }
-
-    
+        },
+        { new: true }
+      );
+    } else {
+      await OTP.create({
+        phone: phone,
+        otp: otp,
+        otpExpiration: new Date(Date.now() + 10 * 60000),
+        verified: false,
+        requestId: requestID,
+      });
+    }
 
     return res.json(
       new ApiResponse(
@@ -329,18 +338,22 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       )
     );
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Failed to send OTP",error.message)
+      new ApiResponse(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        "Failed to send OTP",
+        error.message
+      )
     );
   }
 });
 
-export const verifyOTP = bigPromise(async (req, res, next) => { 
+export const verifyOTP = bigPromise(async (req, res, next) => {
   const { requestId } = req.body;
-    const { otp, otpExpiration, phone, verified } = await OTP.findOne({
-      requestId,
-    });
+  const { otp, otpExpiration, phone, verified } = await OTP.findOne({
+    requestId,
+  });
 
   try {
     const expirationTimeStamp = otpExpiration.getTime();
@@ -350,9 +363,9 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
 
       if (!user) {
         user = await User.create({
-          phone: phone, 
+          phone: phone,
         });
-        isNewUser = true;   // signup
+        isNewUser = true; // signup
       }
 
       const payload = {
@@ -373,7 +386,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          { token, isNewUser, userId:user._id },
+          { token, isNewUser, userId: user._id },
           "OTP verification successfull"
         )
       ); //auth token jwt
@@ -382,9 +395,10 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     }
   } catch (error) {
     res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Internal server error")
+      new ApiResponse(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        "Internal server error"
+      )
     );
   }
 });
-
-

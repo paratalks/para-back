@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema(
       type: [String],
       required: false,
     },
+    profilePicture: {
+      type: String,
+    },
     phone: {
       type: String,
       required: true,
@@ -32,8 +35,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    fcmToken:{//remove, add token
-      type:String,
+    fcmToken: {
+      //remove, add token
+      type: String,
     },
   },
   { timestamps: true }

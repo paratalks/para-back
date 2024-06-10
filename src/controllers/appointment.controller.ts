@@ -101,7 +101,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const createNotification = notification("Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
+    const createNotification = notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
 
     if (!createNotification) {
       throw new ApiError(
@@ -264,6 +264,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const createNotification = notification(
+      appointment.userId,
       "Appointment updated successfully",
       `Appointment ${status}`,
       "appointment",
