@@ -373,7 +373,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          { token, isNewUser },
+          { token, isNewUser, userId:user._id },
           "OTP verification successfull"
         )
       ); //auth token jwt
