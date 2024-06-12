@@ -24,7 +24,7 @@ const router = express.Router();
 router.route("/set-availability").patch(verifyJWT,setAvailability);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
-router.route("/:userId").get(getUserById);
+router.route("/me/:userId").get(getUserById);
 router.route("/get-notifications").get(verifyJWT, getNotifications)
 
 

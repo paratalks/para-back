@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.use("/auth", authRoute);
 router.use("/booking",bookingRoute);
-router.use("/me",userRoute);
+router.use("/user",userRoute);
 router.use("/para",paraRoute);
 router.use("/home",homeRoute);
 router.use("/payment",paymentRoute)

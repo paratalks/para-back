@@ -195,7 +195,7 @@ const getUserById =  asyncHandler(async (req: Request, res: Response) => {
 const getNotifications = asyncHandler(async(req:Request, res:Response)=>{
   try {
     const user:any = req.user
-    const userId = user._id
+    const {userId} = user._id
     const notifications = await Notifications.find({userId})
     if(!notifications){
       return res.json(
