@@ -292,13 +292,12 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
 
     // for testing
     const otp: number =
-      phone === (9999999999 || 8888888888 || 6666666666)
+      phone === 9999999999
         ? 123456
         : Math.floor(100000 + Math.random() * 900000);
     // const otp:number = 123456
     const requestID = httpContext.get("requestId");
     if (phone !== 9999999999) {
-      console.log("hi");
       const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: process.env.FAST2SMS_API_KEY,
