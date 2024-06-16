@@ -7,7 +7,7 @@ import { getAvailableSlots } from "../util/paraexpert.util";
 import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
 import type { ObjectId } from "mongoose";
-import { notification } from "../util/notification.util";
+import { fcm, notification } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
@@ -106,9 +106,20 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     if (!createNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification"
+      );
+    }
+
+    const sendNotification = fcm(createNotification._id);
+
+    if (!sendNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
         "Failed to send notification"
       );
     }
+
+    console.log(sendNotification)
 
     // const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
 
@@ -263,7 +274,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const createNotification = notification(
+    const createNotification = await notification(
       appointment.userId,
       "Appointment updated successfully",
       `Appointment ${status}`,
@@ -272,6 +283,15 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
     );
 
     if (!createNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification"
+      );
+    }
+
+    const sendNotification = fcm(createNotification._id)
+
+    if (!sendNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Failed to send notification"

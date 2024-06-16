@@ -45,25 +45,31 @@ export const setFcm = async (userId: ObjectId, fcmToken: string) => {
   }
 };
 
-export const fcm = ()=>{
-  let beamsClient = new PushNotifications({
-    instanceId: "YOUR_INSTANCE_ID_HERE",
-    secretKey: "YOUR_SECRET_KEY_HERE",
-  });
-
-  beamsClient
-    .publish(["hello"], {
-      fcm: {
-        notification: {
-          title: "Hello",
-          body: "Hello, world!",
-        },
-      },
-    })
-    .then((publishResponse: { publishId: any; }) => {
-      return publishResponse.publishId;
-    })
-    .catch((error:any) => {
-      return;
+export const fcm = async (userId: ObjectId) => {
+  try {
+    let beamsClient = new PushNotifications({
+      instanceId: "PUSHER_INSTANCE_ID",
+      secretKey: "PUSHER_SECRET_KEY",
     });
-}
+
+    const notification = await Notifications.findOne(userId)
+
+    beamsClient
+      .publish([notification.referrer], {
+        fcm: {
+          notification: {
+            title: notification.title,
+            body: notification.description,
+          },
+        },
+      })
+      .then((publishResponse: { publishId: any }) => {
+        return publishResponse.publishId;
+      })
+      .catch((error: any) => {
+        return;
+      });
+  } catch (error) {
+    return;
+  }
+};

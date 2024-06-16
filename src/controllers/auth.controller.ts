@@ -12,7 +12,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { signupObject, parasignupObject } from "../constants/types";
 import axios from "axios";
-import { notification } from "../util/notification.util";
+import { fcm, notification } from "../util/notification.util";
 dotenv.config();
 
 const options = {
@@ -66,7 +66,7 @@ export const signup: RequestHandler = bigPromise(
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
-        const createNotification = notification(
+        const createNotification = await notification(
           user._id,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
@@ -75,6 +75,15 @@ export const signup: RequestHandler = bigPromise(
         );
 
         if (!createNotification) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Failed to create notification"
+          );
+        }
+
+        const sendNotification = fcm(createNotification._id);
+
+        if (!sendNotification) {
           throw new ApiError(
             ResponseStatusCode.BAD_REQUEST,
             "Failed to send notification"
@@ -164,7 +173,7 @@ export const paraSignup: RequestHandler = bigPromise(
 
         await paraExpert.save();
 
-        const createNotification = notification(
+        const createNotification = await notification(
           newUser._id,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
@@ -173,6 +182,15 @@ export const paraSignup: RequestHandler = bigPromise(
         );
 
         if (!createNotification) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Failed to create notification"
+          );
+        }
+
+        const sendNotification = fcm(createNotification._id);
+
+        if (!sendNotification) {
           throw new ApiError(
             ResponseStatusCode.BAD_REQUEST,
             "Failed to send notification"
