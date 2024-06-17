@@ -120,7 +120,6 @@ export const paraSignup: RequestHandler = bigPromise(
         bio,
         basedOn,
         qualifications,
-        reviews,
         experience,
       }: parasignupObject = req.body;
 
@@ -169,7 +168,6 @@ export const paraSignup: RequestHandler = bigPromise(
           bio,
           basedOn,
           qualifications,
-          reviews,
           experience,
         });
 

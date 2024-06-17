@@ -5,8 +5,8 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
-import { paraExpertTypes } from "../models/paraExpert/paraExpert.types";
 import { ObjectId } from "mongoose";
+import { Review } from "../models/reviews/review.model";
 
 interface paraSearch {
   name:String;
@@ -27,7 +27,7 @@ interface paraSearch {
     description: String;
     amount: Number;
   }[];
-  reviews: [string];
+  reviews: any;
   image:string;
 }
 
@@ -93,7 +93,8 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
     const { id } = req.params;
     const paraExpert = await ParaExpert.findById(id);
     const user = await User.findById(paraExpert.userId);
-    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:paraExpert.reviews, image:user.profilePicture}
+    const reviews = await Review.find({paraExpertId:id})
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:reviews, image:user.profilePicture}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );

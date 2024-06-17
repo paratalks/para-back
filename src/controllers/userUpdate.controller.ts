@@ -65,7 +65,6 @@ const updateParaExpertDetails = asyncHandler(
       bio,
       basedOn,
       qualifications,
-      reviews,
       experience,
     }: paraUpdateObject = req.body; 
 
@@ -92,7 +91,6 @@ const updateParaExpertDetails = asyncHandler(
           bio,
           basedOn,
           qualifications,
-          reviews,
           experience,
         },
       },
@@ -126,7 +124,7 @@ const updateParaExpertDetails = asyncHandler(
     );
   }
 );
-//paraexpert
+
 const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { availability } = req.body as {

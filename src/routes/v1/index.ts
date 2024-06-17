@@ -7,6 +7,8 @@ import paraRoute from "./para.route"
 import homeRoute from "./home.route"
 import paymentRoute from "./payment.route"
 import tokenRoute from "./token.route"
+import reviewRoute from "./review.route"
+
 const router = express.Router();
 
 /**
@@ -20,6 +22,7 @@ router.use("/para",paraRoute);
 router.use("/home",homeRoute);
 router.use("/payment",paymentRoute)
 router.use("/token",tokenRoute)
+router.use("/review",reviewRoute)
 
 router.get("/", (req, res) => {
     return res.status(200).send({

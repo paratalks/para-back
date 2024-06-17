@@ -119,14 +119,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    console.log(sendNotification)
-
-    // const userWithFcm = setFcm(user._id, fcmToken);//add fcm token functionality after connecting it with app
-
-    // if(!userWithFcm){
-    //   throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to set FCM");
-    // }
-
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,

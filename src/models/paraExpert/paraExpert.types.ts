@@ -24,7 +24,6 @@ export interface paraExpertTypes {
       certificateUrls: [String];
     }
   ];
-  reviews: [string];
   experience: Number;
   createdAt: Date;
   updatedAt: Date;

@@ -34,7 +34,6 @@ export interface parasignupObject {
       certificateUrls: [String];
     }
   ];
-  reviews: [string];
   experience:Number;
 }
 
@@ -64,6 +63,5 @@ export interface paraUpdateObject {
       certificateUrls: [String];
     }
   ];
-  reviews: [string];
   experience:Number;
 }
