@@ -7,6 +7,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { ObjectId } from "mongoose";
 import { Review } from "../models/reviews/review.model";
+import {banner} from "../constants/banner.json"
 
 interface paraSearch {
   name:String;
@@ -79,7 +80,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
         })
       );
     return res.json(
-      new ApiResponse(ResponseStatusCode.SUCCESS, { categories, paraExperts:paraExpertUsers })
+      new ApiResponse(ResponseStatusCode.SUCCESS, { categories, paraExperts:paraExpertUsers, banners:banner})
     );
   } catch (error) {
     return res.json(
