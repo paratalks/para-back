@@ -55,6 +55,9 @@ const paraExpertSchema = new mongoose.Schema(
     reviews:{
       type:[String],
     },
+    experience:{
+      type:Number,
+    },
   },
   { timestamps: true }
 );

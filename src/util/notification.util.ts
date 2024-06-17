@@ -48,8 +48,8 @@ export const setFcm = async (userId: ObjectId, fcmToken: string) => {
 export const fcm = async (userId: ObjectId) => {
   try {
     let beamsClient = new PushNotifications({
-      instanceId: "PUSHER_INSTANCE_ID",
-      secretKey: "PUSHER_SECRET_KEY",
+      instanceId: "process.env.PUSHER_INSTANCE_ID",
+      secretKey: "process.env.PUSHER_SECRET_KEY",
     });
 
     const notification = await Notifications.findOne(userId)

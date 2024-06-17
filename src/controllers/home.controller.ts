@@ -47,7 +47,7 @@ export const getCategories = asyncHandler(
 export const getSearchResults = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { searchQuery } = req.body;
+      const { searchQuery } = req.params;
 
       let paraExperts: any = await ParaExpert.find({
         $or: [
@@ -75,7 +75,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
       await Promise.all(
         paraExperts.map(async (paraExpert) => {
           const user = await User.findById(paraExpert.userId);
-          return { id:paraExpert._id, name:user.name, expertise:paraExpert.expertise, image:user.profilePicture, ratings:paraExpert.ratings };
+          return { id:paraExpert._id, name:user.name, expertise:paraExpert.expertise, image:user.profilePicture, ratings:paraExpert.ratings, bio:paraExpert.bio, exp:paraExpert.experience };
         })
       );
     return res.json(

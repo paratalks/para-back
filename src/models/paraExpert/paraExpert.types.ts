@@ -11,7 +11,7 @@ export interface paraExpertTypes {
         type: String;
         enum: ["online", "offline"];
       };
-      description:String;
+      description: String;
       amount: Number;
     }
   ];
@@ -24,7 +24,8 @@ export interface paraExpertTypes {
       certificateUrls: [String];
     }
   ];
-  reviews:[string];
+  reviews: [string];
+  experience: Number;
   createdAt: Date;
   updatedAt: Date;
 }

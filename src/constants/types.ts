@@ -35,6 +35,7 @@ export interface parasignupObject {
     }
   ];
   reviews: [string];
+  experience:Number;
 }
 
 export interface paraUpdateObject {
@@ -64,4 +65,5 @@ export interface paraUpdateObject {
     }
   ];
   reviews: [string];
+  experience:Number;
 }

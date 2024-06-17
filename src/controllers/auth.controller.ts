@@ -121,6 +121,7 @@ export const paraSignup: RequestHandler = bigPromise(
         basedOn,
         qualifications,
         reviews,
+        experience,
       }: parasignupObject = req.body;
 
       const user: any = req.user;
@@ -169,6 +170,7 @@ export const paraSignup: RequestHandler = bigPromise(
           basedOn,
           qualifications,
           reviews,
+          experience,
         });
 
         await paraExpert.save();

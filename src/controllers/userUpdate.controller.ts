@@ -66,7 +66,8 @@ const updateParaExpertDetails = asyncHandler(
       basedOn,
       qualifications,
       reviews,
-    }:paraUpdateObject = req.body 
+      experience,
+    }: paraUpdateObject = req.body; 
 
     const dateOfBirth=new Date(req.body.dateOfBirth)
     
@@ -92,6 +93,7 @@ const updateParaExpertDetails = asyncHandler(
           basedOn,
           qualifications,
           reviews,
+          experience,
         },
       },
       { new: true }
