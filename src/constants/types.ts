@@ -40,6 +40,11 @@ export interface parasignupObject {
     video: Number;
     message: Number;
   };
+  socials: {
+    instagram: String;
+    twitter: String;
+    linkenIn: String;
+  };
 }
 
 export interface paraUpdateObject {
@@ -73,5 +78,10 @@ export interface paraUpdateObject {
     audio: Number;
     video: Number;
     message: Number;
+  };
+  socials: {
+    instagram: String;
+    twitter: String;
+    linkenIn: String;
   };
 }

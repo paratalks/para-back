@@ -65,7 +65,18 @@ const paraExpertSchema = new mongoose.Schema(
       message:{
         type:Number,
       },
-    }
+    },
+    socials:{
+      instagram:{
+        type:String,
+      },
+      twitter:{
+        type:String,
+      },
+      linkedIn:{
+        type:String,
+      },
+    },
   },
   { timestamps: true }
 );

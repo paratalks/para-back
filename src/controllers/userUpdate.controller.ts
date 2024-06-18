@@ -66,7 +66,8 @@ const updateParaExpertDetails = asyncHandler(
       basedOn,
       qualifications,
       experience,
-      consultancy
+      consultancy,
+      socials
     }: paraUpdateObject = req.body; 
 
     const dateOfBirth=new Date(req.body.dateOfBirth)
@@ -93,7 +94,8 @@ const updateParaExpertDetails = asyncHandler(
           basedOn,
           qualifications,
           experience,
-          consultancy
+          consultancy,
+          socials
         },
       },
       { new: true }
@@ -213,6 +215,26 @@ const getNotifications = asyncHandler(async(req:Request, res:Response)=>{
   }
 })
 
+const dev = asyncHandler(async(req:Request, res:Response)=>{
+  try {
+    const {socials} = req.body
+    const para = await ParaExpert.updateMany({},
+      {
+        $set:{
+          socials
+        }
+      },
+      {new:true}
+    )
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS,para,"updated successfully"))
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+})
+
 
 export {
   updateUserDetails,
@@ -220,4 +242,5 @@ export {
   setAvailability,
   getUserById,
   getNotifications,
+  dev
 };

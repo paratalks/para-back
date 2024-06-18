@@ -30,6 +30,11 @@ export interface paraExpertTypes {
     video:Number;
     message:Number;
   };
+  socials:{
+    instagram:String;
+    twitter:String;
+    linkenIn:String;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
