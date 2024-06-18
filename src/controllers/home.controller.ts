@@ -30,6 +30,7 @@ interface paraSearch {
   }[];
   reviews: any;
   image:string;
+  experience: Number
 }
 
 export const getCategories = asyncHandler(
@@ -95,7 +96,7 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
     const paraExpert = await ParaExpert.findById(id);
     const user = await User.findById(paraExpert.userId);
     const reviews = await Review.find({paraExpertId:id})
-    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:reviews, image:user.profilePicture}
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:reviews, image:user.profilePicture, experience:paraExpert.experience}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );
