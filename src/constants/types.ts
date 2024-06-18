@@ -34,7 +34,12 @@ export interface parasignupObject {
       certificateUrls: [String];
     }
   ];
-  experience:Number;
+  experience: Number;
+  consultancy: {
+    audio: Number;
+    video: Number;
+    message: Number;
+  };
 }
 
 export interface paraUpdateObject {
@@ -63,5 +68,10 @@ export interface paraUpdateObject {
       certificateUrls: [String];
     }
   ];
-  experience:Number;
+  experience: Number;
+  consultancy: {
+    audio: Number;
+    video: Number;
+    message: Number;
+  };
 }

@@ -10,7 +10,7 @@ import { Review } from "../models/reviews/review.model";
 import {banner} from "../constants/banner.json"
 
 interface paraSearch {
-  name:String;
+  name: String;
   bio: String;
   basedOn: String;
   qualifications: [
@@ -29,8 +29,13 @@ interface paraSearch {
     amount: Number;
   }[];
   reviews: any;
-  image:string;
-  experience: Number
+  image: string;
+  experience: Number;
+  consultancy: {
+    audio: Number;
+    video: Number;
+    message: Number;
+  };
 }
 
 export const getCategories = asyncHandler(
@@ -96,7 +101,7 @@ export const getParaExpertByID = asyncHandler(async(req: Request, res: Response)
     const paraExpert = await ParaExpert.findById(id);
     const user = await User.findById(paraExpert.userId);
     const reviews = await Review.find({paraExpertId:id})
-    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:reviews, image:user.profilePicture, experience:paraExpert.experience}
+    const result:paraSearch={name:user.name, bio:paraExpert.bio, basedOn:paraExpert.basedOn, qualifications:paraExpert.qualifications, packages:paraExpert.packages, reviews:reviews, image:user.profilePicture, experience:paraExpert.experience, consultancy:paraExpert.consultancy}
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, result)
     );

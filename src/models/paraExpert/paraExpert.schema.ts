@@ -55,6 +55,17 @@ const paraExpertSchema = new mongoose.Schema(
     experience:{
       type:Number,
     },
+    consultancy:{
+      audio:{
+        type:Number,
+      },
+      video:{
+        type:Number,
+      },
+      message:{
+        type:Number,
+      },
+    }
   },
   { timestamps: true }
 );

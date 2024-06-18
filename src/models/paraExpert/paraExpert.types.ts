@@ -25,6 +25,11 @@ export interface paraExpertTypes {
     }
   ];
   experience: Number;
+  consultancy:{
+    audio:Number;
+    video:Number;
+    message:Number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
