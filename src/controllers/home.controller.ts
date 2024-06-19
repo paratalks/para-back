@@ -119,7 +119,7 @@ export const getParaExpertByID = asyncHandler(
       const { id } = req.params;
       const paraExpert = await ParaExpert.findById(id);
       const user = await User.findById(paraExpert.userId);
-      const reviews = await getReviews(paraExpert._id)
+      const reviews = await getReviews(paraExpert._id);
       const result: paraSearch = {
         name: user.name,
         bio: paraExpert.bio,
@@ -137,6 +137,34 @@ export const getParaExpertByID = asyncHandler(
           ResponseStatusCode.SUCCESS,
           result,
           "para expert fetched successfully"
+        )
+      );
+    } catch (error) {
+      return res.json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+      );
+    }
+  }
+);
+
+export const getOnlineOffline = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { type } = req.query.type;
+      const paraExpert = await ParaExpert.findById(id);
+
+      if (!paraExpert) {
+        return res.status(404).json({ message: "ParaExpert not found" });
+      }
+
+      const packages = paraExpert.packages.filter((pack) => pack.type === type);
+
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          packages,
+          "Packages fetched successfully"
         )
       );
     } catch (error) {
