@@ -1,6 +1,9 @@
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiError } from "./apiError";
 import { Appointments } from "../models/appointments/appointments.model";
+import { ObjectId } from "mongoose";
+import { Review } from "../models/reviews/review.model";
+import { User } from "../models/user/user.model";
 
 export const getAvailableSlots = async (paraExpertId: any, date: Date) => {
   const paraExpert = await ParaExpert.findById(paraExpertId);
@@ -52,3 +55,31 @@ export const getSlotAvailability = async (
     return false;
   }
 };
+
+export const getReviews = async (paraExpertId:ObjectId) => {
+    try {
+      const reviews = await Review.find({ paraExpertId });
+      const result: {
+        id: ObjectId;
+        name: String;
+        rating: Number;
+        review: String;
+      }[] = await Promise.all(
+        reviews.map(async (review) => {
+          const user = await User.findById(review.userId);
+          return {
+            id: review._id,
+            name: user.name,
+            rating: review.rating,
+            review: review.review,
+          };
+        })
+      );
+      if (!reviews) {
+        return 
+      }
+      return result;
+    } catch (error) {
+      return 
+    }
+  };

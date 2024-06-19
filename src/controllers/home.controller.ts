@@ -6,8 +6,8 @@ import { ResponseStatusCode } from "../constants/constants";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { ObjectId } from "mongoose";
-import { Review } from "../models/reviews/review.model";
 import { banner } from "../constants/banner.json";
+import { getReviews } from "../util/paraexpert.util";
 
 interface paraSearch {
   name: String;
@@ -119,7 +119,7 @@ export const getParaExpertByID = asyncHandler(
       const { id } = req.params;
       const paraExpert = await ParaExpert.findById(id);
       const user = await User.findById(paraExpert.userId);
-      const reviews = await Review.find({ paraExpertId: id });
+      const reviews = await getReviews(paraExpert._id)
       const result: paraSearch = {
         name: user.name,
         bio: paraExpert.bio,

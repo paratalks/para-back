@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { title } from "node:process";
 
 const paraExpertSchema = new mongoose.Schema(
   {
