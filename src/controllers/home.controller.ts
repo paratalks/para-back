@@ -76,8 +76,10 @@ export const getSearchResults = asyncHandler(
 
 export const getAll = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const { limit }: any = req.query;
+    const limitNumber = +limit;
     const categories = listCategories();
-    const paraExperts: any[] = await ParaExpert.find().limit(10);
+    const paraExperts: any[] = await ParaExpert.find().limit(limitNumber);
 
     const paraExpertUsers: {
       id: ObjectId;
@@ -85,6 +87,14 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
       expertise: [String];
       image: string;
       ratings: Number;
+      bio: String;
+      exp: Number
+      qualifications: [{ title: String; certificateUrls: [String] }];
+      socials: {
+        instagram: String;
+        twitter: String;
+        linkenIn: String;
+      };
     }[] = await Promise.all(
       paraExperts.map(async (paraExpert) => {
         const user = await User.findById(paraExpert.userId);
@@ -96,6 +106,8 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
           ratings: paraExpert.ratings,
           bio: paraExpert.bio,
           exp: paraExpert.experience,
+          qualifications: paraExpert.qualifications,
+          socials: paraExpert.socials
         };
       })
     );
