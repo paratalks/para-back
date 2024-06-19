@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
@@ -7,7 +6,6 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { paraUpdateObject } from "../constants/types";
-import { ObjectId } from "mongoose";
 import { Notifications } from "../models/notification/notification.model";
 
 const updateUserDetails = asyncHandler(
@@ -217,15 +215,16 @@ const getNotifications = asyncHandler(async(req:Request, res:Response)=>{
 
 const dev = asyncHandler(async(req:Request, res:Response)=>{
   try {
-    const {socials} = req.body
-    const para = await ParaExpert.updateMany({},
+    const { packages } = req.body;
+    const para = await ParaExpert.updateMany(
+      {},
       {
-        $set:{
-          socials
-        }
+        $set: {
+          packages,
+        },
       },
-      {new:true}
-    )
+      { new: true }
+    );
     return res.json(new ApiResponse(ResponseStatusCode.SUCCESS,para,"updated successfully"))
   } catch (error) {
     throw new ApiError(
