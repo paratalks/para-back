@@ -151,14 +151,15 @@ export const getOnlineOffline = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { type } = req.query.type;
+      const { type } = req.query;
+      const packageType:String = String(type)
       const paraExpert = await ParaExpert.findById(id);
 
       if (!paraExpert) {
         return res.status(404).json({ message: "ParaExpert not found" });
       }
 
-      const packages = paraExpert.packages.filter((pack) => pack.type === type);
+      const packages = paraExpert.packages.filter((pack) => pack.type === packageType);
 
       return res.json(
         new ApiResponse(
