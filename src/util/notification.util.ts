@@ -5,6 +5,7 @@ import { Notifications } from "../models/notification/notification.model";
 import { ObjectId } from "mongoose";
 import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
+const admin = require("firebase-admin");
 
 export const notification = async (
   userId:ObjectId,
@@ -71,5 +72,38 @@ export const fcm = async (userId: ObjectId) => {
       });
   } catch (error) {
     return;
+  }
+};
+
+const serviceAccount = require("../../paratalks-admin.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+export const sendNotif = async (token:String, title:String, body:String) => {
+  try {
+    if (!token || typeof token !== "string") {
+      throw new Error("Invalid FCM token provided");
+    }
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      android: {
+        notification: {
+          sound: "default",
+        },
+        data: {
+          title: title,
+          body: body,
+        },
+      },
+      token: token,
+    };
+    const response = await admin.messaging().send(message);
+    console.log("Successfully sent message:", response);
+  } catch (error) {
+    console.error("Error sending message:", error.message);
+    throw error;
   }
 };

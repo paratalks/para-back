@@ -12,7 +12,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { signupObject, parasignupObject } from "../constants/types";
 import axios from "axios";
-import { fcm, notification } from "../util/notification.util";
+import { fcm, notification, sendNotif } from "../util/notification.util";
 dotenv.config();
 
 const options = {
@@ -65,6 +65,12 @@ export const signup: RequestHandler = bigPromise(
         );
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
+
+        await sendNotif(
+          updatedUser.fcmToken,
+          "Welcome to Paratalks",
+          "Open the doors to a world of peace and serenity!"
+        );
 
         const createNotification = await notification(
           user._id,
@@ -176,6 +182,12 @@ export const paraSignup: RequestHandler = bigPromise(
         });
 
         await paraExpert.save();
+
+        await sendNotif(
+          newUser.fcmToken,
+          "Welcome to Paratalks",
+          "Open the doors to a world of peace and serenity!"
+        );
 
         const createNotification = await notification(
           newUser._id,

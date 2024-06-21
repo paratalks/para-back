@@ -7,7 +7,7 @@ import { getAvailableSlots } from "../util/paraexpert.util";
 import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
 import type { ObjectId } from "mongoose";
-import { fcm, notification } from "../util/notification.util";
+import { fcm, notification, sendNotif } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
@@ -100,6 +100,14 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Failed to create appointment"
       );
     }
+
+    const bookingUser = await User.findById(userId)
+
+    await sendNotif(
+      bookingUser.fcmToken,
+      "Booking confirmed",
+      `Appointment booked for ${date} from ${startTime} to ${endTime}`
+    );
 
     const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
 
@@ -265,6 +273,15 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Appointment not found"
       );
     }
+
+    const bookingUser = await User.findById(appointment.userId);
+
+    await sendNotif(
+      bookingUser.fcmToken,
+      "Appointment updated successfully",
+      `Appointment ${status}`
+    );
+    
 
     const createNotification = await notification(
       appointment.userId,
