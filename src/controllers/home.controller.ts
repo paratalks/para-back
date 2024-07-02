@@ -63,8 +63,13 @@ export const getSearchResults = asyncHandler(
           { expertise: { $in: searchQuery } },
           { expertise: { $elemMatch: { $in: [searchQuery] } } },
         ],
-      });
-
+      })
+      .select('ratings expertise _id userId profilePicture').limit(10)
+      .populate({
+        path: 'userId',
+        model:'User',
+        select: 'name',
+      });     
       return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
     } catch (error) {
       return res.json(
