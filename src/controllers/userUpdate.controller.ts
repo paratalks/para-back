@@ -10,9 +10,10 @@ import { Notifications } from "../models/notification/notification.model";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, gender, interests, profilePicture, phone } = req.body as {
+    const { name, email, gender, interests, profilePicture, phone } = req.body as {
       name: String;
       gender: String;
+      email:String;
       interests: [String];
       profilePicture: String;
       phone: String;
@@ -28,6 +29,7 @@ const updateUserDetails = asyncHandler(
       {
         $set: {
           name,
+          email,
           gender,
           dateOfBirth,
           interests,
@@ -235,11 +237,22 @@ const dev = asyncHandler(async(req:Request, res:Response)=>{
 })
 
 
+const uploadProfile = async (req: Request, res: Response) => {
+  try {
+    
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture,"File Uploaded successfully"))
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );  }
+};
 export {
   updateUserDetails,
   updateParaExpertDetails,
   setAvailability,
   getUserById,
   getNotifications,
+  uploadProfile,
   dev
 };
