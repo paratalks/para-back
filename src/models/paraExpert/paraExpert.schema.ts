@@ -1,5 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
+
+
 const paraExpertSchema = new mongoose.Schema(
   {
     userId: {
@@ -15,7 +17,21 @@ const paraExpertSchema = new mongoose.Schema(
           type: Number,
           enum:[0,1,2,3,4,5,6],
         },
-        slots:[String],
+        slots:{
+          chat: {
+            type: [String],
+            required: false,
+        },
+        video_call: {
+            type: [String],
+            required: false,
+        },
+        audio_call: {
+            type: [String],
+            required: false,
+        },
+        _id: false,
+        },
         _id:false,
       },
     ],
@@ -55,13 +71,13 @@ const paraExpertSchema = new mongoose.Schema(
       type:Number,
     },
     consultancy:{
-      audio:{
+      audio_call_price:{
         type:Number,
       },
-      video:{
+      video_call_price:{
         type:Number,
       },
-      message:{
+      messaging_price:{
         type:Number,
       },
     },

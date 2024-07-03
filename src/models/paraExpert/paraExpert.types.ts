@@ -1,9 +1,24 @@
 import type { Document, Model, Schema } from "mongoose";
+export interface IConsultancy {
+  audio_call_price: number;
+  video_call_price: number;
+  messaging_price: number;
+}
 
+export interface ISlots {
+  chat: string[];
+  video_call: string[];
+  audio_call: string[];
+}
+
+export interface IAvailability {
+  day: number;
+  slots: ISlots;
+}
 export interface paraExpertTypes {
   userId: Schema.Types.ObjectId;
   expertise: [String];
-  availability: [{ day: number; slots: [String] }];
+  availability: IAvailability[];
   packages: [
     {
       title: string;
@@ -25,11 +40,8 @@ export interface paraExpertTypes {
     }
   ];
   experience: Number;
-  consultancy:{
-    audio:Number;
-    video:Number;
-    message:Number;
-  };
+  consultancy: IConsultancy;
+
   socials:{
     instagram:String;
     twitter:String;

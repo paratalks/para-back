@@ -186,51 +186,77 @@ const getParaExpertTimeSlot = asyncHandler(
 );
 
 //paraexpert
-const getParaExpertAvailability = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const { paraExpertId, startDate, endDate } = req.query;
 
-      if (!paraExpertId || !startDate || !endDate) {
-        return res.json(
-          new ApiResponse(
-            ResponseStatusCode.BAD_REQUEST,
-            "Missing required parameters"
-          )
-        );
-      }
+const getParaExpertAvailability = async (req: Request, res: Response) => {
+  try {
+    const { paraExpertId, startDate, endDate } = req.query;
 
-      const startDateObj = new Date(startDate as string);
-      const endDateObj = new Date(endDate as string);
-
-      let availableSlots: { date: string; slots: String[] }[] = [];
-
-      let loop = new Date(startDateObj);
-      while (loop <= endDateObj) {
-        const slots: String[] = await getAvailableSlots(paraExpertId, loop);
-
-        if (slots) {
-          const slots2 = {
-            date: loop.toISOString().split("T")[0],
-            slots: slots,
-          };
-
-          availableSlots = [...availableSlots, slots2];
-        }
-
-        let newDate = loop.setDate(loop.getDate() + 1);
-        loop = new Date(newDate);
-      }
-
-      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, availableSlots));
-    } catch (error) {
-      throw new ApiError(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        error.message || "Internal server error"
+    if (!paraExpertId || !startDate || !endDate) {
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          "Missing required parameters"
+        )
       );
     }
+
+    const startDateObj = new Date(startDate as string);
+    const endDateObj = new Date(endDate as string);
+
+    const paraExpert = await ParaExpert.findById(paraExpertId);
+
+    if (!paraExpert) {
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.NOT_FOUND,
+          "ParaExpert not found"
+        )
+      );
+    }
+
+    const availableSlots: {
+      date: string;
+      slots: { chat: string[]; video_call: string[]; audio_call: string[] };
+    }[] = [];
+
+    let loop = new Date(startDateObj);
+    while (loop <= endDateObj) {
+      const dayOfWeek = loop.getDay();
+      const dayAvailability = paraExpert.availability.find(item => item.day === dayOfWeek);
+
+      if (dayAvailability) {
+        const slots2 = {
+          date: loop.toISOString().split("T")[0],
+          slots: {
+            chat: dayAvailability.slots.chat,
+            video_call: dayAvailability.slots.video_call,
+            audio_call: dayAvailability.slots.audio_call,
+          },
+        };
+
+        availableSlots.push(slots2);
+      }
+
+      loop.setDate(loop.getDate() + 1);
+    }
+
+    const response = {
+      availability: availableSlots,
+      consultancy: {
+        audio_call_price: paraExpert.consultancy.audio_call_price,
+        video_call_price: paraExpert.consultancy.video_call_price,
+        messaging_price: paraExpert.consultancy.messaging_price,
+      },
+    };
+
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, response));
+  } catch (error) {
+    console.error('Error fetching availability:', error);
+    res.status(ResponseStatusCode.INTERNAL_SERVER_ERROR).json({
+      error: 'Failed to fetch availability',
+    });
   }
-);
+};
 
 //paraexpert
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
