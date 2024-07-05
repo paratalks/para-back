@@ -7,6 +7,8 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { paraUpdateObject } from "../constants/types";
 import { Notifications } from "../models/notification/notification.model";
+import fs from 'fs';
+import { S3Client,PutObjectCommand } from '@aws-sdk/client-s3';
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -132,14 +134,15 @@ const updateParaExpertDetails = asyncHandler(
 const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { availability } = req.body as {
-      availability: [{ day: number; slots: [string] }];
+      availability: Array<{ day: number; slots: { chat: string[]; video_call: string[]; audio_call: string[] } }>;
     };
 
-    const user = req.user;
-    const userId = user._id;
-    const para = await ParaExpert.findOne({ userId });
-    const paraExpertId = para._id;
+    // const user = req.;
+    const userId = req.params.paraExpId;
+    const para = await ParaExpert.findById(userId);
 
+    const paraExpertId = userId;
+    console.log(paraExpertId)
     if (!availability) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -157,11 +160,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
 
     const paraExpert = await ParaExpert.findByIdAndUpdate(
       paraExpertId,
-      {
-        $set: {
-          availability,
-        },
-      },
+      { $set: { availability } },
       { new: true }
     );
 
@@ -236,17 +235,87 @@ const dev = asyncHandler(async(req:Request, res:Response)=>{
   }
 })
 
+// // Configuring AWS SDK
+// // Configure S3Client
+// const s3Client = new S3Client({
+//   region: process.env.AWS_REGION!,
+//   credentials: {
+//     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+//   }
+// });
+
+// const myBucket = process.env.AWS_S3_BUCKET_NAME;
+// // const s3 = new AWS.S3();
+
+
+// const storage = multerS3({
+//   s3: s3Client,
+//   bucket: myBucket,
+//   acl: 'public-read', // or any other appropriate ACL
+//   contentType: multerS3.AUTO_CONTENT_TYPE,
+//   key: (req, file, cb) => {
+//     cb(null, `${Date.now().toString()}-${file.originalname}`); // Use a unique file name
+//   }
+// });
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+  }
+});
+
+const myBucket = process.env.AWS_S3_BUCKET_NAME!;
 
 const uploadProfile = async (req: Request, res: Response) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const userID = req.params.userId;
     
-    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture,"File Uploaded successfully"))
+    const locaFilePath = req.file.path;
+    console.log('local filepath', locaFilePath);
+
+    const fileContent = fs.readFileSync(locaFilePath);
+
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME, 
+      Key: `${Date.now()}_${req.file.originalname}`,
+      Body: fileContent,
+      ContentType: req.file.mimetype,
+    };
+    const command = new PutObjectCommand(params);
+    const s3Response = await s3Client.send(command);
+    const url = `https://${myBucket}.s3.amazonaws.com/${params.Key}`;
+
+    let user;
+    if (url) {
+      user = await User.findByIdAndUpdate(
+        userID,
+        {
+          profileImage: url,
+        },
+        {
+          new: true,
+        }
+      );
+    }
+
+    fs.unlinkSync(locaFilePath);
+
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture, "File Uploaded successfully"));
   } catch (error) {
+    console.error('Error uploading file:', error);
     throw new ApiError(
       ResponseStatusCode.INTERNAL_SERVER_ERROR,
       error.message || "Internal server error"
-    );  }
+    );
+  }
 };
+
 export {
   updateUserDetails,
   updateParaExpertDetails,

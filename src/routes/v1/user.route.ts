@@ -11,6 +11,8 @@ import {
 } from "../../controllers/userUpdate.controller";
 
 
+import { upload } from '../../middlewares/upload';
+
 // /**
 //  * Endpoint: /api/v1/user
 //  */
@@ -23,11 +25,15 @@ const router = express.Router();
 //     .route("/") //
 //     .get(authorization, getAllUsers);
 
-router.route("/set-availability").patch(verifyJWT,setAvailability);
+
+
+
+
+router.route("/set-availability/:paraExpId").patch(setAvailability);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(getUserById);
-router.route("/uploadProfile/:userId").put(verifyJWT,uploadProfile);
+router.patch('/upload/:userId', upload.single('file'), uploadProfile);
 router.route("/get-notifications").get(verifyJWT, getNotifications)
 router.route("/dev").patch(dev)
 
