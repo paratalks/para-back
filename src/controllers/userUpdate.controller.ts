@@ -7,8 +7,9 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { paraUpdateObject } from "../constants/types";
 import { Notifications } from "../models/notification/notification.model";
-import fs from 'fs';
-import { S3Client,PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import axios from "axios";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -235,30 +236,6 @@ const dev = asyncHandler(async(req:Request, res:Response)=>{
   }
 })
 
-// // Configuring AWS SDK
-// // Configure S3Client
-// const s3Client = new S3Client({
-//   region: process.env.AWS_REGION!,
-//   credentials: {
-//     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-//   }
-// });
-
-// const myBucket = process.env.AWS_S3_BUCKET_NAME;
-// // const s3 = new AWS.S3();
-
-
-// const storage = multerS3({
-//   s3: s3Client,
-//   bucket: myBucket,
-//   acl: 'public-read', // or any other appropriate ACL
-//   contentType: multerS3.AUTO_CONTENT_TYPE,
-//   key: (req, file, cb) => {
-//     cb(null, `${Date.now().toString()}-${file.originalname}`); // Use a unique file name
-//   }
-// });
-
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
   credentials: {
@@ -267,53 +244,63 @@ const s3Client = new S3Client({
   }
 });
 
-const myBucket = process.env.AWS_S3_BUCKET_NAME!;
+const bucketName = process.env.AWS_S3_BUCKET_NAME!;
 
 const uploadProfile = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
     }
     const userID = req.params.userId;
-    
-    const locaFilePath = req.file.path;
-    console.log('local filepath', locaFilePath);
+    const isUser = await User.findById(userID);
+    if (!isUser) {
+      return res.status(404).json(new ApiResponse(ResponseStatusCode.NOT_FOUND, null, 'User not found'));
+    }
+    const filename = `${req.file.originalname}-${Date.now()}`;
+    const contentType = req.file.mimetype;
+    const fileContent = req.file.buffer;
 
-    const fileContent = fs.readFileSync(locaFilePath);
 
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME, 
-      Key: `${Date.now()}_${req.file.originalname}`,
-      Body: fileContent,
-      ContentType: req.file.mimetype,
-    };
-    const command = new PutObjectCommand(params);
-    const s3Response = await s3Client.send(command);
-    const url = `https://${myBucket}.s3.amazonaws.com/${params.Key}`;
+    const putCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: `uploads/user-profile/${filename}`,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 60 });
+
+    await axios.put(uploadUrl, fileContent, {
+      headers: {
+        'Content-Type': contentType
+      }
+    });
+
+    const getCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: `uploads/user-profile/${filename}`,
+    });
+    const accessUrl = await getSignedUrl(s3Client, getCommand);
 
     let user;
-    if (url) {
-      user = await User.findByIdAndUpdate(
-        userID,
-        {
-          profileImage: url,
-        },
-        {
-          new: true,
+        if (accessUrl) {
+          user = await User.findByIdAndUpdate(
+            userID,
+            {
+              profilePicture: accessUrl,
+            },
+            {
+              new: true,
+            }
+          );
         }
-      );
-    }
-
-    fs.unlinkSync(locaFilePath);
-
-    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture, "File Uploaded successfully"));
+  return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture, "Profile Pic Uploaded successfully"));
   } catch (error) {
-    console.error('Error uploading file:', error);
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
-  }
+        console.error('Error uploading file:', error);
+        throw new ApiError(
+          ResponseStatusCode.INTERNAL_SERVER_ERROR,
+          error.message || "Internal server error"
+        );
+      }
 };
 
 export {

@@ -9,10 +9,7 @@ import {
   uploadProfile,
   dev,
 } from "../../controllers/userUpdate.controller";
-
-
-import { upload } from '../../middlewares/upload';
-
+import multer from 'multer';
 // /**
 //  * Endpoint: /api/v1/user
 //  */
@@ -25,15 +22,14 @@ const router = express.Router();
 //     .route("/") //
 //     .get(authorization, getAllUsers);
 
+const upload = multer({ storage: multer.memoryStorage() });
+const uploadFile = (fieldName: string) => upload.single(fieldName);
 
-
-
-
+router.patch('/uploadProfile/:userId', uploadFile('profilePicture'), uploadProfile);
 router.route("/set-availability/:paraExpId").patch(setAvailability);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(getUserById);
-router.patch('/upload/:userId', upload.single('file'), uploadProfile);
 router.route("/get-notifications").get(verifyJWT, getNotifications)
 router.route("/dev").patch(dev)
 
