@@ -26,6 +26,7 @@ const updateUserDetails = asyncHandler(
     if (!name || !gender || !dateOfBirth || !interests || !phone) {
       throw new ApiError(ResponseStatusCode.BAD_REQUEST, "All fields are required");
     }
+    console.log(req.user?._id)
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -256,7 +257,7 @@ const uploadProfile = async (req: Request, res: Response) => {
     if (!isUser) {
       return res.status(404).json(new ApiResponse(ResponseStatusCode.NOT_FOUND, null, 'User not found'));
     }
-    const filename = `${req.file.originalname}-${Date.now()}`;
+    const filename = `${Date.now()}-${req.file.originalname}`;
     const contentType = req.file.mimetype;
     const fileContent = req.file.buffer;
 
@@ -264,10 +265,11 @@ const uploadProfile = async (req: Request, res: Response) => {
     const putCommand = new PutObjectCommand({
       Bucket: bucketName,
       Key: `uploads/user-profile/${filename}`,
+      Body: fileContent,
       ContentType: contentType,
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 60 });
+    const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 100 });
 
     await axios.put(uploadUrl, fileContent, {
       headers: {
@@ -279,21 +281,9 @@ const uploadProfile = async (req: Request, res: Response) => {
       Bucket: bucketName,
       Key: `uploads/user-profile/${filename}`,
     });
-    const accessUrl = await getSignedUrl(s3Client, getCommand);
+    const accessUrl = await getSignedUrl(s3Client, getCommand,  { expiresIn: 8640 });
 
-    let user;
-        if (accessUrl) {
-          user = await User.findByIdAndUpdate(
-            userID,
-            {
-              profilePicture: accessUrl,
-            },
-            {
-              new: true,
-            }
-          );
-        }
-  return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, user.profilePicture, "Profile Pic Uploaded successfully"));
+  return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, accessUrl, "Profile Pic Uploaded successfully"));
   } catch (error) {
         console.error('Error uploading file:', error);
         throw new ApiError(
