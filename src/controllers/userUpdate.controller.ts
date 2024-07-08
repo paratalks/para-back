@@ -242,51 +242,90 @@ const s3Client = new S3Client({
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME!;
 
+// const uploadProfile = async (req: Request, res: Response) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
+//     }
+//     const userID = req.params.userId;
+//     const isUser = await User.findById(userID);
+//     if (!isUser) {
+//       return res.status(404).json(new ApiResponse(ResponseStatusCode.NOT_FOUND, null, 'User not found'));
+//     }
+//     const filename = `${Date.now()}-${req.file.originalname}`;
+//     const contentType = req.file.mimetype;
+//     const fileContent = req.file.buffer;
+
+
+//     const putCommand = new PutObjectCommand({
+//       Bucket: bucketName,
+//       Key: `uploads/user-profile/${filename}`,
+//       Body: fileContent,
+//       ContentType: contentType,
+//     });
+
+//     const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 100 });
+
+//     await axios.put(uploadUrl, fileContent, {
+//       headers: {
+//         'Content-Type': contentType
+//       }
+//     });
+
+//     const getCommand = new GetObjectCommand({
+//       Bucket: bucketName,
+//       Key: `uploads/user-profile/${filename}`,
+//     });
+//     const accessUrl = await getSignedUrl(s3Client, getCommand,  { expiresIn: 8640 });
+
+//   return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, accessUrl, "Profile Pic Uploaded successfully"));
+//   } catch (error) {
+//         console.error('Error uploading file:', error);
+//         throw new ApiError(
+//           ResponseStatusCode.INTERNAL_SERVER_ERROR,
+//           error.message || "Internal server error"
+//         );
+//       }
+// };
+
 const uploadProfile = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
     }
+
     const userID = req.params.userId;
     const isUser = await User.findById(userID);
     if (!isUser) {
       return res.status(404).json(new ApiResponse(ResponseStatusCode.NOT_FOUND, null, 'User not found'));
     }
+
     const filename = `${Date.now()}-${req.file.originalname}`;
     const contentType = req.file.mimetype;
     const fileContent = req.file.buffer;
-
 
     const putCommand = new PutObjectCommand({
       Bucket: bucketName,
       Key: `uploads/user-profile/${filename}`,
       Body: fileContent,
       ContentType: contentType,
+      ACL: 'public-read',
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 100 });
+    await s3Client.send(putCommand);
 
-    await axios.put(uploadUrl, fileContent, {
-      headers: {
-        'Content-Type': contentType
-      }
-    });
+    const accessUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/user-profile/${filename}`;
 
-    const getCommand = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: `uploads/user-profile/${filename}`,
-    });
-    const accessUrl = await getSignedUrl(s3Client, getCommand,  { expiresIn: 8640 });
-
-  return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, accessUrl, "Profile Pic Uploaded successfully"));
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, accessUrl, "Profile Pic Uploaded successfully"));
   } catch (error) {
-        console.error('Error uploading file:', error);
-        throw new ApiError(
-          ResponseStatusCode.INTERNAL_SERVER_ERROR,
-          error.message || "Internal server error"
-        );
-      }
+    console.error('Error uploading file:', error);
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
 };
+
 
 export {
   updateUserDetails,
