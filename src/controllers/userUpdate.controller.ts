@@ -13,47 +13,42 @@ import axios from "axios";
 
 const updateUserDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, email, gender, interests, profilePicture, phone } = req.body as {
-      name: String;
-      gender: String;
-      email:String;
-      interests: [String];
-      profilePicture: String;
-      phone: String;
-    };
-    const dateOfBirth = new Date(req.body.dateOfBirth)
+    const { userId } = req.params;
+    const { name, email, gender, interests, profilePicture, phone, dateOfBirth } = req.body;
 
-    if (!name || !gender || !dateOfBirth || !interests || !phone) {
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "All fields are required");
+    const updateFields: any = {};
+
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+    if (gender) updateFields.gender = gender;
+    if (dateOfBirth) updateFields.dateOfBirth = new Date(dateOfBirth);
+    if (interests) updateFields.interests = interests;
+    if (profilePicture) updateFields.profilePicture = profilePicture;
+    if (phone) updateFields.phone = phone;
+
+    try {
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: updateFields },
+        { new: true }
+      ).select('-password -refreshToken');
+
+      if (!user) {
+        throw new ApiError(ResponseStatusCode.NOT_FOUND, "User not found");
+      }
+
+      res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          user,
+          "User details updated successfully"
+        )
+      );
+    } catch (error) {
+      console.log(error);
     }
-    console.log(req.user?._id)
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          name,
-          email,
-          gender,
-          dateOfBirth,
-          interests,
-          profilePicture,
-          phone,
-        },
-      },
-      { new: true }
-    );
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        user,
-        "User details updated successfully"
-      )
-    );
   }
 );
-
 const updateParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const {
