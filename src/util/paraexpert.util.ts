@@ -4,8 +4,9 @@ import { Appointments } from "../models/appointments/appointments.model";
 import { ObjectId } from "mongoose";
 import { Review } from "../models/reviews/review.model";
 import { User } from "../models/user/user.model";
+import { BookingType } from ".";
 
-export const getAvailableSlots = async (paraExpertId: any, date: Date) => {
+export const getAvailableSlots = async (paraExpertId: any, date: Date, appointmentMode: string) => {
   const paraExpert = await ParaExpert.findById(paraExpertId);
 
   if (!paraExpert) {
@@ -14,7 +15,22 @@ export const getAvailableSlots = async (paraExpertId: any, date: Date) => {
 
   const day: number = date.getDay();
   const availables = paraExpert.availability.find((item) => item.day === day);
-  const available_slots = availables?.slots;
+  const available_modes = availables?.slots;
+  let available_slots;
+
+  switch (appointmentMode) {
+    case BookingType.CHAT:
+      available_slots = available_modes.chat;
+      break;
+    case BookingType.VIDEO_CALL:
+      available_slots = available_modes.video_call;
+      break;
+    case BookingType.AUDIO_CALL:
+      available_slots = available_modes.audio_call;
+      break;
+    default:
+      throw new ApiError(400, "Invalid appointment mode");
+  }
 
   if (available_slots) {
     const appointments = await Appointments.find({
@@ -43,9 +59,10 @@ export const getSlotAvailability = async (
   paraExpertId: any,
   date: Date,
   startTime: string,
-  endTime: string
+  endTime: string,
+  appointmentMode : string
 ) => {
-  const availability: String[] = await getAvailableSlots(paraExpertId, date);
+  const availability: String[] = await getAvailableSlots(paraExpertId, date, appointmentMode);
   const slots = availability?.find(
     (slot) => slot.split("-")[0] === startTime //&& slot.split("-")[1] === endTime
   );

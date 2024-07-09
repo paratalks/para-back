@@ -29,12 +29,12 @@ interface paraSearch {
     amount: Number;
   }[];
   reviews: any;
-  image: string;
+  image: String;
   experience: Number;
   consultancy: {
-    audio: Number;
-    video: Number;
-    message: Number;
+    audio_call_price: Number;
+    video_call_price: Number;
+    messaging_price: Number;
   };
   ratings: Number;
 }
@@ -63,8 +63,13 @@ export const getSearchResults = asyncHandler(
           { expertise: { $in: searchQuery } },
           { expertise: { $elemMatch: { $in: [searchQuery] } } },
         ],
-      });
-
+      })
+      .select('ratings expertise _id userId profilePicture').limit(10)
+      .populate({
+        path: 'userId',
+        model:'User',
+        select: 'name',
+      });     
       return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
     } catch (error) {
       return res.json(

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { BookingType } from "../../util";
 
 const appointmentsSchema = new mongoose.Schema({
   userId: {
@@ -25,7 +26,8 @@ const appointmentsSchema = new mongoose.Schema({
   },
   appointmentMode:{
     type:String,
-    enum:["online","offline"],
+    enum:[BookingType.CHAT,BookingType.VIDEO_CALL,BookingType.AUDIO_CALL,BookingType.ONLINE_PACKAGE,BookingType.OFFLINE_PACKAGE],
+    
   },
   callToken:{
     type:String,

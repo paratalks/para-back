@@ -2,6 +2,18 @@ export enum Status {
     ACTIVE = "active",
     INACTIVE="inactive"
 }
+export enum BookingType {
+    CHAT = "chat",
+    VIDEO_CALL = "video_call",
+    AUDIO_CALL = "audio_call",
+    ONLINE_PACKAGE = "online_package",
+    OFFLINE_PACKAGE = "offline_package"
+}
+export enum PaymentStatus {
+    PENDING = "pending",
+    SUCCESS = "success",
+    FAILED = "failed"
+}
 
 export enum StatusCode {
     OK = 200,
