@@ -435,3 +435,104 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     );
   }
 });
+
+
+export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
+  async (req: Request, res: Response) => {
+    try {
+      const phone: number = req.body.phone;
+
+      if (!phone) {
+        return res.status(400).json(
+          new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: 'Mobile number is required' })
+        );
+      }
+
+      let user: any = await User.findOne({ phone });
+
+      if (!user) {
+        return res.status(403).json(
+          new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not an authorized user')
+        );
+      }
+
+      const userId = user._id;
+      const paraExpert = await ParaExpert.findOne({ userId });
+
+      if (!paraExpert) {
+        return res.status(403).json(
+          new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not authorized Para Expert')
+        );
+      }
+      else  {
+        const otpResponse = await sendOTPF(phone);
+        return res.json(otpResponse); 
+      }
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, { message: error.message })
+      );
+    }
+  }
+);
+
+// Function to send OTP
+async function sendOTPF(phone: number): Promise<ApiResponse> {
+  try {
+    const otp: number = generateOTP();
+    const requestID = httpContext.get("requestId"); // Assuming you have requestId set in your middleware
+
+    // Replace with your SMS API endpoint and credentials
+    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+      params: {
+        authorization: process.env.FAST2SMS_API_KEY,
+        variables_values: otp,
+        route: "otp",
+        numbers: phone,
+      },
+    });
+
+    // Update or create OTP record in database
+    if (await OTP.findOne({ phone })) {
+      await OTP.findOneAndUpdate(
+        { phone },
+        {
+          otp,
+          otpExpiration: new Date(Date.now() + 10 * 60000),
+          verified: false,
+          requestId: requestID,
+        },
+        { new: true }
+      );
+    } else {
+      await OTP.create({
+        phone,
+        otp,
+        otpExpiration: new Date(Date.now() + 10 * 60000),
+        verified: false,
+        requestId: requestID,
+      });
+    }
+
+    return new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      { requestID },
+      `OTP sent successfully to ${phone}`
+    );
+
+  } catch (error) {
+    console.error(error);
+    return new ApiResponse(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      "Failed to send OTP",
+      error.message
+    );
+  }
+}
+
+// Function to generate OTP
+function generateOTP(): number {
+  return Math.floor(100000 + Math.random() * 900000);
+}
