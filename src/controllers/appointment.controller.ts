@@ -269,7 +269,7 @@ const getBookings = asyncHandler(async (req: Request, res: Response) => {
     const paraExpert = await ParaExpert.findOne({ userId });
     const paraExpertId = paraExpert._id;
     const appointments = await Appointments.find({ paraExpertId })
-    .select('-_id -updatedAt -__v') 
+    .select('-createdAt -updatedAt -__v') 
     .populate({
       path: 'userId',
       model:'User',
