@@ -107,25 +107,36 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookingUser = await User.findById(userId)
-
+    const paraExpertUserId = await ParaExpert.findById(userId)
+    const bookedParaExpert = await User.findById(paraExpertUserId.userId)
+ 
     await sendNotif(
       bookingUser.fcmToken,
+      bookedParaExpert.fcmToken,
       "Booking confirmed",
       `Appointment booked for ${date} from ${startTime} to ${endTime}`
     );
 
-    const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
+    const createUserNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
 
-    if (!createNotification) {
+    const createExpertNotifiction = await notification(bookedParaExpert.id,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
+    if (!createUserNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Failed to create notification"
       );
     }
 
-    const sendNotification = fcm(createNotification._id);
+    const sendUserNotification = fcm(createUserNotification._id);
+    const sendExpertNotification = fcm(createExpertNotifiction._id);
+    if (!sendUserNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to send notification"
+      );
+    }
 
-    if (!sendNotification) {
+    if (!sendExpertNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Failed to send notification"

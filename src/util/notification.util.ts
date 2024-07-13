@@ -79,9 +79,9 @@ const serviceAccount = require("../../paratalks-admin.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-export const sendNotif = async (token:String, title:String, body:String) => {
+export const sendNotif = async (userToken:String,paraToken:String, title:String, body:String) => {
   try {
-    if (!token || typeof token !== "string") {
+    if (!userToken || !paraToken) {
       throw new Error("Invalid FCM token provided");
     }
     const message = {
@@ -98,7 +98,8 @@ export const sendNotif = async (token:String, title:String, body:String) => {
           body: body,
         },
       },
-      token: token,
+      userToken: userToken,
+      paraToken: paraToken
     };
     const response = await admin.messaging().send(message);
     console.log("Successfully sent message:", response);
