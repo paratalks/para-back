@@ -13,4 +13,3 @@ router.route("/update-appointments").patch(updateAppointment);
 router.route("/appointment/:id").get(getAppointmentById);
 
 export default router;
-
