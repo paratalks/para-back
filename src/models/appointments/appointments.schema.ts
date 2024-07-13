@@ -12,22 +12,30 @@ const appointmentsSchema = new mongoose.Schema({
   },
   date:{
     type: Date,
+    required:true,
   },
   startTime:{
     type: String,
+    required:true,
   },
   endTime:{
     type:String,
+    required:true,
   },
   status:{
       type:String,
       enum:["scheduled","cancelled","completed","rescheduled"],
       default:"scheduled",
   },
-  appointmentMode:{
-    type:String,
-    enum:[BookingType.CHAT,BookingType.VIDEO_CALL,BookingType.AUDIO_CALL,BookingType.ONLINE_PACKAGE,BookingType.OFFLINE_PACKAGE],
-    
+  appointmentMode: {
+    type: String,
+    enum: ["online", "offline"],
+    default: "online", 
+  },
+  appointmentMethod: {
+    type: String,
+    enum: ["chat", "video_call", "audio_call", "offline_package"],
+    default: "chat",
   },
   callToken:{
     type:String,

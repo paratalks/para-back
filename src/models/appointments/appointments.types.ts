@@ -11,6 +11,10 @@ export interface appointmentsTypes {
     type: String;
     enum: ["online", "offline"];
   };
+  appointmentMethod: {
+    type: String;
+    enum: ["chat", "video_call", "audio_call", "offline_package"];
+  };
   callToken: {
     type: String;
   };

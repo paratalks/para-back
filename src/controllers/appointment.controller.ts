@@ -20,7 +20,7 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { startTime, endTime, status, image, amount, appointmentMode, problem } =
+  const { startTime, endTime, status, image, amount, appointmentMode,appointmentMethod, problem } =
     req.body as {
       startTime: string;
       endTime: string;
@@ -28,6 +28,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       image: string;
       amount: number;
       appointmentMode: string;
+      appointmentMethod: string;
       problem: string[];
     };
 
@@ -91,6 +92,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       endTime,
       status,
       appointmentMode,
+      appointmentMethod,
       callToken,
       problem,
     });
@@ -266,7 +268,14 @@ const getBookings = asyncHandler(async (req: Request, res: Response) => {
     const userId = user._id;
     const paraExpert = await ParaExpert.findOne({ userId });
     const paraExpertId = paraExpert._id;
-    const appointments = await Appointments.find({ paraExpertId });
+    const appointments = await Appointments.find({ paraExpertId })
+    .select('-_id -updatedAt -__v') 
+    .populate({
+      path: 'userId',
+      model:'User',
+      select: 'name profilePicture'
+    })
+
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,

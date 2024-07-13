@@ -436,6 +436,9 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
   }
 });
 
+export const generateOTP = (): number => {
+  return Math.floor(100000 + Math.random() * 900000);
+};
 
 export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
   async (req: Request, res: Response) => {
@@ -465,7 +468,7 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
         );
       }
       else  {
-        const otpResponse = await sendOTPF(phone);
+        const otpResponse = await sendOTPToParaexpert(phone);
         return res.json(otpResponse); 
       }
 
@@ -478,13 +481,10 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
   }
 );
 
-// Function to send OTP
-async function sendOTPF(phone: number): Promise<ApiResponse> {
+async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
   try {
     const otp: number = generateOTP();
-    const requestID = httpContext.get("requestId"); // Assuming you have requestId set in your middleware
-
-    // Replace with your SMS API endpoint and credentials
+    const requestID = httpContext.get("requestId");
     const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
       params: {
         authorization: process.env.FAST2SMS_API_KEY,
@@ -494,7 +494,6 @@ async function sendOTPF(phone: number): Promise<ApiResponse> {
       },
     });
 
-    // Update or create OTP record in database
     if (await OTP.findOne({ phone })) {
       await OTP.findOneAndUpdate(
         { phone },
@@ -530,9 +529,4 @@ async function sendOTPF(phone: number): Promise<ApiResponse> {
       error.message
     );
   }
-}
-
-// Function to generate OTP
-function generateOTP(): number {
-  return Math.floor(100000 + Math.random() * 900000);
 }
