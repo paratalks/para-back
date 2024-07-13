@@ -6,7 +6,7 @@ import { Review } from "../models/reviews/review.model";
 import { User } from "../models/user/user.model";
 import { BookingType } from ".";
 
-export const getAvailableSlots = async (paraExpertId: any, date: Date, appointmentMode: string) => {
+export const getAvailableSlots = async (paraExpertId: any, date: Date, appointmentMethod: string) => {
   const paraExpert = await ParaExpert.findById(paraExpertId);
 
   if (!paraExpert) {
@@ -18,7 +18,7 @@ export const getAvailableSlots = async (paraExpertId: any, date: Date, appointme
   const available_modes = availables?.slots;
   let available_slots;
 
-  switch (appointmentMode) {
+  switch (appointmentMethod) {
     case BookingType.CHAT:
       available_slots = available_modes.chat;
       break;
@@ -60,9 +60,9 @@ export const getSlotAvailability = async (
   date: Date,
   startTime: string,
   endTime: string,
-  appointmentMode : string
+  appointmentMethod : string
 ) => {
-  const availability: String[] = await getAvailableSlots(paraExpertId, date, appointmentMode);
+  const availability: String[] = await getAvailableSlots(paraExpertId, date, appointmentMethod);
   const slots = availability?.find(
     (slot) => slot.split("-")[0] === startTime //&& slot.split("-")[1] === endTime
   );

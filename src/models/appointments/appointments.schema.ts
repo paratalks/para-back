@@ -30,7 +30,7 @@ const appointmentsSchema = new mongoose.Schema({
   appointmentMode: {
     type: String,
     enum: ["online", "offline"],
-    default: "online", 
+    default: "online",
   },
   appointmentMethod: {
     type: String,
