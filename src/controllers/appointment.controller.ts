@@ -131,6 +131,52 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Failed to send notification"
       );
     }
+    const paraExpert = await ParaExpert.findById(paraExpertId);
+
+    if (!paraExpert) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Para expert not found"
+      );
+    }
+     const paraExpertUser = await User.findById(paraExpert.userId);
+
+     if (!paraExpertUser || !paraExpertUser.fcmToken) {
+       throw new ApiError(
+         ResponseStatusCode.BAD_REQUEST,
+         "FCM token not found for para expert user"
+       );
+     }
+
+    await sendNotif(
+      paraExpertUser.fcmToken,
+      "New booking request",
+      `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
+    );
+
+    const createParaExpertNotification = await notification(
+      paraExpert.userId,
+      "New booking request",
+      `You have a new appointment request for ${date} from ${startTime} to ${endTime}`,
+      "appointment",
+      appointment._id
+    );
+
+    if (!createParaExpertNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification for para expert"
+      );
+    }
+
+    const sendParaExpertNotification = fcm(createParaExpertNotification._id);
+
+    if (!sendParaExpertNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to send notification to para expert"
+      );
+    }
 
     return res.json(
       new ApiResponse(

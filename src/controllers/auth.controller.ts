@@ -443,7 +443,7 @@ export const generateOTP = (): number => {
 export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
   async (req: Request, res: Response) => {
     try {
-      const phone: number = req.body.phone;
+      const { phone, fcmToken } = req.body;
 
       if (!phone) {
         return res.status(400).json(
@@ -451,7 +451,7 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
         );
       }
 
-      let user: any = await User.findOne({ phone });
+      let user = await User.findOne({ phone });
 
       if (!user) {
         return res.status(403).json(
@@ -467,10 +467,12 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
           new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not authorized Para Expert')
         );
       }
-      else  {
+        user.fcmToken = fcmToken;
+        await user.save();
+
         const otpResponse = await sendOTPToParaexpert(phone);
         return res.json(otpResponse); 
-      }
+      
 
     } catch (error) {
       console.error(error);
