@@ -1,9 +1,5 @@
-// <<<<<<< HEAD
-// // import User from "../models/User/";
-// =======
-// //import User from "../models/User";
+
 // import {User} from "../models/user/user.model";
-// >>>>>>> 4b0b1cfbb126230c95bf9c4acf48e15b1d1609db
 // import { NextFunction, Request, RequestHandler, Response } from "express";
 // import bigPromise from "../middlewares/bigPromise";
 // import { sendSuccessApiResponse } from "../middlewares/successApiResponse";
@@ -182,10 +178,8 @@
 //     });
 
 //     return res.status(200).json({
-// <<<<<<< Updated upstream
 //         success: true,
 //         message: "Logged Out Successfully",
-// =======
 //       success: true,
 //       message: "OTP send successfully",
 //     });
@@ -215,6 +209,5 @@
 //     res.status(400).json({
 //       success: false,
 //       message: "Mobile number not found or OTP expired",
-// >>>>>>> Stashed changes
 //     });
 // });
