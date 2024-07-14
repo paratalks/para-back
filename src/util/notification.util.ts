@@ -81,7 +81,9 @@ export const sendNotif = async (token:String, title:String, body:String) => {
     const serviceAccount = require("../../paratalks-admin.json");
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-    });
+    },
+    "paratalks"
+  );
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
     }
@@ -116,7 +118,9 @@ export const sendParaNotif = async (token: String, title: String, body: String) 
     const serviceAccount2 = require("../../paraexperts-app-admin.json");
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount2),
-    });
+    },
+    "paraexpert"
+  );
 
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
