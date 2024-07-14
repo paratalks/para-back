@@ -252,7 +252,7 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
     }
 
     const startDateObj = new Date(startDate as string);
-    const endDateObj = new Date(endDate as string);
+    // const endDateObj = new Date(endDate as string);
 
     const paraExpert = await ParaExpert.findById(paraExpertId);
 
@@ -264,36 +264,48 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
         )
       );
     }
+    const bookings = await Appointments.find({
+      paraExpertId: paraExpertId,
+      date: startDateObj, 
+      status: 'scheduled'
+    }).select('startTime endTime');
 
-    const availableSlots: {
-      date: string;
-      slots: { chat: string[]; video_call: string[]; audio_call: string[] };
-    }[] = [];
+    const bookedSlots = bookings.map(appointment => ({
+      _id: appointment._id,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime
+    }));
+    
+    bookedSlots.sort((a, b) => {
+      if (a.startTime < b.startTime) return -1;
+      if (a.startTime > b.startTime) return 1;
+      return 0;
+    });
+    
+    const uniqueTimes = [...new Set(bookedSlots.flatMap(slot => [slot.startTime, slot.endTime]))];
+    
+    // Sorting uniqueTimes chronologically
+    const bookedUniqueTimes =uniqueTimes.sort();
+    const availableSlots = [
+      "06:00", "07:00", "08:00", "09:00", "10:00",
+      "11:00", "12:00", "13:00", "14:00", "15:00",
+      "16:00", "17:00", "18:00"
+  ];
+  
+    const availableSlotsFiltered = availableSlots.filter(slot => !bookedUniqueTimes.includes(slot));
 
-    let loop = new Date(startDateObj);
-    while (loop <= endDateObj) {
-      const dayOfWeek = loop.getDay();
-      const dayAvailability = paraExpert.availability.find(item => item.day === dayOfWeek);
-
-      if (dayAvailability) {
-        const slots2 = {
-          date: loop.toISOString().split("T")[0],
-          slots: {
-            chat: dayAvailability.slots.chat,
-            video_call: dayAvailability.slots.video_call,
-            audio_call: dayAvailability.slots.audio_call,
-          },
-        };
-
-        availableSlots.push(slots2);
-      }
-
-      loop.setDate(loop.getDate() + 1);
-    }
 
     const response = {
-      availability: availableSlots,
-      consultancy: {
+      availability: {
+        date: startDate,
+        slots: {
+        chat: [...availableSlotsFiltered],
+        video_call: [...availableSlotsFiltered],
+        audio_call: [...availableSlotsFiltered]
+        }
+        
+      },
+    consultancy: {
         audio_call_price: paraExpert.consultancy.audio_call_price,
         video_call_price: paraExpert.consultancy.video_call_price,
         messaging_price: paraExpert.consultancy.messaging_price,
