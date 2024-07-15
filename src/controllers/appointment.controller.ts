@@ -7,7 +7,7 @@ import { getAvailableSlots } from "../util/paraexpert.util";
 import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
 import type { ObjectId } from "mongoose";
-import { fcm, notification, sendNotif, sendParaNotif } from "../util/notification.util";
+import { fcm, notification, sendNotif } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
@@ -148,7 +148,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
        );
      }
 
-    await sendParaNotif(
+    await sendNotif(
       paraExpertUser.fcmToken,
       "New booking request",
       `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
