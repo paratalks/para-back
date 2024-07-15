@@ -107,6 +107,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookingUser = await User.findById(userId)
+    console.log("bokking",bookingUser)
 
     await sendNotif(
       bookingUser.fcmToken,
@@ -115,6 +116,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     );
 
     const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
+    console.log("createNotification",createNotification)
 
     if (!createNotification) {
       throw new ApiError(
@@ -124,6 +126,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const sendNotification = fcm(createNotification._id);
+    console.log("sendNotification",sendNotification)
 
     if (!sendNotification) {
       throw new ApiError(
@@ -132,7 +135,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
     const paraExpert = await ParaExpert.findById(paraExpertId);
-
+    console.log("paraExpert",paraExpert)
     if (!paraExpert) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -140,14 +143,14 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
      const paraExpertUser = await User.findById(paraExpert.userId);
-
+      console.log("paraExpertUser",paraExpertUser)
      if (!paraExpertUser || !paraExpertUser.fcmToken) {
        throw new ApiError(
          ResponseStatusCode.BAD_REQUEST,
          "FCM token not found for para expert user"
        );
      }
-
+     
     await sendNotif(
       paraExpertUser.fcmToken,
       "New booking request",
