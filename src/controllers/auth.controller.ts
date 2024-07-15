@@ -367,7 +367,7 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         { requestID },
-        `OTP send successfully ${otp}`
+        `OTP send successfully ${otp} to ${phone}`
       )
     );
   } catch (error) {
