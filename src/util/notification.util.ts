@@ -82,7 +82,7 @@ export const sendNotif = async (token:String, title:String, body:String) => {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     },
-    "paratalks"
+    "parauser"
   );
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
