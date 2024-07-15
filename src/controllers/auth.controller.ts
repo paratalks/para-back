@@ -515,7 +515,7 @@ async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
         { phone },
         {
           otp,
-          otpExpiration: new Date(Date.now() + 10 * 60000),
+          otpExpiration: new Date(Date.now() + 2 * 60000),
           verified: false,
           requestId: requestID,
         },
@@ -525,7 +525,7 @@ async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
       await OTP.create({
         phone,
         otp,
-        otpExpiration: new Date(Date.now() + 10 * 60000),
+        otpExpiration: new Date(Date.now() + 2 * 60000),
         verified: false,
         requestId: requestID,
       });
