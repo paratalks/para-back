@@ -6,7 +6,6 @@ import { ObjectId } from "mongoose";
 import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
 const admin = require("firebase-admin");
-admin.initializeApp()
 
 export const notification = async (
   userId:ObjectId,
@@ -82,9 +81,7 @@ export const sendNotif = async (token:String, title:String, body:String) => {
     const serviceAccount = require("../../paratalks-admin.json");
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-    },
-    "parauser"
-  );
+    });
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
     }
