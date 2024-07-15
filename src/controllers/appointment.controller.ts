@@ -109,11 +109,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     const bookingUser = await User.findById(userId)
     console.log("bokking",bookingUser)
 
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Booking confirmed",
-      `Appointment booked for ${date} from ${startTime} to ${endTime}`
-    );
+    // await sendNotif(
+    //   bookingUser.fcmToken,
+    //   "Booking confirmed",
+    //   `Appointment booked for ${date} from ${startTime} to ${endTime}`
+    // );
 
     const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
     console.log("createNotification",createNotification)
@@ -151,11 +151,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
        );
      }
      
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      "New booking request",
-      `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
-    );
+    // await sendNotif(
+    //   paraExpertUser.fcmToken,
+    //   "New booking request",
+    //   `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
+    // );
 
     const createParaExpertNotification = await notification(
       paraExpert.userId,
@@ -172,14 +172,14 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const sendParaExpertNotification = fcm(createParaExpertNotification._id);
+    // const sendParaExpertNotification = fcm(createParaExpertNotification._id);
 
-    if (!sendParaExpertNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to send notification to para expert"
-      );
-    }
+    // if (!sendParaExpertNotification) {
+    //   throw new ApiError(
+    //     ResponseStatusCode.BAD_REQUEST,
+    //     "Failed to send notification to para expert"
+    //   );
+    // }
 
     return res.json(
       new ApiResponse(
