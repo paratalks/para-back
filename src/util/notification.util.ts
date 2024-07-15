@@ -6,6 +6,7 @@ import { ObjectId } from "mongoose";
 import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
 const admin = require("firebase-admin");
+admin.initializeApp()
 
 export const notification = async (
   userId:ObjectId,
