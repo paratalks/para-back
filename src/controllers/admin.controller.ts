@@ -9,7 +9,7 @@ import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
-import { notification } from '../util/notification.util';
+import { Appointments } from "../models/appointments/appointments.model";
 import { Schema } from 'mongoose';
 
 export const isValidatedPassword = async function (
@@ -240,4 +240,31 @@ export const paraExpertSignup: RequestHandler = async (req: Request, res: Respon
         )
       );
     }
-  };
+};
+
+export const getAppointments: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const appointments = await Appointments.find({})
+    .select('-createdAt -updatedAt -callToken -__v')
+    .populate({
+      path: 'userId',
+      model:'User',
+      select: 'name profilePicture',
+    })
+    .populate({
+      path: 'paraExpertId',
+      model: 'ParaExpert',
+      select: 'userId',
+      populate: {
+        path: 'userId',
+        model: 'User',
+        select: 'name profilePicture',
+      },
+    });
+    
+    res.json(new ApiResponse(200, { appointments }, "All Appointments fetched successfully!"));
+  } catch (error) {
+    next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in fetching Admins"));
+  }
+};
+
