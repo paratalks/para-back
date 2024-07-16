@@ -9,7 +9,7 @@ export interface userTypes {
   interests: [String];
   profilePicture:String;
   phone: String;
-  status: Status;
+  status:String;
   refreshToken: String;
   fcmToken: String;
 };

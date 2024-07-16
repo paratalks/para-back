@@ -46,8 +46,8 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     status: {
-      type: Status,
-      default: Status.ACTIVE,
+      type: String,
+      default: 'active',
       required: false,
     },
   },
