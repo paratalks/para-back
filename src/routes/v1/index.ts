@@ -8,7 +8,7 @@ import homeRoute from "./home.route"
 import paymentRoute from "./payment.route"
 import tokenRoute from "./token.route"
 import reviewRoute from "./review.route"
-
+import adminRoutes from "./admin.route"
 const router = express.Router();
 
 /**
@@ -23,6 +23,7 @@ router.use("/home",homeRoute);
 router.use("/payment",paymentRoute)
 router.use("/token",tokenRoute)
 router.use("/review",reviewRoute)
+router.use("/admin",adminRoutes);
 
 router.get("/", (req, res) => {
     return res.status(200).send({

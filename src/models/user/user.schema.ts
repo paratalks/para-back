@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { Status } from "../../util/index";
 
 const userSchema = new mongoose.Schema(
   {
