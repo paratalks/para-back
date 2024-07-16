@@ -13,7 +13,7 @@ export const generateRtcToken =()=>{
     let role = RtcRole.PUBLISHER;
 
     // get the expire time
-    let expireTime = 3600;
+    let expireTime = 7*24*3600;
 
     // calculate privilege expire time
     const currentTime = Math.floor(Date.now() / 1000);
