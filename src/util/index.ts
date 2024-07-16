@@ -2,6 +2,11 @@ export enum Status {
     ACTIVE = "active",
     INACTIVE="inactive"
 }
+export enum Role {
+    USER = "user",
+    ADMIN = "admin",
+    PARA_EXPERT = "paraExpert"
+}
 export enum BookingType {
     CHAT = "chat",
     VIDEO_CALL = "video_call",

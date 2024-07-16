@@ -87,14 +87,14 @@ export const signup: RequestHandler = bigPromise(
           );
         }
 
-        const sendNotification = fcm(createNotification._id);
+        // const sendNotification = fcm(createNotification._id);
 
-        if (!sendNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to send notification"
-          );
-        }
+        // if (!sendNotification) {
+        //   throw new ApiError(
+        //     ResponseStatusCode.BAD_REQUEST,
+        //     "Failed to send notification"
+        //   );
+        // }
 
         res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {

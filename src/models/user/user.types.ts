@@ -1,4 +1,5 @@
 import { Document, Model } from "mongoose";
+import { Status } from "../../util/index";
 
 export interface userTypes {
   name: String;
@@ -8,6 +9,7 @@ export interface userTypes {
   interests: [String];
   profilePicture:String;
   phone: String;
+  status: Status;
   refreshToken: String;
   fcmToken: String;
 };

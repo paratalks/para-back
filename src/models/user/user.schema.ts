@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Status } from "../../util/index";
 
 const userSchema = new mongoose.Schema(
   {
@@ -43,6 +44,11 @@ const userSchema = new mongoose.Schema(
     fcmToken: {
       //remove, add token
       type: String,
+    },
+    status: {
+      type: Status,
+      default: Status.ACTIVE,
+      required: false,
     },
   },
   { timestamps: true }
