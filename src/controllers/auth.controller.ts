@@ -66,11 +66,11 @@ export const signup: RequestHandler = bigPromise(
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
-        await sendNotif(
-          updatedUser.fcmToken,
-          "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!"
-        );
+        // await sendNotif(
+        //   updatedUser.fcmToken,
+        //   "Welcome to Paratalks",
+        //   "Open the doors to a world of peace and serenity!"
+        // );
 
         const createNotification = await notification(
           user._id,
