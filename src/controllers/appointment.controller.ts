@@ -225,11 +225,9 @@ const getParaExpertTimeSlot = asyncHandler(
   }
 );
 
-//paraexpert
-
 const getParaExpertAvailability = async (req: Request, res: Response) => {
   try {
-    const { paraExpertId, startDate, endDate } = req.query;
+      const { paraExpertId, startDate, endDate } = req.query;
 
     if (!paraExpertId || !startDate || !endDate) {
       return res.json(
@@ -243,6 +241,8 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
     const startDateObj = new Date(startDate as string);
     // const endDateObj = new Date(endDate as string);
 
+    const day = startDateObj.getUTCDay(); // Get the day of the week (0-6)
+
     const paraExpert = await ParaExpert.findById(paraExpertId);
 
     if (!paraExpert) {
@@ -253,48 +253,50 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
         )
       );
     }
+
+    const availabilityForDay = paraExpert.availability.find(a => a.day === day);
+
+    if (!availabilityForDay) {
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.NOT_FOUND,
+          "No availability for the selected day"
+        )
+      );
+    }
+
     const bookings = await Appointments.find({
       paraExpertId: paraExpertId,
-      date: startDateObj, 
+      date: startDateObj,
       status: 'scheduled'
     }).select('startTime endTime');
 
-    const bookedSlots = bookings.map(appointment => ({
-      _id: appointment._id,
-      startTime: appointment.startTime,
-      endTime: appointment.endTime
-    }));
-    
-    bookedSlots.sort((a, b) => {
-      if (a.startTime < b.startTime) return -1;
-      if (a.startTime > b.startTime) return 1;
-      return 0;
+    const bookedSlots = bookings.flatMap(appointment => {
+      return [
+        { type: 'chat', time: appointment.startTime },
+        { type: 'chat', time: appointment.endTime },
+        { type: 'video_call', time: appointment.startTime },
+        { type: 'video_call', time: appointment.endTime },
+        { type: 'audio_call', time: appointment.startTime },
+        { type: 'audio_call', time: appointment.endTime }
+      ];
     });
-    
-    const uniqueTimes = [...new Set(bookedSlots.flatMap(slot => [slot.startTime, slot.endTime]))];
-    
-    // Sorting uniqueTimes chronologically
-    const bookedUniqueTimes =uniqueTimes.sort();
-    const availableSlots = [
-      "06:00", "07:00", "08:00", "09:00", "10:00",
-      "11:00", "12:00", "13:00", "14:00", "15:00",
-      "16:00", "17:00", "18:00"
-  ];
-  
-    const availableSlotsFiltered = availableSlots.filter(slot => !bookedUniqueTimes.includes(slot));
 
+    const filterAvailableSlots = (type: 'chat' | 'video_call' | 'audio_call') => {
+      const availableSlots = availabilityForDay.slots[type];
+      return availableSlots.filter(slot => !bookedSlots.some(b => b.type === type && b.time === slot));
+    };
 
     const response = {
       availability: {
         date: startDate,
         slots: {
-        chat: [...availableSlotsFiltered],
-        video_call: [...availableSlotsFiltered],
-        audio_call: [...availableSlotsFiltered]
+          chat: filterAvailableSlots('chat'),
+          video_call: filterAvailableSlots('video_call'),
+          audio_call: filterAvailableSlots('audio_call')
         }
-        
       },
-    consultancy: {
+      consultancy: {
         audio_call_price: paraExpert.consultancy.audio_call_price,
         video_call_price: paraExpert.consultancy.video_call_price,
         messaging_price: paraExpert.consultancy.messaging_price,
@@ -309,6 +311,7 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 //paraexpert
 const getBookings = asyncHandler(async (req: Request, res: Response) => {
