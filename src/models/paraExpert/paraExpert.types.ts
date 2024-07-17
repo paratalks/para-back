@@ -15,21 +15,20 @@ export interface IAvailability {
   day: number;
   slots: ISlots;
 }
+export interface IPackage {
+  title: string;
+  type: "online" | "offline";
+  description: string;
+  amount: number;
+  additional?: string;
+  packageDuration?: string;
+}
+
 export interface paraExpertTypes {
   userId: Schema.Types.ObjectId;
   expertise: [String];
   availability: IAvailability[];
-  packages: [
-    {
-      title: string;
-      type: {
-        type: String;
-        enum: ["online", "offline"];
-      };
-      description: String;
-      amount: Number;
-    }
-  ];
+  packages:IPackage[]
   ratings: Number;
   bio: String;
   basedOn: String;
@@ -43,9 +42,9 @@ export interface paraExpertTypes {
   consultancy: IConsultancy;
 
   socials:{
-    instagram:String;
-    twitter:String;
-    linkenIn:String;
+    instagram?:String;
+    twitter?:String;
+    linkenIn?:String;
   };
   createdAt: Date;
   updatedAt: Date;
