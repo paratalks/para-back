@@ -8,14 +8,19 @@ import { ApiError } from "../util/apiError";
 import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
 
 export const checkout = async (req: Request, res: Response) => {
-  const options = {
-    amount: Number(req.body.amount * 100),
-    currency: "INR",
-  };
+  try {
+    const options = {
+      amount: Number(req.body.amount * 100),
+      currency: "INR",
+    };
 
-  const order = await instance.orders.create(options);
+    const order = await instance.orders.create(options);
 
-  res.json(new ApiResponse(200,order));
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, order));
+  } catch (error) {
+    console.error("Error during checkout:", error);
+    res.status(500).json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Error during checkout"));
+  }
 };
 
 //redirect url
