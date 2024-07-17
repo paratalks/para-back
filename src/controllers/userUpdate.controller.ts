@@ -139,7 +139,6 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     const para = await ParaExpert.findById(userId);
 
     const paraExpertId = userId;
-    console.log(paraExpertId)
     if (!availability) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -164,7 +163,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        paraExpert,
+        paraExpert.availability,
         "ParaExpert availability updated successfully"
       )
     );

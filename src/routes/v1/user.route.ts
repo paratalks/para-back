@@ -1,7 +1,6 @@
 import express from "express";
 import { verifyJWT } from "../../middlewares/auth.middleware";
 import {
-  setAvailability,
   updateUserDetails,
   updateParaExpertDetails,
   getUserById,
@@ -26,7 +25,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 const uploadFile = (fieldName: string) => upload.single(fieldName);
 
 router.patch('/uploadProfile/:userId', uploadFile('profilePicture'), uploadProfile);
-router.route("/set-availability/:paraExpId").patch(setAvailability);
 router.route("/update-user/:userId").patch(updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(getUserById);
