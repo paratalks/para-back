@@ -7,7 +7,7 @@ const router = express.Router();
 router.route("/get-bookings").get(verifyJWT,getBookings);
 router.route("/get-available-slots").get(verifyJWT,getParaExpertAvailability);
 router.route("/set-availability").patch(verifyJWT,setAvailability);
-router.route("/get-availability").patch(verifyJWT,getAvailability);
+router.route("/get-availability").get(verifyJWT,getAvailability);
 router.route("/create-and-update-packages").patch(verifyJWT,createAndUpdateExpertPackages);
 
 
