@@ -38,7 +38,7 @@ export const adminSignup: RequestHandler = async (req: Request, res: Response, n
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingAdmin) {
-      return res.status(400).json(new ApiResponse(400, { message: "Admin already exists" }));
+      return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: "Admin already exists" }));
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -61,7 +61,7 @@ export const adminSignup: RequestHandler = async (req: Request, res: Response, n
 
     // const token = jwt.sign({ id: newAdmin._id, role: newAdmin.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json(new ApiResponse(200, {admin: newAdmin }, "Admin Registered Successfully!"));
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, {admin: newAdmin }, "Admin Registered Successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in Admin registration"));
   }
@@ -81,8 +81,7 @@ export const adminLogin: RequestHandler = async (req: Request, res: Response, ne
         throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "Invalid email or password");
       }
   
-    //   const isPasswordValid = await bcrypt?.compare(password, admin.password);
-    const isValidPassword = await isValidatedPassword(
+      const isValidPassword = await isValidatedPassword(
         password,
         admin.password.toString()
       );
@@ -108,7 +107,7 @@ export const adminLogin: RequestHandler = async (req: Request, res: Response, ne
         expiresIn: process.env.JWT_EXPIRY,
       });  
     
-      res.json(new ApiResponse(200, { token, adminDetails }, `${admin.name} Logged In Successfully!`));
+      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, { token, adminDetails }, `${admin.name} Logged In Successfully!`));
     } catch (error) {
       next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in Admin login"));
     }
@@ -117,7 +116,7 @@ export const adminLogin: RequestHandler = async (req: Request, res: Response, ne
 export const getUsers: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await User.find({}).select('name phone gender interests profilePicture status');
-    res.json(new ApiResponse(200, { users }, "Users fetched successfully!"));
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, { users }, "Users fetched successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in fetching Admins"));
   }
@@ -190,7 +189,7 @@ export const paraExpertSignup: RequestHandler = async (req: Request, res: Respon
       if (user && user.name && user.gender && user.dateOfBirth) {
         return res
           .status(400)
-          .json(new ApiResponse(400, { message: "User already exist" }));
+          .json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: "User already exist" }));
       }
 
       const toStore = {

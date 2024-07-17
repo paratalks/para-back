@@ -153,9 +153,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     const user = req.user;
     const userId = user._id;
     const para = await ParaExpert.findOne({ userId });
-    console.log(user)
-    console.log(userId);
-    console.log(para._id)
+    
    
     if (!availability) {
       throw new ApiError(
@@ -388,8 +386,10 @@ const createAndUpdateExpertPackages = asyncHandler(
       const userId = user._id;
       const paraExpert = await ParaExpert.findOne({ userId });
       if (!paraExpert) {
-        return res.status(404).json({ message: "ParaExpert not found" });
-      }
+        throw new ApiError(
+          ResponseStatusCode.NOT_FOUND,
+          "Para Expert Not Founded"
+        );      }
       const { title, type, description, amount, additional, packageDuration } =
         req.body;
       const expert = await ParaExpert.findById(paraExpert._id);
