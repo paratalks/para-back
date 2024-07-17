@@ -153,7 +153,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     const user = req.user;
     const userId = user._id;
     const para = await ParaExpert.findOne({ userId });
-    
+
    
     if (!availability) {
       throw new ApiError(
@@ -190,6 +190,30 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     );
   }
 });
+
+const getAvailability = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const userId = user._id;
+    const para = await ParaExpert.findOne({ userId });
+    
+    const paraExpert = await ParaExpert.findById(para._id);
+
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        {availability:paraExpert.availability},
+        "ParaExpert availability fetched successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+});
+
 
 const getUserById = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -437,6 +461,7 @@ export {
   updateUserDetails,
   updateParaExpertDetails,
   setAvailability,
+  getAvailability,
   getUserById,
   getNotifications,
   uploadProfile,
