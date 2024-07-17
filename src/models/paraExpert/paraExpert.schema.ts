@@ -49,6 +49,14 @@ const paraExpertSchema = new mongoose.Schema(
       amount:{
         type:Number,
       },
+      additional: {
+        type: String,
+        required: false,
+      },
+      packageDuration: {
+        type: String,
+        required: false,
+      }
     }],
     ratings:{
       type:Number,
