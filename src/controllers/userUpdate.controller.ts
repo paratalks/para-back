@@ -12,8 +12,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import axios from "axios";
+import { createS3Client,bucketName } from '../util/s3Client.util';
 
 const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -154,7 +153,6 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
     const userId = user._id;
     const para = await ParaExpert.findOne({ userId });
 
-   
     if (!availability) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -195,14 +193,17 @@ const getAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const userId = user._id;
-    const para = await ParaExpert.findOne({ userId });
-    
-    const paraExpert = await ParaExpert.findById(para._id);
-
+    const paraExpert = await ParaExpert.findOne({ userId });
+    if (!paraExpert) {
+      throw new ApiError(
+        ResponseStatusCode.NOT_FOUND,
+        "Para Expert Not Founded"
+      );
+    }
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        {availability:paraExpert.availability},
+        { availability: paraExpert.availability },
         "ParaExpert availability fetched successfully"
       )
     );
@@ -213,7 +214,6 @@ const getAvailability = asyncHandler(async (req: Request, res: Response) => {
     );
   }
 });
-
 
 const getUserById = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -291,61 +291,6 @@ const dev = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-const bucketName = process.env.AWS_S3_BUCKET_NAME!;
-
-// const uploadProfile = async (req: Request, res: Response) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
-//     }
-//     const userID = req.params.userId;
-//     const isUser = await User.findById(userID);
-//     if (!isUser) {
-//       return res.status(404).json(new ApiResponse(ResponseStatusCode.NOT_FOUND, null, 'User not found'));
-//     }
-//     const filename = `${Date.now()}-${req.file.originalname}`;
-//     const contentType = req.file.mimetype;
-//     const fileContent = req.file.buffer;
-
-//     const putCommand = new PutObjectCommand({
-//       Bucket: bucketName,
-//       Key: `uploads/user-profile/${filename}`,
-//       Body: fileContent,
-//       ContentType: contentType,
-//     });
-
-//     const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 100 });
-
-//     await axios.put(uploadUrl, fileContent, {
-//       headers: {
-//         'Content-Type': contentType
-//       }
-//     });
-
-//     const getCommand = new GetObjectCommand({
-//       Bucket: bucketName,
-//       Key: `uploads/user-profile/${filename}`,
-//     });
-//     const accessUrl = await getSignedUrl(s3Client, getCommand,  { expiresIn: 8640 });
-
-//   return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, accessUrl, "Profile Pic Uploaded successfully"));
-//   } catch (error) {
-//         console.error('Error uploading file:', error);
-//         throw new ApiError(
-//           ResponseStatusCode.INTERNAL_SERVER_ERROR,
-//           error.message || "Internal server error"
-//         );
-//       }
-// };
-
 const uploadProfile = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -382,6 +327,7 @@ const uploadProfile = async (req: Request, res: Response) => {
       ACL: "public-read",
     });
 
+    const s3Client: S3Client = createS3Client();
     await s3Client.send(putCommand);
 
     const accessUrl = `https://${bucketName}.s3.${process.env
@@ -413,7 +359,8 @@ const createAndUpdateExpertPackages = asyncHandler(
         throw new ApiError(
           ResponseStatusCode.NOT_FOUND,
           "Para Expert Not Founded"
-        );      }
+        );
+      }
       const { title, type, description, amount, additional, packageDuration } =
         req.body;
       const expert = await ParaExpert.findById(paraExpert._id);
