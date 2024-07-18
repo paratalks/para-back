@@ -6,6 +6,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { ApiError } from "../util/apiError";
 import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
+import { createS3Client,bucketName } from '../util/s3Client.util';
 
 export const checkout = async (req: Request, res: Response) => {
   try {
@@ -54,15 +55,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
   }
 };
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-  }
-});
-
-const bucketName = process.env.AWS_S3_BUCKET_NAME!;
 //upload payment receipt
 export const uploadPaymentReceipt = async (req: Request, res: Response) => {
   try {
@@ -81,7 +73,7 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
       ContentType: contentType,
       ACL: 'public-read',
     });
-
+    const s3Client: S3Client = createS3Client();
     await s3Client.send(putCommand);
 
     const fileUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/payment-receipt/${filename}`;
