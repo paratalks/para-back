@@ -7,6 +7,7 @@ export  interface  PackageBookingTpes {
   bookingDate: Date;
   status: 'pending' | 'confirmed' | 'cancelled' | 'rescheduled' | 'scheduled';
   location: string;
+  address?:string;
   prescriptionReport?: string; 
   questions?: string[];
 }

@@ -35,7 +35,7 @@ export const uploadPrescriptionReportToS3 = async (file: Express.Multer.File): P
   const s3Client: S3Client = createS3Client();
   await s3Client.send(putCommand);
 
-  return `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/payment-receipt/${filename}`;
+  return `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/prescription-report/${filename}`;
 };
 
 export const createBooking = asyncHandler(
@@ -58,9 +58,9 @@ export const createBooking = asyncHandler(
         packageId,
         paraExpertId,
         userId,
-        bookingDate,
         location,
         questions,
+        address,
         status,
       } = req.body;
 
@@ -84,9 +84,10 @@ export const createBooking = asyncHandler(
         paraExpertId,
         userId,
         location,
-        prescriptionReport: fileUrl,
+        prescriptionReport:fileUrl,
         questions,
-        bookingDate,
+        bookingDate:Date.now(),
+        address,
         status,
       });
 
@@ -154,11 +155,12 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
       .exec();
 
     const transformedBookings = transformBookings(bookings);
-
-    res.json(
+      //fine tuning
+    
+      res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        transformedBookings,
+        bookings,
         "Package bookings fetched successfully"
       )
     );
@@ -177,15 +179,15 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
 export const getExpertsBookings = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { expertId, status } = req.query;
+      const { paraExpertId, status } = req.query;
 
-      if (!expertId) {
+      if (!paraExpertId) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
           "ParaExpert ID is required"
         );
       }
-      const queryObj: any = { expertId };
+      const queryObj: any = { paraExpertId };
       if (status) {
         queryObj.status = status;
       }

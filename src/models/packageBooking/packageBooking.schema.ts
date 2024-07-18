@@ -6,21 +6,18 @@ const PackageBookingSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "ParaExpert.packages",
       required: true,
-      unique:false
 
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique:false
 
     },
     paraExpertId: {
       type: Schema.Types.ObjectId,
       ref: "paraExpert",
       required: true,
-      unique:false
     },
     bookingDate: {
       type: Date,
@@ -38,6 +35,10 @@ const PackageBookingSchema = new mongoose.Schema(
     questions: {
       type: [String],
       required: false,
+    },
+    address: {
+      type: String,
+      required:false,
     },
     status: {
       type: String,
