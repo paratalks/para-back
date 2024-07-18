@@ -8,7 +8,7 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 const uploadFile = (fieldName: string) => upload.single(fieldName);
 
-router.post('/createBooking', uploadFile('prescriptionReport'),createBooking);
+router.post('/booking', uploadFile('prescriptionReport'),createBooking);
 router.route("/user/get-bookings").get(verifyJWT,getBookings);
 router.route("/para/get-bookings").get(verifyJWT,getExpertsBookings);
 router.route('/updateBookingStatus/:bookingId').put(updateBookingStatus);
