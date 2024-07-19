@@ -8,54 +8,62 @@ import { ApiError } from "../util/apiError";
 import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
 import { createS3Client,bucketName } from '../util/s3Client.util';
 
+
 export const checkout = async (req: Request, res: Response) => {
   try {
+    const { amount, bookingId } = req.body;
+
     const options = {
-      amount: Number(req.body.amount * 100),
-      currency: "INR",
+      amount: Number(amount * 100),
+      currency: 'INR',
+      receipt: `receipt_${bookingId}`,
     };
 
     const order = await instance.orders.create(options);
 
-    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, order));
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, order, 'Order created successfully'));
   } catch (error) {
-    console.error("Error during checkout:", error);
-    res.status(500).json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "Error during checkout"));
+    console.error('Error during checkout:', error);
+    res.status(500).json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, 'Error during checkout'));
   }
 };
 
-//redirect url
 export const paymentVerification = async (req: Request, res: Response) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-    req.body;
+  const { Gateway_order_id, Gateway_payment_id, Gateway_signature, amount, bookingId, paymentReceiptUrl } = req.body;
+
   try {
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const body = `${Gateway_order_id}|${Gateway_payment_id}`;
 
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
-      .digest("hex");
+      .digest('hex');
 
-    const isAuthentic = expectedSignature === razorpay_signature;
+    const isAuthentic = expectedSignature === Gateway_signature;
     if (isAuthentic) {
-      await Payment.create({
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
+      const newPayment = new Payment({
+        GatewayDetails: {
+          order_id: Gateway_order_id,
+          payment_id: Gateway_payment_id,
+          signature: Gateway_signature,
+        },
+        amount,
+        bookingId,
+        paymentReceiptUrl,
+        status: 'completed',
       });
-      console.log("H")
 
-      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, "verified successfully"));
-      // res.redirect(`FrontURI${}`)
+      const savedPayment = await newPayment.save();
+
+      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, savedPayment, 'Payment verified and saved successfully'));
     } else {
-      res.json(new ApiResponse(ResponseStatusCode.UNAUTHORIZED,"unauthorised"));
+      res.json(new ApiResponse(ResponseStatusCode.UNAUTHORIZED, 'Unauthorized'));
     }
   } catch (error) {
-    res.json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, "internal server error"))
+    res.json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || 'Internal server error'));
   }
 };
 
-//upload payment receipt
 export const uploadPaymentReceipt = async (req: Request, res: Response) => {
   try {
     if (!req.file) {

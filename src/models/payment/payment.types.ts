@@ -1,11 +1,20 @@
-import type { Document,Model,Schema } from "mongoose";
+import type { Document, Model, Schema } from "mongoose";
 
-export interface paymentTypes {
-    razorpay_order_id: String,
-    razorpay_payment_id: String,
-    razorpay_signature: String
+export interface GatewayDetails {
+  order_id: string;
+  payment_id: string;
+  signature: string;
 }
 
-export interface paymentDocument extends paymentTypes, Document {}
+export interface PaymentTypes {
+  GatewayDetails: GatewayDetails;
+  amount: number;
+  bookingId: Schema.Types.ObjectId;
+  bookingMethod: 'appointment' | 'package';
+  paymentReceiptUrl?: string;
+  status: 'pending' | 'completed' | 'failed';
+}
 
-export interface paymentModel extends Model<paymentDocument>  {}
+export interface PaymentDocument extends PaymentTypes, Document {}
+
+export interface PaymentModel extends Model<PaymentDocument> {}
