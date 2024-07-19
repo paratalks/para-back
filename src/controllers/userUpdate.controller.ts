@@ -404,6 +404,38 @@ const createAndUpdateExpertPackages = asyncHandler(
   }
 );
 
+
+const getExpertPackages = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      const userId = user._id;
+      const paraExpert = await ParaExpert.findOne({ userId });
+      if (!paraExpert) {
+        throw new ApiError(
+          ResponseStatusCode.NOT_FOUND,
+          "Para Expert Not Found"
+        );
+      }
+      const packages = paraExpert.packages;
+
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          packages,
+          "Fetched ParaExpert packages successfully"
+        )
+      );
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
+      );
+    }
+  }
+);
+
+
 export {
   updateUserDetails,
   updateParaExpertDetails,
@@ -414,4 +446,5 @@ export {
   uploadProfile,
   dev,
   createAndUpdateExpertPackages,
+  getExpertPackages,
 };
