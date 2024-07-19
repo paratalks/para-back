@@ -10,6 +10,8 @@ import { asyncHandler } from "../util/asyncHandler";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { Appointments } from "../models/appointments/appointments.model";
+import { Payment } from "../models/payment/payment.model";
+
 import { Schema } from 'mongoose';
 
 export const isValidatedPassword = async function (
@@ -56,11 +58,7 @@ export const adminSignup: RequestHandler = async (req: Request, res: Response, n
     });
 
     await newAdmin.save();
-
-  
-
-    // const token = jwt.sign({ id: newAdmin._id, role: newAdmin.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+    
     res.json(new ApiResponse(ResponseStatusCode.SUCCESS, {admin: newAdmin }, "Admin Registered Successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in Admin registration"));
@@ -111,6 +109,71 @@ export const adminLogin: RequestHandler = async (req: Request, res: Response, ne
     } catch (error) {
       next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in Admin login"));
     }
+};
+
+export const getDashboardData = async (req: Request, res: Response) => {
+  try {
+    const totalParaExperts = await ParaExpert.countDocuments();
+    const totalUsers = await User.countDocuments({ status: 'active' });
+    const startOfMonth = (date: Date): Date => {
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    };
+    
+    const endOfMonth = (date: Date): Date => {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    };    
+    const totalRevenue = await Payment.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$amount' },
+        },
+      },
+    ]);
+
+    try {
+      const currentMonthRevenue = await Payment.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: startOfMonth,
+              $lte: endOfMonth,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            monthlyAmount: { $sum: '$amount' },
+          },
+        },
+      ]);
+      const dashboardData = {
+        totalParaExperts,
+        totalUsers,
+        totalRevenue: totalRevenue[0]?.totalAmount || 0,
+        monthlyRevenue: currentMonthRevenue[0]?.monthlyAmount || 0,
+      };
+      res.json({
+        statusCode: 200,
+        data: dashboardData,
+        message: 'Dashboard data fetched successfully',
+        success: true,
+      });
+  
+    }
+    catch (error) {
+      console.error('Error calculating current month revenue:', error);
+      throw error;
+    }
+  } catch (error) {
+    res.status(500).json({
+      statusCode: 500,
+      data: null,
+      message: 'Internal server error',
+      success: false,
+    });
+  }
 };
 
 export const getUsers: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
