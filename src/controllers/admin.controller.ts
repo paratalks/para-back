@@ -58,7 +58,7 @@ export const adminSignup: RequestHandler = async (req: Request, res: Response, n
     });
 
     await newAdmin.save();
-    
+
     res.json(new ApiResponse(ResponseStatusCode.SUCCESS, {admin: newAdmin }, "Admin Registered Successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in Admin registration"));
@@ -178,8 +178,19 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
 export const getUsers: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const users = await User.find({}).select('name phone gender interests profilePicture status');
-    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, { users }, "Users fetched successfully!"));
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const page = parseInt(req.query.page as string, 10) || 1;
+
+    const skip = (page - 1) * limit;
+
+    const users = await User.find({})
+    .select('name phone gender interests profilePicture status')
+    .limit(limit)
+    .skip(skip);
+
+    const totalUsers = await User.countDocuments({});
+
+    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, { users,totalUsers,limit, page }, "Users fetched successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in fetching Admins"));
   }
@@ -187,13 +198,24 @@ export const getUsers: RequestHandler = async (req: Request, res: Response, next
 
 export const getParaExpert: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const page = parseInt(req.query.page as string, 10) || 1;
+
+    const skip = (page - 1) * limit;
+
     const paraExpert = await ParaExpert.find({})
     .select('userId experience basedOn ratings expertise')
+    .limit(limit)
+    .skip(skip)
     .populate({
       path: 'userId',
       model:'User',
       select: 'name gender profilePicture status',
-    });  res.json(new ApiResponse(200, { paraExpert }, "paraExpert fetched successfully!"));
+    });
+
+    const totalExperts = await ParaExpert.countDocuments({});
+
+    res.json(new ApiResponse(200, { paraExpert,totalExperts,limit, page }, "paraExpert fetched successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in fetching Admins"));
   }
@@ -306,8 +328,15 @@ export const paraExpertSignup: RequestHandler = async (req: Request, res: Respon
 
 export const getAppointments: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const page = parseInt(req.query.page as string, 10) || 1;
+
+    const skip = (page - 1) * limit;
+
     const appointments = await Appointments.find({})
     .select('-createdAt -updatedAt -callToken -__v')
+    .limit(limit)
+    .skip(skip)
     .populate({
       path: 'userId',
       model:'User',
@@ -324,7 +353,9 @@ export const getAppointments: RequestHandler = async (req: Request, res: Respons
       },
     });
     
-    res.json(new ApiResponse(200, { appointments }, "All Appointments fetched successfully!"));
+    const totalBookings = await Appointments.countDocuments({});
+
+    res.json(new ApiResponse(200, { appointments,totalBookings,limit, page }, "All Appointments fetched successfully!"));
   } catch (error) {
     next(new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Failure in fetching Admins"));
   }
