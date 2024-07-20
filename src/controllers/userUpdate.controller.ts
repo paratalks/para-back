@@ -12,7 +12,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { createS3Client,bucketName } from '../util/s3Client.util';
+import { createS3Client, bucketName } from "../util/s3Client.util";
 
 const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -349,92 +349,6 @@ const uploadProfile = async (req: Request, res: Response) => {
   }
 };
 
-const createAndUpdateExpertPackages = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const user = req.user;
-      const userId = user._id;
-      const paraExpert = await ParaExpert.findOne({ userId });
-      if (!paraExpert) {
-        throw new ApiError(
-          ResponseStatusCode.NOT_FOUND,
-          "Para Expert Not Founded"
-        );
-      }
-      const { title, type, description, amount, additional, packageDuration } =
-        req.body;
-      const expert = await ParaExpert.findById(paraExpert._id);
-
-      const packageIndex = expert.packages.findIndex(
-        (pkg) => pkg.title === title
-      );
-      if (packageIndex === -1) {
-        expert.packages.push({
-          title,
-          type,
-          description,
-          amount,
-          additional,
-          packageDuration,
-        });
-      } else {
-        expert.packages[packageIndex] = {
-          title,
-          type,
-          description,
-          amount,
-          additional,
-          packageDuration,
-        };
-      }
-      const updatedParaExpert = await expert.save();
-      return res.json(
-        new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          updatedParaExpert.packages,
-          "updated ParaExpert packages successfully"
-        )
-      );
-    } catch (error) {
-      throw new ApiError(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        error.message || "Internal server error"
-      );
-    }
-  }
-);
-
-
-const getExpertPackages = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const user = req.user;
-      const userId = user._id;
-      const paraExpert = await ParaExpert.findOne({ userId });
-      if (!paraExpert) {
-        throw new ApiError(
-          ResponseStatusCode.NOT_FOUND,
-          "Para Expert Not Found"
-        );
-      }
-      const packages = paraExpert.packages;
-
-      return res.json(
-        new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          packages,
-          "Fetched ParaExpert packages successfully"
-        )
-      );
-    } catch (error) {
-      throw new ApiError(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        error.message || "Internal server error"
-      );
-    }
-  }
-);
-
 
 export {
   updateUserDetails,
@@ -445,6 +359,4 @@ export {
   getNotifications,
   uploadProfile,
   dev,
-  createAndUpdateExpertPackages,
-  getExpertPackages,
 };

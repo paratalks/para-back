@@ -1,4 +1,5 @@
 import type { Document, Model, Schema } from "mongoose";
+import mongoose from "mongoose";
 export interface IConsultancy {
   audio_call_price: number;
   video_call_price: number;
@@ -16,10 +17,14 @@ export interface IAvailability {
   slots: ISlots;
 }
 export interface IPackage {
+  _id?: string;
   title: string;
-  type: "online" | "offline";
+  priority?: 'high' | 'medium' | 'low';
+  type: 'online' | 'offline';
   description: string;
-  amount: number;
+  minamount: number;
+  maxamount: number;
+  services: string[];
   additional?: string;
   packageDuration?: string;
 }

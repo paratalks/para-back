@@ -10,6 +10,8 @@ import tokenRoute from "./token.route"
 import reviewRoute from "./review.route"
 import adminRoutes from "./admin.route"
 import packagesbookingRoute from "./packageBooking.routes"
+import packagesRoutes from "./package.route"
+
 const router = express.Router();
 
 /**
@@ -18,6 +20,7 @@ const router = express.Router();
 
 router.use("/auth", authRoute);
 router.use("/booking",bookingRoute);
+router.use("/para/package",packagesRoutes);
 router.use("/package",packagesbookingRoute);
 router.use("/user",userRoute);
 router.use("/para",paraRoute);
