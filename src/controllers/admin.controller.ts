@@ -47,13 +47,11 @@ export const adminSignup: RequestHandler = async (
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingAdmin) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
-            message: "Admin already exists",
-          })
-        );
+      return res.status(400).json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+          message: "Admin already exists",
+        })
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -325,33 +323,45 @@ export const getParaExpertByID = asyncHandler(
   }
 );
 
-export const updateParaExpertById = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { paraExpertID } = req.params;
-    const updateData = req.body;
+export const updateParaExpertById = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const { paraExpertID } = req.params;
+      const updateData = req.body;
 
-    const paraExpert = await ParaExpert.findByIdAndUpdate(paraExpertID, updateData, { new: true, runValidators: true })
-      .select("-createdAt -updatedAt -__v")
+      const paraExpert = await ParaExpert.findByIdAndUpdate(
+        paraExpertID,
+        updateData,
+        { new: true, runValidators: true }
+      ).select("-createdAt -updatedAt -__v");
 
-    if (!paraExpert) {
+      if (!paraExpert) {
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.NOT_FOUND,
+            {},
+            "ParaExpert not found"
+          )
+        );
+      }
+
       return res.json(
-        new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "ParaExpert not found")
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          null,
+          "ParaExpert updated successfully"
+        )
+      );
+    } catch (error) {
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.INTERNAL_SERVER_ERROR,
+          error.message || "Internal server error"
+        )
       );
     }
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        null,
-        "ParaExpert updated successfully"
-      )
-    );
-  } catch (error) {
-    return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || "Internal server error")
-    );
   }
-});
+);
 
 export const paraExpertSignup: RequestHandler = async (
   req: Request,
@@ -383,13 +393,11 @@ export const paraExpertSignup: RequestHandler = async (
     const user: any = req.user;
 
     if (user && user.name && user.gender && user.dateOfBirth) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
-            message: "User already exist",
-          })
-        );
+      return res.status(400).json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+          message: "User already exist",
+        })
+      );
     }
 
     const toStore = {
@@ -529,8 +537,9 @@ export const getAppointmentById = asyncHandler(
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    const user = await User.findById(userId)
-    .select("-createdAt -updatedAt -fcmToken -__v")
+    const user = await User.findById(userId).select(
+      "-createdAt -updatedAt -fcmToken -__v"
+    );
     if (!user) {
       return res.json(
         new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "user not found")
@@ -551,31 +560,35 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const updateUserById = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    const updateData = req.body;
+export const updateUserById = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const updateData = req.body;
 
-    const user = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true })
-      .select("-createdAt -updatedAt -fcmToken -__v");
+      const user = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+        runValidators: true,
+      }).select("-createdAt -updatedAt -fcmToken -__v");
 
-    if (!user) {
+      if (!user) {
+        return res.json(
+          new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "User not found")
+        );
+      }
+
       return res.json(
-        new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "User not found")
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          user,
+          "User updated successfully"
+        )
+      );
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
       );
     }
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        user,
-        "User updated successfully"
-      )
-    );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
   }
-});
+);

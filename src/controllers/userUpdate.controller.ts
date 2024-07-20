@@ -143,13 +143,12 @@ const getParaExpertDetails = asyncHandler(
     try {
       const paraUser = req.user;
       const paraExpertId = paraUser?._id;
-      console.log("par",paraUser)
       const paraExpert = await ParaExpert.findOne({ userId: paraExpertId })
       .select("-createdAt -updatedAt -__v -availability -packages")
         .populate({
           path: "userId",
           model: "User",
-          select: "name phone gender email profilePicture",
+          select: "name phone gender interests dateOfBirth email profilePicture ",
         });
       return res.json(
         new ApiResponse(
