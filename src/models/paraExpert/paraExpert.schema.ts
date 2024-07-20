@@ -39,25 +39,34 @@ const paraExpertSchema = new mongoose.Schema(
       title:{
         type:String,
       },
+      priority:{
+        type:String,
+        enum:["high","medium","low"],
+        required:false,
+        default:'medium'
+      },
       type:{
         type:String,
         enum:["online","offline"],
       },
       description:{
         type:String,
-        required:true,
       },
-      amount:{
+      minamount:{
+        type:Number,
+      },
+      maxamount:{
         type:Number,
       },
       additional: {
         type: String,
-        required: false,
       },
       packageDuration: {
         type: String,
-        required: false,
-      }
+      },
+      services: {
+        type: [String],
+      },
     }],
     ratings:{
       type:Number,
