@@ -59,8 +59,6 @@ const updateParaExpertDetails = asyncHandler(
       interests,
       phone,
       expertise,
-      availability,
-      packages,
       profilePicture,
       ratings,
       bio,
@@ -80,8 +78,6 @@ const updateParaExpertDetails = asyncHandler(
       !interests ||
       !phone ||
       !expertise ||
-      !availability ||
-      !packages ||
       !profilePicture
     ) {
       throw new ApiError(
@@ -92,28 +88,6 @@ const updateParaExpertDetails = asyncHandler(
 
     const paraExpert = req.user;
     const paraExpertId = paraExpert._id;
-
-    const user = await ParaExpert.findOneAndUpdate(
-      { userId: paraExpertId },
-      {
-        $set: {
-          expertise,
-          availability,
-          packages,
-          ratings,
-          bio,
-          basedOn,
-          qualifications,
-          experience,
-          consultancy,
-          socials,
-        },
-      },
-      { new: true }
-    );
-    console.log(user);
-
-    const expert = await ParaExpert.findById(paraExpertId);
 
     await User.findByIdAndUpdate(
       paraExpertId,
@@ -130,13 +104,65 @@ const updateParaExpertDetails = asyncHandler(
       { new: true }
     );
 
+    const expert = await ParaExpert.findOneAndUpdate(
+      { userId: paraExpertId },
+      {
+        $set: {
+          expertise,
+          ratings,
+          bio,
+          basedOn,
+          qualifications,
+          experience,
+          consultancy,
+          socials,
+        },
+      },
+      { new: true }
+    ).select("-createdAt -updatedAt -__v -availability -packages")
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "name phone gender email profilePicture",
+      });
+
+    
+
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        user,
+        { expert },
         "Para Expert details updated successfully"
       )
     );
+  }
+);
+
+const getParaExpertDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const paraUser = req.user;
+      const paraExpertId = paraUser?._id;
+      console.log("par",paraUser)
+      const paraExpert = await ParaExpert.findOne({ userId: paraExpertId })
+      .select("-createdAt -updatedAt -__v -availability -packages")
+        .populate({
+          path: "userId",
+          model: "User",
+          select: "name phone gender email profilePicture",
+        });
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          paraExpert,
+          "para expert fetched successfully"
+        )
+      );
+    } catch (error) {
+      return res.json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+      );
+    }
   }
 );
 
@@ -349,7 +375,6 @@ const uploadProfile = async (req: Request, res: Response) => {
   }
 };
 
-
 export {
   updateUserDetails,
   updateParaExpertDetails,
@@ -357,6 +382,7 @@ export {
   getAvailability,
   getUserById,
   getNotifications,
+  getParaExpertDetails,
   uploadProfile,
   dev,
 };
