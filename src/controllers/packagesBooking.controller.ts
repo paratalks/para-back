@@ -14,6 +14,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { createS3Client, bucketName } from "../util/s3Client.util";
+import { IPackage } from "../models/paraExpert/paraExpert.types";
 
 export const uploadPrescriptionReportToS3 = async (file: Express.Multer.File): Promise<string> => {
   if (!file) {
@@ -109,21 +110,6 @@ export const createBooking = asyncHandler(
     }
   }
 );
-export const transformBookings = (bookings: PackageBookingDocument[]) => {
-  return bookings.map((booking) => {
-    const paraExpert = booking.paraExpertId;
-    const filteredPackages = paraExpert.packages.filter(
-      (pkg: PackageBookingDocument) => pkg._id.equals(booking.packageId)
-    );
-    return {
-      ...booking.toObject(),
-      paraExpertId: {
-        ...paraExpert.toObject(),
-        packages: filteredPackages,
-      },
-    };
-  });
-};
 
 export const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -139,24 +125,23 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookings = await PackagesBooking.find(queryObj)
-      .select("-createdAt -updatedAt -__v")
-      .populate([
-        {
-          path: "paraExpertId",
-          model: "ParaExpert",
-          select: "userId packages _id",
-          populate: {
-            path: "userId",
-            model: "User",
-            select: "name profilePicture",
-          },
-        },
-      ])
-      .exec();
+    .select('-createdAt -updatedAt -__v')
+    .populate([
+      {
+        path: 'paraExpertId',
+        model: 'ParaExpert',
+        select: 'userId _id',
+        populate: [
+          {
+            path: 'userId',
+            model: 'User',
+            select: 'name profilePicture',
+          }
+        ],
+      },
+    ])
+    .exec();
 
-    const transformedBookings = transformBookings(bookings);
-      //fine tuning
-    
       res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
@@ -175,6 +160,47 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
       );
   }
 });
+
+export const getbookingByPackageById = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      const userId = user._id;
+      const { packageId,bookingId } = req.query;
+      
+      const bookings = await PackagesBooking.findById(bookingId)
+
+      const paraExpert = await ParaExpert.findOne({ userId });
+      if (!paraExpert) {
+        throw new ApiError(
+          ResponseStatusCode.NOT_FOUND,
+          "Para Expert Not Found"
+        );
+      }
+
+      const packageIndex = paraExpert.packages.findIndex(
+        (pkg: IPackage) => pkg._id?.toString() === packageId
+      );
+      if (packageIndex === -1) {
+        throw new ApiError(ResponseStatusCode.NOT_FOUND, "Package Not Found");
+      }
+
+      const packageDetail = paraExpert.packages[packageIndex];
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          {bookings,packageDetail},
+          "Fetched bookings Details successfully"
+        )
+      );
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
+      );
+    }
+  }
+);
 
 export const getExpertsBookings = asyncHandler(
   async (req: Request, res: Response) => {
@@ -208,12 +234,11 @@ export const getExpertsBookings = asyncHandler(
         ])
         .exec();
 
-      const transformedBookings = transformBookings(bookings);
 
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          transformedBookings,
+          bookings,
           "Package bookings fetched successfully"
         )
       );
