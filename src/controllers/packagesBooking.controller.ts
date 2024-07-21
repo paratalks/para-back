@@ -6,38 +6,8 @@ import { ResponseStatusCode } from "../constants/constants";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { User } from "../models/user/user.model";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
-import mongoose from "mongoose";
-import { PackageBookingDocument } from "../models/packageBooking/packageBooking.types";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { createS3Client, bucketName } from "../util/s3Client.util";
+import { uploadfileToS3 } from "../util/s3Client.util";
 import { IPackage } from "../models/paraExpert/paraExpert.types";
-
-export const uploadPrescriptionReportToS3 = async (file: Express.Multer.File): Promise<string> => {
-  if (!file) {
-    throw new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded');
-  }
-
-  const filename = `${Date.now()}-${file.originalname}`;
-  const contentType = file.mimetype;
-  const fileContent = file.buffer;
-
-  const putCommand = new PutObjectCommand({
-    Bucket: bucketName,
-    Key: `uploads/prescription-report/${filename}`,
-    Body: fileContent,
-    ContentType: contentType,
-    ACL: 'public-read',
-  });
-
-  const s3Client: S3Client = createS3Client();
-  await s3Client.send(putCommand);
-
-  return `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/prescription-report/${filename}`;
-};
 
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
@@ -53,8 +23,8 @@ export const createBooking = asyncHandler(
             )
           );
       }
-      const fileUrl = await uploadPrescriptionReportToS3(req.file);
-      
+      const fileUrl = await uploadfileToS3(req?.file, "prescription-report");
+
       const {
         packageId,
         paraExpertId,
@@ -63,6 +33,7 @@ export const createBooking = asyncHandler(
         questions,
         address,
         status,
+        bookingDate,
       } = req.body;
 
       if (!packageId || !paraExpertId || !userId || !location) {
@@ -85,9 +56,9 @@ export const createBooking = asyncHandler(
         paraExpertId,
         userId,
         location,
-        prescriptionReport:fileUrl,
+        prescriptionReport: fileUrl,
         questions,
-        bookingDate:Date.now(),
+        bookingDate:bookingDate || Date.now(),
         address,
         status,
       });
@@ -125,24 +96,24 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookings = await PackagesBooking.find(queryObj)
-    .select('-createdAt -updatedAt -__v')
-    .populate([
-      {
-        path: 'paraExpertId',
-        model: 'ParaExpert',
-        select: 'userId _id',
-        populate: [
-          {
-            path: 'userId',
-            model: 'User',
-            select: 'name profilePicture',
-          }
-        ],
-      },
-    ])
-    .exec();
+      .select("-createdAt -updatedAt -__v")
+      .populate([
+        {
+          path: "paraExpertId",
+          model: "ParaExpert",
+          select: "userId _id",
+          populate: [
+            {
+              path: "userId",
+              model: "User",
+              select: "name profilePicture",
+            },
+          ],
+        },
+      ])
+      .exec();
 
-      res.json(
+    res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         bookings,
@@ -166,9 +137,9 @@ export const getbookingByPackageById = asyncHandler(
     try {
       const user = req.user;
       const userId = user._id;
-      const { packageId,bookingId } = req.query;
-      
-      const bookings = await PackagesBooking.findById(bookingId)
+      const { packageId, bookingId } = req.query;
+
+      const bookings = await PackagesBooking.findById(bookingId);
 
       const paraExpert = await ParaExpert.findOne({ userId });
       if (!paraExpert) {
@@ -189,7 +160,7 @@ export const getbookingByPackageById = asyncHandler(
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          {bookings,packageDetail},
+          { bookings, packageDetail },
           "Fetched bookings Details successfully"
         )
       );
@@ -233,7 +204,6 @@ export const getExpertsBookings = asyncHandler(
           },
         ])
         .exec();
-
 
       res.json(
         new ApiResponse(

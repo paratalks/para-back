@@ -7,12 +7,8 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { paraUpdateObject } from "../constants/types";
 import { Notifications } from "../models/notification/notification.model";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { createS3Client, bucketName } from "../util/s3Client.util";
+
+import { uploadfileToS3 } from "../util/s3Client.util";
 
 const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -339,23 +335,7 @@ const uploadProfile = async (req: Request, res: Response) => {
           new ApiResponse(ResponseStatusCode.NOT_FOUND, null, "User not found")
         );
     }
-
-    const filename = `${Date.now()}-${req.file.originalname}`;
-    const contentType = req.file.mimetype;
-    const fileContent = req.file.buffer;
-
-    const putCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: `uploads/user-profile/${filename}`,
-      Body: fileContent,
-      ContentType: contentType,
-      ACL: "public-read",
-    });
-
-    const s3Client: S3Client = createS3Client();
-    await s3Client.send(putCommand);
-
-    const accessUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/user-profile/${filename}`;
+    const accessUrl = await uploadfileToS3(req?.file,"user-profile");
 
     return res.json(
       new ApiResponse(
@@ -379,21 +359,7 @@ export const uploadQualificationDetails = async (req: Request, res: Response) =>
       return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
     }
 
-    const filename = `${Date.now()}-${req.file.originalname}`;
-    const contentType = req.file.mimetype;
-    const fileContent = req.file.buffer;
-
-    const putCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: `uploads/certificate/${filename}`,
-      Body: fileContent,
-      ContentType: contentType,
-      ACL: 'public-read',
-    });
-    const s3Client: S3Client = createS3Client();
-    await s3Client.send(putCommand);
-
-    const fileUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/certificate/${filename}`;
+    const fileUrl = await uploadfileToS3(req?.file,"certificate")
 
     return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, fileUrl, "Qualification Details  Uploaded successfully"));
   } catch (error) {

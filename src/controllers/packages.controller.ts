@@ -5,7 +5,6 @@ import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
-import mongoose from "mongoose";
 import { IPackage } from "../models/paraExpert/paraExpert.types";
 
 export const createExpertPackages = asyncHandler(
