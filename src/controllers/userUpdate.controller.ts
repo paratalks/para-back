@@ -54,6 +54,7 @@ const updateParaExpertDetails = asyncHandler(
       gender,
       interests,
       phone,
+      email,
       expertise,
       profilePicture,
       ratings,
@@ -74,7 +75,8 @@ const updateParaExpertDetails = asyncHandler(
       !interests ||
       !phone ||
       !expertise ||
-      !profilePicture
+      !profilePicture ||
+      !email 
     ) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -91,6 +93,7 @@ const updateParaExpertDetails = asyncHandler(
         $set: {
           name,
           gender,
+          email,
           dateOfBirth,
           interests,
           profilePicture,
