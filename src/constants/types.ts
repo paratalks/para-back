@@ -52,6 +52,7 @@ export interface paraUpdateObject {
   gender: String;
   interests: [String];
   phone: String;
+  email: String;
   expertise: String[];
   availability: [{ day: string; slots: string[] }];
   packages: {
