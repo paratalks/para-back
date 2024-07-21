@@ -6,7 +6,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { ApiError } from "../util/apiError";
 import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
-import { createS3Client,bucketName } from '../util/s3Client.util';
+import { uploadfileToS3 } from '../util/s3Client.util';
 
 
 export const checkout = async (req: Request, res: Response) => {
@@ -70,21 +70,7 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
       return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
     }
 
-    const filename = `${Date.now()}-${req.file.originalname}`;
-    const contentType = req.file.mimetype;
-    const fileContent = req.file.buffer;
-
-    const putCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: `uploads/payment-receipt/${filename}`,
-      Body: fileContent,
-      ContentType: contentType,
-      ACL: 'public-read',
-    });
-    const s3Client: S3Client = createS3Client();
-    await s3Client.send(putCommand);
-
-    const fileUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/payment-receipt/${filename}`;
+    const fileUrl = await uploadfileToS3(req.file, "payment-receipt");
 
     return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, fileUrl, "payment receipt Uploaded successfully"));
   } catch (error) {

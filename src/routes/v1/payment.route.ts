@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.route("/checkout").post(checkout)
 router.route("/verification").post(paymentVerification)
-router.patch('/uploadPaymentReceipt', uploadFile('paymentReceipt'),uploadPaymentReceipt);
+router.post('/uploadPaymentReceipt', uploadFile('paymentReceipt'),uploadPaymentReceipt);
 
 export default router;

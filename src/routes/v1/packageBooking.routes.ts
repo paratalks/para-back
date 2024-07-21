@@ -1,12 +1,10 @@
 import express from 'express';
 import { createBooking, getBookings,getbookingByPackageById, updateBookingStatus,getExpertsBookings } from '../../controllers/packagesBooking.controller';
 import { verifyJWT } from '../../middlewares/auth.middleware';
-import multer from 'multer';
+import { uploadFile } from '../../util/s3Client.util';
 
 const router = express.Router();
 
-const upload = multer({ storage: multer.memoryStorage() });
-const uploadFile = (fieldName: string) => upload.single(fieldName);
 
 router.post('/booking', uploadFile('prescriptionReport'),createBooking);
 router.route("/user/get-bookings").get(verifyJWT,getBookings);
