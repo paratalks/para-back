@@ -107,7 +107,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookingUser = await User.findById(userId)
-    console.log("bokking",bookingUser)
 
     // await sendNotif(
     //   bookingUser.fcmToken,
@@ -160,7 +159,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       "appointment",
       appointment._id
     );
-    console.log("createParaExpertNotification",createParaExpertNotification)
     if (!createParaExpertNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -184,7 +182,6 @@ const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
-      console.log("user", user);
       const userId = user._id;
       const { status }: { status?: string } = req.query;
       const queryObj: Query = { userId };

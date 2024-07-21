@@ -6,6 +6,10 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
+export const uploadFile = (fieldName: string) => upload.single(fieldName);
 
 export const createS3Client = () => {
   return new S3Client({

@@ -8,7 +8,7 @@ import {
   uploadProfile,
   dev,
 } from "../../controllers/userUpdate.controller";
-import multer from 'multer';
+import { uploadFile } from "../../util/s3Client.util";
 // /**
 //  * Endpoint: /api/v1/user
 //  */
@@ -21,8 +21,6 @@ const router = express.Router();
 //     .route("/") //
 //     .get(authorization, getAllUsers);
 
-const upload = multer({ storage: multer.memoryStorage() });
-const uploadFile = (fieldName: string) => upload.single(fieldName);
 
 router.patch('/uploadProfile/:userId', uploadFile('profilePicture'), uploadProfile);
 router.route("/update-user/:userId").patch(updateUserDetails);

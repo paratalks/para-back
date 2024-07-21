@@ -355,8 +355,7 @@ const uploadProfile = async (req: Request, res: Response) => {
     const s3Client: S3Client = createS3Client();
     await s3Client.send(putCommand);
 
-    const accessUrl = `https://${bucketName}.s3.${process.env
-      .AWS_REGION!}.amazonaws.com/uploads/user-profile/${filename}`;
+    const accessUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/user-profile/${filename}`;
 
     return res.json(
       new ApiResponse(
@@ -367,6 +366,38 @@ const uploadProfile = async (req: Request, res: Response) => {
     );
   } catch (error) {
     console.error("Error uploading file:", error);
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+};
+
+export const uploadQualificationDetails = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
+    }
+
+    const filename = `${Date.now()}-${req.file.originalname}`;
+    const contentType = req.file.mimetype;
+    const fileContent = req.file.buffer;
+
+    const putCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: `uploads/certificate/${filename}`,
+      Body: fileContent,
+      ContentType: contentType,
+      ACL: 'public-read',
+    });
+    const s3Client: S3Client = createS3Client();
+    await s3Client.send(putCommand);
+
+    const fileUrl = `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/certificate/${filename}`;
+
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, fileUrl, "Qualification Details  Uploaded successfully"));
+  } catch (error) {
+    console.error('Error uploading file:', error);
     throw new ApiError(
       ResponseStatusCode.INTERNAL_SERVER_ERROR,
       error.message || "Internal server error"
