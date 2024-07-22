@@ -56,7 +56,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
     const limitNumber = +limit;
     const categories = listCategories();
     const paraExperts: any[] = await ParaExpert.find().limit(limitNumber)
-    .select("bio exp ratings ")
+    .select("expertise ratings ")
         .populate({
           path: "userId",
           model: "User",
