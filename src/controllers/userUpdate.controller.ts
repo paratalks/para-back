@@ -76,7 +76,7 @@ const updateParaExpertDetails = asyncHandler(
       !phone ||
       !expertise ||
       !profilePicture ||
-      !email 
+      !email
     ) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -118,14 +118,13 @@ const updateParaExpertDetails = asyncHandler(
         },
       },
       { new: true }
-    ).select("-createdAt -updatedAt -__v -availability -packages")
+    )
+      .select("-createdAt -updatedAt -__v -availability -packages")
       .populate({
         path: "userId",
         model: "User",
         select: "name phone gender email profilePicture",
       });
-
-    
 
     return res.json(
       new ApiResponse(
@@ -143,11 +142,12 @@ const getParaExpertDetails = asyncHandler(
       const paraUser = req.user;
       const paraExpertId = paraUser?._id;
       const paraExpert = await ParaExpert.findOne({ userId: paraExpertId })
-      .select("-createdAt -updatedAt -__v -availability -packages")
+        .select("-createdAt -updatedAt -__v -availability -packages")
         .populate({
           path: "userId",
           model: "User",
-          select: "name phone gender interests dateOfBirth email profilePicture ",
+          select:
+            "name phone gender interests dateOfBirth email profilePicture ",
         });
       return res.json(
         new ApiResponse(
@@ -241,6 +241,7 @@ const getAvailability = asyncHandler(async (req: Request, res: Response) => {
 
 const getUserById = asyncHandler(async (req: Request, res: Response) => {
   try {
+
     const { userId } = req.params;
     const user = await User.findById(userId);
     if (!user) {
@@ -338,7 +339,7 @@ const uploadProfile = async (req: Request, res: Response) => {
           new ApiResponse(ResponseStatusCode.NOT_FOUND, null, "User not found")
         );
     }
-    const accessUrl = await uploadfileToS3(req?.file,"user-profile");
+    const accessUrl = await uploadfileToS3(req?.file, "user-profile");
 
     return res.json(
       new ApiResponse(
@@ -356,17 +357,34 @@ const uploadProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const uploadQualificationDetails = async (req: Request, res: Response) => {
+export const uploadQualificationDetails = async (
+  req: Request,
+  res: Response
+) => {
   try {
     if (!req.file) {
-      return res.status(400).json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded'));
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            ResponseStatusCode.BAD_REQUEST,
+            null,
+            "No file uploaded"
+          )
+        );
     }
 
-    const fileUrl = await uploadfileToS3(req?.file,"certificate")
+    const fileUrl = await uploadfileToS3(req?.file, "certificate");
 
-    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, fileUrl, "Qualification Details  Uploaded successfully"));
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        fileUrl,
+        "Qualification Details  Uploaded successfully"
+      )
+    );
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error("Error uploading file:", error);
     throw new ApiError(
       ResponseStatusCode.INTERNAL_SERVER_ERROR,
       error.message || "Internal server error"
