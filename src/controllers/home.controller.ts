@@ -50,56 +50,33 @@ export const getSearchResults = asyncHandler(
   }
 );
 
-// export const getAll = asyncHandler(async (req: Request, res: Response) => {
-//   try {
-//     const { limit }: any = req.query;
-//     const limitNumber = +limit;
-//     const categories = listCategories();
-//     const paraExperts: any[] = await ParaExpert.find().limit(limitNumber);
+export const getAll = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { limit }: any = req.query;
+    const limitNumber = +limit;
+    const categories = listCategories();
+    const paraExperts: any[] = await ParaExpert.find().limit(limitNumber)
+    .select("bio exp ratings ")
+        .populate({
+          path: "userId",
+          model: "User",
+          select:
+            "name profilePicture ",
+        });
 
-//     const paraExpertUsers: {
-//       id: ObjectId;
-//       name: String;
-//       expertise: [String];
-//       image: string;
-//       ratings: Number;
-//       bio: String;
-//       exp: Number;
-//       qualifications: [{ title: String; certificateUrls: [String] }];
-//       socials: {
-//         instagram: String;
-//         twitter: String;
-//         linkenIn: String;
-//       };
-//     }[] = await Promise.all(
-//       paraExperts.map(async (paraExpert) => {
-//         const user = await User.findById(paraExpert.userId);
-//         return {
-//           id: paraExpert._id,
-//           name: user.name,
-//           expertise: paraExpert.expertise,
-//           image: user.profilePicture,
-//           ratings: paraExpert.ratings,
-//           bio: paraExpert.bio,
-//           exp: paraExpert.experience,
-//           qualifications: paraExpert.qualifications,
-//           socials: paraExpert.socials,
-//         };
-//       })
-//     );
-//     return res.json(
-//       new ApiResponse(ResponseStatusCode.SUCCESS, {
-//         categories,
-//         paraExperts: paraExpertUsers,
-//         banners: banner,
-//       })
-//     );
-//   } catch (error) {
-//     return res.json(
-//       new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-//     );
-//   }
-// });
+    return res.json(
+      new ApiResponse(ResponseStatusCode.SUCCESS, {
+        categories,
+        paraExperts,
+        banners: banner,
+      })
+    );
+  } catch (error) {
+    return res.json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+    );
+  }
+});
 
 export const getParaExpertByID = asyncHandler(
   async (req: Request, res: Response) => {
