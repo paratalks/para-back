@@ -9,36 +9,6 @@ import { ObjectId } from "mongoose";
 import { banner } from "../constants/banner.json";
 import { getReviews } from "../util/paraexpert.util";
 
-interface paraSearch {
-  name: String;
-  bio: String;
-  basedOn: String;
-  qualifications: [
-    {
-      title: String;
-      certificateUrls: [String];
-    }
-  ];
-  packages: {
-    title: string;
-    type: {
-      type: String;
-      enum: ["online", "offline"];
-    };
-    description: String;
-    amount: Number;
-  }[];
-  reviews: any;
-  image: String;
-  experience: Number;
-  consultancy: {
-    audio_call_price: Number;
-    video_call_price: Number;
-    messaging_price: Number;
-  };
-  ratings: Number;
-}
-
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
     try {
@@ -64,12 +34,13 @@ export const getSearchResults = asyncHandler(
           { expertise: { $elemMatch: { $in: [searchQuery] } } },
         ],
       })
-      .select('ratings expertise _id userId profilePicture').limit(10)
-      .populate({
-        path: 'userId',
-        model:'User',
-        select: 'name',
-      });     
+        .select("ratings expertise _id userId profilePicture")
+        .limit(10)
+        .populate({
+          path: "userId",
+          model: "User",
+          select: "name",
+        });
       return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
     } catch (error) {
       return res.json(
@@ -79,80 +50,86 @@ export const getSearchResults = asyncHandler(
   }
 );
 
-export const getAll = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { limit }: any = req.query;
-    const limitNumber = +limit;
-    const categories = listCategories();
-    const paraExperts: any[] = await ParaExpert.find().limit(limitNumber);
+// export const getAll = asyncHandler(async (req: Request, res: Response) => {
+//   try {
+//     const { limit }: any = req.query;
+//     const limitNumber = +limit;
+//     const categories = listCategories();
+//     const paraExperts: any[] = await ParaExpert.find().limit(limitNumber);
 
-    const paraExpertUsers: {
-      id: ObjectId;
-      name: String;
-      expertise: [String];
-      image: string;
-      ratings: Number;
-      bio: String;
-      exp: Number
-      qualifications: [{ title: String; certificateUrls: [String] }];
-      socials: {
-        instagram: String;
-        twitter: String;
-        linkenIn: String;
-      };
-    }[] = await Promise.all(
-      paraExperts.map(async (paraExpert) => {
-        const user = await User.findById(paraExpert.userId);
-        return {
-          id: paraExpert._id,
-          name: user.name,
-          expertise: paraExpert.expertise,
-          image: user.profilePicture,
-          ratings: paraExpert.ratings,
-          bio: paraExpert.bio,
-          exp: paraExpert.experience,
-          qualifications: paraExpert.qualifications,
-          socials: paraExpert.socials
-        };
-      })
-    );
-    return res.json(
-      new ApiResponse(ResponseStatusCode.SUCCESS, {
-        categories,
-        paraExperts: paraExpertUsers,
-        banners: banner,
-      })
-    );
-  } catch (error) {
-    return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-    );
-  }
-});
+//     const paraExpertUsers: {
+//       id: ObjectId;
+//       name: String;
+//       expertise: [String];
+//       image: string;
+//       ratings: Number;
+//       bio: String;
+//       exp: Number;
+//       qualifications: [{ title: String; certificateUrls: [String] }];
+//       socials: {
+//         instagram: String;
+//         twitter: String;
+//         linkenIn: String;
+//       };
+//     }[] = await Promise.all(
+//       paraExperts.map(async (paraExpert) => {
+//         const user = await User.findById(paraExpert.userId);
+//         return {
+//           id: paraExpert._id,
+//           name: user.name,
+//           expertise: paraExpert.expertise,
+//           image: user.profilePicture,
+//           ratings: paraExpert.ratings,
+//           bio: paraExpert.bio,
+//           exp: paraExpert.experience,
+//           qualifications: paraExpert.qualifications,
+//           socials: paraExpert.socials,
+//         };
+//       })
+//     );
+//     return res.json(
+//       new ApiResponse(ResponseStatusCode.SUCCESS, {
+//         categories,
+//         paraExperts: paraExpertUsers,
+//         banners: banner,
+//       })
+//     );
+//   } catch (error) {
+//     return res.json(
+//       new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+//     );
+//   }
+// });
 
 export const getParaExpertByID = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const paraExpert = await ParaExpert.findById(id);
+      const paraExpert = await ParaExpert.findById(id)
+        .select("-createdAt -updatedAt -__v -availability")
+        .populate({
+          path: "userId",
+          model: "User",
+          select:
+            "name gender profilePicture ",
+        });
+
+      if (!paraExpert) {
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.NOT_FOUND,
+            {},
+            "ParaExpert not found"
+          )
+        );
+      }
       const user = await User.findById(paraExpert.userId);
       const reviews = await getReviews(paraExpert._id);
-      const result: paraSearch = {
-        name: user.name,
-        bio: paraExpert.bio,
-        basedOn: paraExpert.basedOn,
-        qualifications: paraExpert.qualifications,
-        packages: paraExpert.packages,
-        reviews: reviews,
-        image: user.profilePicture,
-        experience: paraExpert.experience,
-        consultancy: paraExpert.consultancy,
-        ratings: paraExpert.ratings,
-      };
+
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          result,
+          { paraExpert, reviews },
           "para expert fetched successfully"
         )
       );
@@ -164,19 +141,27 @@ export const getParaExpertByID = asyncHandler(
   }
 );
 
-export const getOnlineOffline = asyncHandler(
+export const getOnlineOfflinepackage = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { type } = req.query;
-      const packageType:String = String(type)
+      const packageType: String = String(type);
       const paraExpert = await ParaExpert.findById(id);
 
       if (!paraExpert) {
-        return res.status(404).json({ message: "ParaExpert not found" });
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.NOT_FOUND,
+            {},
+            "ParaExpert not found"
+          )
+        );
       }
 
-      const packages = paraExpert.packages.filter((pack) => pack.type === packageType);
+      const packages = paraExpert.packages.filter(
+        (pack) => pack.type === packageType
+      );
 
       return res.json(
         new ApiResponse(
@@ -193,45 +178,45 @@ export const getOnlineOffline = asyncHandler(
   }
 );
 
-export const webHome = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { limit }: any = req.query;
-    const limitNumber = +limit;
-    const paraExperts = await ParaExpert.find().limit(limitNumber);
-    const result: {
-      id: ObjectId;
-      name: String;
-      expertise: [String];
-      image: string;
-      qualifications: [{ title: String; certificateUrls: [String] }];
-      socials: {
-        instagram: String;
-        twitter: String;
-        linkenIn: String;
-      };
-    }[] = await Promise.all(
-      paraExperts.map(async (para) => {
-        const user = await User.findById(para.userId);
-        return {
-          id: para._id,
-          name: user.name,
-          expertise: para.expertise,
-          image: user.profilePicture,
-          qualifications: para.qualifications,
-          socials: para.socials,
-        };
-      })
-    );
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        result,
-        "paraExperts fetched successfully"
-      )
-    );
-  } catch (error) {
-    return res.json(
-      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-    );
-  }
-});
+// export const webHome = asyncHandler(async (req: Request, res: Response) => {
+//   try {
+//     const { limit }: any = req.query;
+//     const limitNumber = +limit;
+//     const paraExperts = await ParaExpert.find().limit(limitNumber);
+//     const result: {
+//       id: ObjectId;
+//       name: String;
+//       expertise: [String];
+//       image: string;
+//       qualifications: [{ title: String; certificateUrls: [String] }];
+//       socials: {
+//         instagram: String;
+//         twitter: String;
+//         linkenIn: String;
+//       };
+//     }[] = await Promise.all(
+//       paraExperts.map(async (para) => {
+//         const user = await User.findById(para.userId);
+//         return {
+//           id: para._id,
+//           name: user.name,
+//           expertise: para.expertise,
+//           image: user.profilePicture,
+//           qualifications: para.qualifications,
+//           socials: para.socials,
+//         };
+//       })
+//     );
+//     return res.json(
+//       new ApiResponse(
+//         ResponseStatusCode.SUCCESS,
+//         result,
+//         "paraExperts fetched successfully"
+//       )
+//     );
+//   } catch (error) {
+//     return res.json(
+//       new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+//     );
+//   }
+// });
