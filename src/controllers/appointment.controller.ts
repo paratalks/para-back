@@ -13,8 +13,9 @@ import { title } from "node:process";
 
 interface Query {
   userId: string;
-  status?: string;
+  status?: { $in: string[] } | string;
 }
+
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
@@ -181,10 +182,18 @@ const getBookedAppointment = asyncHandler(
     try {
       const user = req.user;
       const userId = user._id.toString();
-      
-      const { status = "scheduled" }: { status?: string } = req.query;
-      const queryObj: Query = { userId,status };
+      const { status }: { status?: string } = req.query;
 
+      let queryObj: Query = { userId };
+  
+      if (status) {
+        if (status === "scheduled") {
+          queryObj.status = { $in: ["scheduled", "rescheduled"] };
+        } else {
+          queryObj.status = status;
+        }
+      }
+  
       const appointment = await Appointments.find(queryObj)
       .select("-reason -problem -createdAt -updatedAt -__v")
       .populate([
@@ -491,6 +500,53 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+//user while cancelled and completed time
+const updateAppointmentByStatus = asyncHandler(async (req: Request, res: Response) => {
+    try {
+    const { bookingId } = req.params;
+    const { status } = req.body;
+
+    if (!['completed', 'cancelled'].includes(status)) {
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Invalid status value");
+    }
+
+    const appointment = await Appointments.findByIdAndUpdate(
+      bookingId,
+      { $set: { status } },
+      { new: true }
+    );
+
+    if (!appointment) {
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Appointment not found");
+    }
+
+    const createNotification = await notification(
+      appointment.userId,
+      "Appointment status updated successfully",
+      `Your appointment status has been changed to ${status}`,
+      "appointment",
+      appointment._id
+    );
+
+    if (!createNotification) {
+      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to create notification");
+    }
+
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        appointment,
+        "Appointment status updated successfully"
+      )
+    );
+  } catch (error) {
+    throw new ApiError(
+      ResponseStatusCode.INTERNAL_SERVER_ERROR,
+      error.message || "Internal server error"
+    );
+  }
+});
+
 
 
 export {
@@ -501,4 +557,5 @@ export {
   getParaExpertAvailability,
   updateAppointment,
   getAppointmentById,
+  updateAppointmentByStatus
 };
