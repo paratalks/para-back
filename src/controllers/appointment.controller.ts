@@ -315,7 +315,7 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
     const bookings = await Appointments.find({
       paraExpertId: paraExpertId,
       date: startDateObj,
-      status: 'scheduled'
+      status: { $in: ["scheduled", "rescheduled"] }
     }).select('startTime endTime');
 
     const bookedSlots = bookings.flatMap(appointment => {

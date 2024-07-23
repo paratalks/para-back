@@ -8,7 +8,7 @@ const router = express.Router();
 router.route("/get-bookings").get(verifyJWT, getParaExpertsBookings);
 router.route("/get-booking/:bookingId").get(verifyJWT, getBookingById);
 
-router.route("/get-available-slots").get(verifyJWT, getParaExpertAvailability);
+router.route("/get-available-slots").get( getParaExpertAvailability);
 router.route("/set-availability").patch(verifyJWT, setAvailability);
 router.route("/get-availability").get(verifyJWT, getAvailability);
 
