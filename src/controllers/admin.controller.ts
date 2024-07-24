@@ -11,6 +11,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { Appointments } from "../models/appointments/appointments.model";
 import { Payment } from "../models/payment/payment.model";
+import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 
 import { Schema } from "mongoose";
 
@@ -592,3 +593,54 @@ export const updateUserById = asyncHandler(
     }
   }
 );
+
+export const getPackageBookings: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const page = parseInt(req.query.page as string, 10) || 1;
+
+    const skip = (page - 1) * limit;
+
+    const packageBookings = await PackagesBooking.find({})
+      .select("-questions -updatedAt -__v")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "name profilePicture",
+      })
+      .populate({
+        path: "paraExpertId",
+        model: "ParaExpert",
+        select: "userId",
+        populate: {
+          path: "userId",
+          model: "User",
+          select: "name profilePicture",
+        },
+      });
+
+    const totalBookings = await PackagesBooking.countDocuments({});
+
+    res.json(
+      new ApiResponse(
+        200,
+        { packageBookings, totalBookings, limit, page },
+        "All Package Booking Details have been successfully retrieved!"
+      )
+    );
+  } catch (error) {
+    next(
+      new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Failure in fetching Admins"
+      )
+    );
+  }
+};
