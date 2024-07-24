@@ -52,10 +52,7 @@ const paraExpertSchema = new mongoose.Schema(
       description:{
         type:String,
       },
-      minamount:{
-        type:Number,
-      },
-      maxamount:{
+      amount:{
         type:Number,
       },
       additional: {

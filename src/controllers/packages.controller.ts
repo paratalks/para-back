@@ -24,8 +24,7 @@ export const createExpertPackages = asyncHandler(
         title,
         type,
         description,
-        minamount,
-        maxamount,
+        amount,
         services,
         additional,
         packageDuration,
@@ -41,8 +40,7 @@ export const createExpertPackages = asyncHandler(
           title,
           type,
           description,
-          minamount,
-          maxamount,
+          amount,
           services,
           additional,
           packageDuration,
@@ -53,8 +51,7 @@ export const createExpertPackages = asyncHandler(
           title,
           type,
           description,
-          minamount,
-          maxamount,
+          amount,
           services,
           additional,
           packageDuration,
@@ -172,33 +169,30 @@ export const updatePackageById = asyncHandler(
         title,
         type,
         description,
-        minamount,
-        maxamount,
+        amount,
         services,
         additional,
         packageDuration,
       } = req.body;
 
       paraExpert.packages[packageIndex] = {
-        ...paraExpert.packages[packageIndex],
+        _id: packageId,
         ...(priority !== undefined && { priority }),
         ...(title !== undefined && { title }),
         ...(type !== undefined && { type }),
         ...(description !== undefined && { description }),
-        ...(minamount !== undefined && { minamount }),
-        ...(maxamount !== undefined && { maxamount }),
+        ...(amount !== undefined && { amount }),
         ...(services !== undefined && { services }),
         ...(additional !== undefined && { additional }),
         ...(packageDuration !== undefined && { packageDuration }),
       };
 
       const updatedParaExpert = await paraExpert.save();
-      const updatedPackage = updatedParaExpert.packages[packageIndex];
 
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          updatedPackage,
+          updatedParaExpert.packages,
           "Updated Package successfully"
         )
       );
@@ -218,7 +212,6 @@ export const deletePackageById = asyncHandler(
       const userId = user._id;
       const { packageId } = req.params;
 
-      // Find the ParaExpert document by userId
       const paraExpert = await ParaExpert.findOne({ userId });
       if (!paraExpert) {
         throw new ApiError(
@@ -227,7 +220,6 @@ export const deletePackageById = asyncHandler(
         );
       }
 
-      // Find the index of the package to delete
       const packageIndex = paraExpert.packages.findIndex(
         (pkg: IPackage) => pkg._id?.toString() === packageId
       );
@@ -235,10 +227,8 @@ export const deletePackageById = asyncHandler(
         throw new ApiError(ResponseStatusCode.NOT_FOUND, "Package Not Found");
       }
 
-      // Remove the package from the array
       paraExpert.packages.splice(packageIndex, 1);
 
-      // Save the updated ParaExpert document
       const updatedParaExpert = await paraExpert.save();
 
       return res.json(
