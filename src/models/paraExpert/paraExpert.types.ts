@@ -22,8 +22,7 @@ export interface IPackage {
   priority?: 'high' | 'medium' | 'low';
   type: 'online' | 'offline';
   description: string;
-  minamount: number;
-  maxamount: number;
+  amount: number;
   services: string[];
   additional?: string;
   packageDuration?: string;
