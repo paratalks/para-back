@@ -12,19 +12,13 @@ import { IPackage } from "../models/paraExpert/paraExpert.types";
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      if (!req.file) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              ResponseStatusCode.BAD_REQUEST,
-              null,
-              "No file uploaded"
-            )
-          );
+      let fileUrl:string = "";
+      if (req?.file) {
+        fileUrl = await uploadfileToS3(req.file, "prescription-report");
+      } else {
+        console.log("No file uploaded, proceeding without file.");
       }
-      const fileUrl = await uploadfileToS3(req?.file, "prescription-report");
-
+      
       const {
         packageId,
         paraExpertId,
