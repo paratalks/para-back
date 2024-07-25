@@ -12,19 +12,13 @@ import { IPackage } from "../models/paraExpert/paraExpert.types";
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      if (!req.file) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              ResponseStatusCode.BAD_REQUEST,
-              null,
-              "No file uploaded"
-            )
-          );
+      let fileUrl:string = "";
+      if (req?.file) {
+        fileUrl = await uploadfileToS3(req.file, "prescription-report");
+      } else {
+        console.log("No file uploaded, proceeding without file.");
       }
-      const fileUrl = await uploadfileToS3(req?.file, "prescription-report");
-
+      
       const {
         packageId,
         paraExpertId,
@@ -139,8 +133,29 @@ export const getbookingByPackageById = asyncHandler(
       const userId = user._id;
       const { packageId, bookingId } = req.query;
 
-      const bookings = await PackagesBooking.findById(bookingId);
-
+      const bookings = await PackagesBooking.findById(bookingId)
+      .select("-createdAt -updatedAt -__v")
+      .populate([
+        {
+          path: "userId",
+          model: "User",
+          select: "name profilePicture",
+        },
+        {
+          path: "paraExpertId",
+          model: "ParaExpert",
+          select: "userId _id",
+          populate: [
+            {
+              path: "userId",
+              model: "User",
+              select: "name profilePicture",
+            },
+          ],
+        },
+      ])
+      .exec();
+      
       const paraExpert = await ParaExpert.findOne({ userId });
       if (!paraExpert) {
         throw new ApiError(
@@ -176,8 +191,10 @@ export const getbookingByPackageById = asyncHandler(
 export const getExpertsBookings = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      const { paraExpertId, status } = req.query;
-
+      const { status } = req.query;
+      const user = req.user;
+      const userId = user._id;
+      const paraExpertId = await ParaExpert.findOne({ userId });
       if (!paraExpertId) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
