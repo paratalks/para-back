@@ -33,7 +33,7 @@ const PackageBookingSchema = new mongoose.Schema(
       required: false,
     },
     questions: {
-      type: [String],
+      type: String,
       required: false,
     },
     address: {
