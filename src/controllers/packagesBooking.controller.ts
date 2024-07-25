@@ -96,7 +96,7 @@ export const getBookings = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const bookings = await PackagesBooking.find(queryObj)
-      .select("-createdAt -updatedAt -__v")
+      .select("-createdAt -updatedAt -__v -questions")
       .populate([
         {
           path: "paraExpertId",
@@ -190,12 +190,12 @@ export const getExpertsBookings = asyncHandler(
       }
 
       const bookings = await PackagesBooking.find(queryObj)
-        .select("-createdAt -updatedAt -__v")
+        .select("-createdAt -updatedAt -__v -questions")
         .populate([
           {
             path: "paraExpertId",
             model: "ParaExpert",
-            select: "userId packages _id",
+            select: "userId _id",
           },
           {
             path: "userId",
