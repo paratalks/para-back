@@ -193,11 +193,6 @@ export const getExpertsBookings = asyncHandler(
         .select("-createdAt -updatedAt -__v -questions")
         .populate([
           {
-            path: "paraExpertId",
-            model: "ParaExpert",
-            select: "userId _id",
-          },
-          {
             path: "userId",
             model: "User",
             select: "name profilePicture",
