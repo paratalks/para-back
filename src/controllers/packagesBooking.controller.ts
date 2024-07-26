@@ -131,6 +131,9 @@ export const getbookingByPackageById = asyncHandler(
     try {
       const user = req.user;
       const userId = user._id;
+      if (!userId) {
+        throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "UNAUTHORIZED User ID is required");
+      }
       const { packageId, bookingId } = req.query;
 
       const bookings = await PackagesBooking.findById(bookingId)
@@ -156,7 +159,7 @@ export const getbookingByPackageById = asyncHandler(
       ])
       .exec();
       
-      const paraExpert = await ParaExpert.findOne({ userId });
+      const paraExpert = await ParaExpert.findById(bookings?.paraExpertId);
       if (!paraExpert) {
         throw new ApiError(
           ResponseStatusCode.NOT_FOUND,
