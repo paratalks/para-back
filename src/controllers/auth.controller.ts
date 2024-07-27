@@ -26,13 +26,14 @@ export const signup: RequestHandler = bigPromise(
       const {
         name,
         gender,
+        email,
         dateOfBirth,
         interests,
         profilePicture,
         fcmToken,
       }: signupObject = req.body;
 
-      if (!name || !gender || !dateOfBirth || !interests || !fcmToken) {
+      if (!name || !gender || !email|| !dateOfBirth || !interests || !fcmToken) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
           "All fields are required"
@@ -51,6 +52,7 @@ export const signup: RequestHandler = bigPromise(
       const toStore: signupObject = {
         name,
         gender,
+        email,
         dateOfBirth,
         interests,
         profilePicture,
@@ -115,6 +117,7 @@ export const paraSignup: RequestHandler = bigPromise(
       const {
         name,
         gender,
+        email,
         dateOfBirth,
         interests,
         fcmToken,
@@ -151,6 +154,7 @@ export const paraSignup: RequestHandler = bigPromise(
       const toStore: signupObject = {
         name,
         gender,
+        email,
         dateOfBirth,
         interests,
         profilePicture,

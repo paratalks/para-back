@@ -1,6 +1,7 @@
 export interface signupObject {
   name: string;
   gender: string;
+  email: string;
   dateOfBirth: Date;
   interests: [string];
   profilePicture: string;
@@ -10,6 +11,7 @@ export interface signupObject {
 export interface parasignupObject {
   name: string;
   gender: string;
+  email: string;
   dateOfBirth: Date;
   interests: [string];
   fcmToken: string;
