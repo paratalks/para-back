@@ -107,11 +107,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     const bookingUser = await User.findById(userId)
 
-    // await sendNotif(
-    //   bookingUser.fcmToken,
-    //   "Booking confirmed",
-    //   `Appointment booked for ${date} from ${startTime} to ${endTime}`
-    // );
+    await sendNotif(
+      bookingUser.fcmToken,
+      "Booking confirmed",
+      `Appointment booked for ${date} from ${startTime} to ${endTime}`
+    );
 
     const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
 
@@ -145,11 +145,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
        );
      }
      
-    // await sendNotif(
-    //   paraExpertUser.fcmToken,
-    //   "New booking request",
-    //   `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
-    // );
+    await sendNotif(
+      paraExpertUser.fcmToken,
+      "New booking request",
+      `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
+    );
 
     const createParaExpertNotification = await notification(
       paraExpertUser._id,
