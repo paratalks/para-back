@@ -122,14 +122,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    const sendNotification = fcm(createNotification._id);
-
-    if (!sendNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to send notification"
-      );
-    }
     const paraExpert = await ParaExpert.findById(paraExpertId);
     if (!paraExpert) {
       throw new ApiError(
@@ -158,12 +150,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       "appointment",
       appointment._id
     );
-    if (!createParaExpertNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification for para expert"
-      );
-    }
+   
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
