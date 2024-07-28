@@ -10,6 +10,6 @@ router.post('/booking', uploadFile('prescriptionReport'),createBooking);
 router.route("/user/get-bookings").get(verifyJWT,getBookings);
 router.route("/para/get-bookings").get(verifyJWT,getExpertsBookings);
 router.route("/user/bookings/details").get(verifyJWT,getbookingByPackageById);
-router.route('/updateBookingStatus/:bookingId').put(verifyJWT,updateBookingStatus);
+router.route('/updateBookingStatus/:bookingId').put(updateBookingStatus);
 
 export default router;
