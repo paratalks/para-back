@@ -7,7 +7,7 @@ const router = experss.Router();
 
 router
   .route("/book-appointment/:paraExpertId")
-  .post(verifyJWT, bookAppointment);
+  .post(verifyJWT,bookAppointment);
 router.route("/get-appointments").get(verifyJWT, getBookedAppointment);
 router.route("/update-appointment/:bookingId").patch(updateAppointment);
 router.route("/appointment/:bookingId").get(getAppointmentById);

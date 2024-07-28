@@ -6,16 +6,16 @@ import { ObjectId } from "mongoose";
 import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
 const admin = require("firebase-admin");
+const serviceAccount = require("../../paratalks-admin.json");
 
 export const notification = async (
-  userId:ObjectId,
-  title:string,
-  description:string,
+  userId: ObjectId,
+  title: string,
+  description: string,
   referrer: string,
   referrerId: any,
 ) => {
   try {
-
     const createNotification = await Notifications.create({
       userId,
       title,
@@ -23,28 +23,38 @@ export const notification = async (
       referrer,
       referrerId,
     });
-
     return createNotification;
   } catch (error) {
-    return;
+    console.error("Failed to create notification:", error);
+    return null;
   }
 };
+
 
 export const setFcm = async (userId: ObjectId, fcmToken: string) => {
   try {
     const user = await User.findById(userId);
-    const fcm = {
-      fcmToken,
-    };
-    const updatedUser = await User.findByIdAndUpdate(user._id, {
-      fcm,
-    });
-
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { fcmToken },
+      { new: true }
+    );
     return updatedUser;
   } catch (error) {
-    return;
+    console.error("Failed to set FCM token:", error);
+    return null;
   }
 };
+
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 export const fcm = async (userId: ObjectId) => {
   try {
@@ -76,12 +86,10 @@ export const fcm = async (userId: ObjectId) => {
 };
 
 
-export const sendNotif = async (token:String, title:String, body:String) => {
+
+
+export const sendNotif = async (token: String, title: string, body: string) => {
   try {
-    const serviceAccount = require("../../paratalks-admin.json");
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
     }
@@ -103,10 +111,12 @@ export const sendNotif = async (token:String, title:String, body:String) => {
     };
     const response = await admin.messaging().send(message);
     console.log("Successfully sent message:", response);
+    return response;
   } catch (error) {
     console.error("Error sending message:", error.message);
-    throw error;
+    return null;
   }
 };
+
 
 
