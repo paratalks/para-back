@@ -8,18 +8,18 @@ import { User } from "../models/user/user.model";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 import { uploadfileToS3 } from "../util/s3Client.util";
 import { IPackage } from "../models/paraExpert/paraExpert.types";
-import { sendNotif,notification } from "../util/notification.util";
+import { sendNotif, notification } from "../util/notification.util";
 
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
     try {
-      let fileUrl:string = "";
+      let fileUrl: string = "";
       if (req?.file) {
-        fileUrl = await uploadfileToS3(req.file, "prescription-report");
+        // fileUrl = await uploadfileToS3(req.file, "prescription-report");
       } else {
         console.log("No file uploaded, proceeding without file.");
       }
-      
+
       const {
         packageId,
         paraExpertId,
@@ -38,95 +38,104 @@ export const createBooking = asyncHandler(
         );
       }
 
-    const booking = new PackagesBooking({
+      const booking = new PackagesBooking({
         packageId,
         paraExpertId,
         userId,
         location,
         prescriptionReport: fileUrl,
         questions,
-        bookingDate:bookingDate || Date.now(),
+        bookingDate: bookingDate || Date.now(),
         address,
         status,
-    });
+      });
 
-    const bookedPackage = await booking.save();
-    const date = bookingDate.toISOString().split("T")[0];
+      const bookedPackage = await booking.save();
+      const packageid = packageId.toString();
+      const date = new Date(bookingDate || Date.now()).toISOString().split("T")[0];
+      console.log("date", date);
 
+      const bookingUser = await User.findById(userId);
+      if (!bookingUser) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Booking user not found"
+        );
+      }
 
-    const bookingUser = await User.findById(userId);
-
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Package Booking Placed",
-      `Your package booking request for package has been successfully placed. The Booking is scheduled for ${date} at ${address}`,
-      bookedPackage._id
-    );
-
-    const createNotification = await notification(
-      userId,
-      "Package Booking Placed",
-      `Your package booking request for ${packageId} has been successfully placed. The Booking is scheduled for ${date} at ${address}`,
-      packageId,
-      bookedPackage._id
-    );
-
-    if (!createNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
+      await sendNotif(
+        bookingUser.fcmToken,
+        "Package Booking Placed",
+        `Your package booking request has been successfully placed. The booking is scheduled for ${date} at ${address}.`,
+        bookedPackage._id
       );
-    }
 
-    const paraExpert = await ParaExpert.findById(paraExpertId);
-  
-    const paraExpertUser = await User.findById(paraExpert.userId);
-    if (!paraExpertUser) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "FCM token not found for para expert user"
+      const createNotification = await notification(
+        userId,
+        "Package Booking Placed",
+        `Your package booking request has been successfully placed. The booking is scheduled for ${date} at ${address}.`,
+        "package",
+        bookedPackage._id
       );
-    }
 
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      "New Package Booking Request",
-      `You have a new package booking request form ${bookingUser?.name} from ${bookingUser.name}. The Booking is scheduled form ${date} to ${address} location`,
-      bookedPackage?._id
-    );
+      const paraExpert = await ParaExpert.findById(paraExpertId);
+      if (!paraExpert) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Para expert not found"
+        );
+      }
 
-    const createParaExpertNotification = await notification(
-      paraExpertUser._id,
-      "New Package Booking Request",
-      `You have a new package booking request for packageId ${packageId} from ${bookingUser.name}. The Booking is scheduled for ${date} at ${address}, ${location}.`,
-      packageId,
-      bookedPackage._id,
-      bookingUser?.profilePicture
-    );
-    if (!createParaExpertNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
+      const paraExpertUser = await User.findById(paraExpert.userId);
+      if (!paraExpertUser) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "FCM token not found for para expert user"
+        );
+      }
+
+      await sendNotif(
+        paraExpertUser.fcmToken,
+        "New Package Booking Request",
+        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
+        bookedPackage._id
       );
-    }
 
+      const createParaExpertNotification = await notification(
+        paraExpertUser._id,
+        "New Package Booking Request",
+        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
+        "package",
+        bookedPackage._id,
+        bookingUser.profilePicture
+      );
+      if (!createParaExpertNotification) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Failed to create notification"
+        );
+      }
 
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          booking,
+          bookedPackage,
           "Package booking created successfully"
         )
       );
     } catch (error) {
-      res
-        .status(error.statusCode || 500)
-        .json(
-          new ApiError(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-        );
+      console.error("Error creating booking:", error);
+
+      const statusCode = error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
+      const message = error.message || "Internal server error";
+
+      res.status(statusCode).json(
+        new ApiError(statusCode, message)
+      );
     }
   }
 );
+
 
 export const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -184,33 +193,36 @@ export const getbookingByPackageById = asyncHandler(
       const user = req.user;
       const userId = user._id;
       if (!userId) {
-        throw new ApiError(ResponseStatusCode.UNAUTHORIZED, "UNAUTHORIZED User ID is required");
+        throw new ApiError(
+          ResponseStatusCode.UNAUTHORIZED,
+          "UNAUTHORIZED User ID is required"
+        );
       }
       const { packageId, bookingId } = req.query;
 
       const bookings = await PackagesBooking.findById(bookingId)
-      .select("-createdAt -updatedAt -__v")
-      .populate([
-        {
-          path: "userId",
-          model: "User",
-          select: "name profilePicture",
-        },
-        {
-          path: "paraExpertId",
-          model: "ParaExpert",
-          select: "userId _id",
-          populate: [
-            {
-              path: "userId",
-              model: "User",
-              select: "name profilePicture",
-            },
-          ],
-        },
-      ])
-      .exec();
-      
+        .select("-createdAt -updatedAt -__v")
+        .populate([
+          {
+            path: "userId",
+            model: "User",
+            select: "name profilePicture",
+          },
+          {
+            path: "paraExpertId",
+            model: "ParaExpert",
+            select: "userId _id",
+            populate: [
+              {
+                path: "userId",
+                model: "User",
+                select: "name profilePicture",
+              },
+            ],
+          },
+        ])
+        .exec();
+
       const paraExpert = await ParaExpert.findById(bookings?.paraExpertId);
       if (!paraExpert) {
         throw new ApiError(
@@ -292,7 +304,7 @@ export const getExpertsBookings = asyncHandler(
   }
 );
 
-type BookingStatus = "completed"| "confirmed"| "cancelled";
+type BookingStatus = "completed" | "confirmed" | "cancelled";
 
 export const updateBookingStatus = asyncHandler(
   async (req: Request, res: Response) => {
@@ -328,62 +340,65 @@ export const updateBookingStatus = asyncHandler(
         );
       }
 
-      const statusMessages: Record<BookingStatus, { title: string, message: string, paraExpertMessage: string, paraExpertTitle: string }> = {
+      const statusMessages: Record<
+        BookingStatus,
+        {
+          title: string;
+          message: string;
+          paraExpertMessage: string;
+          paraExpertTitle: string;
+        }
+      > = {
         confirmed: {
-            title: "Package Booking Confirmed",
-            message: `Your package booking has been confirmed for ${date} at ${address}.`,
-            paraExpertMessage: `You have a package booking confirmed for ${date} at ${address}.`,
-            paraExpertTitle: "Package Booking Scheduled"
+          title: "Package Booking Confirmed",
+          message: `Your package booking has been confirmed for ${date} at ${address}.`,
+          paraExpertMessage: `You have a package booking confirmed for ${date} at ${address}.`,
+          paraExpertTitle: "Package Booking Scheduled",
         },
         cancelled: {
-            title: "Package Booking Cancelled",
-            message: `Your package booking for ${date} at ${address} has been cancelled.`,
-            paraExpertMessage: `The package booking scheduled for ${date} at ${address} has been cancelled.`,
-            paraExpertTitle: "Package Booking Cancelled"
+          title: "Package Booking Cancelled",
+          message: `Your package booking for ${date} at ${address} has been cancelled.`,
+          paraExpertMessage: `The package booking scheduled for ${date} at ${address} has been cancelled.`,
+          paraExpertTitle: "Package Booking Cancelled",
         },
         completed: {
-            title: "Package Booking Completed",
-            message: `Your package booking on ${date} at ${address} has been completed.`,
-            paraExpertMessage: `The package booking with the ${bookingUser?.name} on ${date} at ${address} has been completed.`,
-            paraExpertTitle: "Package Booking Completed"
-        }
-    };
+          title: "Package Booking Completed",
+          message: `Your package booking on ${date} at ${address} has been completed.`,
+          paraExpertMessage: `The package booking with the ${bookingUser?.name} on ${date} at ${address} has been completed.`,
+          paraExpertTitle: "Package Booking Completed",
+        },
+      };
 
-    const { title, message, paraExpertMessage, paraExpertTitle } = statusMessages[status as BookingStatus];
+      const { title, message, paraExpertMessage, paraExpertTitle } =
+        statusMessages[status as BookingStatus];
 
-    
-    // Notify the user
-    await sendNotif(
-      bookingUser.fcmToken,
-      title,
-      message,
-      bookingId
-    );
+      // Notify the user
+      await sendNotif(bookingUser.fcmToken, title, message, bookingId);
 
-    await notification(
-      bookingUser._id,
-      title,
-      message,
-      packageId,
-      bookingId,
-      paraExpertUser.profilePicture
-    );
+      await notification(
+        bookingUser._id,
+        title,
+        message,
+        packageId,
+        bookingId,
+        paraExpertUser.profilePicture
+      );
 
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      paraExpertTitle,
-      paraExpertMessage,
-      bookingId
-    );
+      await sendNotif(
+        paraExpertUser.fcmToken,
+        paraExpertTitle,
+        paraExpertMessage,
+        bookingId
+      );
 
-    await notification(
-      paraExpertUser._id,
-      paraExpertTitle,
-      paraExpertMessage,
-      packageId,
-      bookingId,
-      bookingUser.profilePicture
-    );
+      await notification(
+        paraExpertUser._id,
+        paraExpertTitle,
+        paraExpertMessage,
+        packageId,
+        bookingId,
+        bookingUser.profilePicture
+      );
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
