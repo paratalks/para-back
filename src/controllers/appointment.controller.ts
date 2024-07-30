@@ -19,7 +19,7 @@ interface Query {
 
 //user
 const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
-  const { startTime, endTime, status, image, amount, appointmentMode,appointmentMethod, problem } =
+  const { startTime, endTime, status, image, amount, appointmentMode, appointmentMethod, problem } =
     req.body as {
       startTime: string;
       endTime: string;
@@ -67,7 +67,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       endTime,
       appointmentMethod
     );
-    console.log("value",isSlotAvailable)
+    console.log("value", isSlotAvailable)
 
     if (!isSlotAvailable) {
       throw new ApiError(
@@ -98,6 +98,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       problem,
     });
 
+
+
     if (!appointment) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -107,14 +109,20 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     const bookingUser = await User.findById(userId)
 
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Booking confirmed",
-      `Appointment booked for ${date} from ${startTime} to ${endTime}`
+    // await sendNotif(
+    //   bookingUser.fcmToken,
+    //   "Booking confirmed",
+    //   `Appointment booked for ${date} from ${startTime} to ${endTime}`
+    // );
+
+    const createNotification = await notification(
+      userId,
+      "Booking Placed",
+      `Your appointment request has been received for ${date} from ${startTime} to ${endTime}.`,
+      "appointment",
+      appointment._id
     );
-
-    const createNotification = await notification(userId,"Booking confirmed",`Appointment booked for ${date} from ${startTime} to ${endTime}`,"appointment",appointment._id);
-
+    
     if (!createNotification) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
@@ -129,18 +137,20 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Para expert not found"
       );
     }
-     const paraExpertUser = await User.findById(paraExpert.userId);
-     if (!paraExpertUser) {
-       throw new ApiError(
-         ResponseStatusCode.BAD_REQUEST,
-         "FCM token not found for para expert user"
-       );
-     }
-     
+    const paraExpertUser = await User.findById(paraExpert.userId);
+    if (!paraExpertUser) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "FCM token not found for para expert user"
+      );
+    }
+
     await sendNotif(
       paraExpertUser.fcmToken,
-      "New booking request",
-      `You have a new appointment request for ${date} from ${startTime} to ${endTime}`
+      "New Booking Request",
+      `You have a new appointment request for ${date} from ${startTime} to ${endTime}.`,
+      appointment?._id,
+
     );
 
     const createParaExpertNotification = await notification(
@@ -148,9 +158,17 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       "New booking request",
       `You have a new appointment request for ${date} from ${startTime} to ${endTime}`,
       "appointment",
-      appointment._id
+      appointment._id,
+      bookingUser?.profilePicture
     );
-   
+    if (!createParaExpertNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification"
+      );
+    }
+
+
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
@@ -172,7 +190,7 @@ const getBookedAppointment = asyncHandler(
       const { status }: { status?: string } = req.query;
 
       let queryObj: Query = { userId };
-  
+
       if (status) {
         if (status === "scheduled") {
           queryObj.status = { $in: ["scheduled", "rescheduled"] };
@@ -180,24 +198,24 @@ const getBookedAppointment = asyncHandler(
           queryObj.status = status;
         }
       }
-  
+
       const appointment = await Appointments.find(queryObj)
-      .select("-reason -problem -createdAt -updatedAt -__v")
-      .populate([
-        {
-          path: "paraExpertId",
-          model: "ParaExpert",
-          select: "userId basedOn _id",
-          populate: [
-            {
-              path: "userId",
-              model: "User",
-              select: "name profilePicture",
-            },
-          ],
-        },
-      ])
-      .exec();
+        .select("-reason -problem -createdAt -updatedAt -__v")
+        .populate([
+          {
+            path: "paraExpertId",
+            model: "ParaExpert",
+            select: "userId basedOn _id",
+            populate: [
+              {
+                path: "userId",
+                model: "User",
+                select: "name profilePicture",
+              },
+            ],
+          },
+        ])
+        .exec();
 
 
       return res.json(
@@ -221,7 +239,7 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
-    .select("-createdAt -updatedAt -__v")
+      .select("-createdAt -updatedAt -__v")
       .populate([
         {
           path: "paraExpertId",
@@ -246,7 +264,7 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        { appointment},
+        { appointment },
         "Appointment fetched successfully"
       )
     );
@@ -261,7 +279,7 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
 //paraexpert
 const getParaExpertAvailability = async (req: Request, res: Response) => {
   try {
-      const { paraExpertId, startDate, endDate } = req.query;
+    const { paraExpertId, startDate, endDate } = req.query;
 
     if (!paraExpertId || !startDate || !endDate) {
       return res.json(
@@ -360,16 +378,16 @@ const getParaExpertsBookings = asyncHandler(async (req: Request, res: Response) 
     const paraExpertId = await ParaExpert.find({ userId });
     const { status = "scheduled" }: { status?: string } = req.query;
 
-    const appointments = await Appointments.find({ 
-      paraExpertId, 
-      status:status
+    const appointments = await Appointments.find({
+      paraExpertId,
+      status: status
     })
-    .select('-problem -paraExpertId -reason -createdAt -updatedAt -__v') 
-    .populate({
-      path: 'userId',
-      model:'User',
-      select: 'name profilePicture'
-    }).exec();
+      .select('-problem -paraExpertId -reason -createdAt -updatedAt -__v')
+      .populate({
+        path: 'userId',
+        model: 'User',
+        select: 'name profilePicture'
+      }).exec();
 
     return res.json(
       new ApiResponse(
@@ -391,12 +409,12 @@ const getBookingById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
-    .select('-paraExpertId -createdAt -updatedAt -__v') 
-    .populate({
-      path: 'userId',
-      model:'User',
-      select: 'name profilePicture'
-    }).exec();
+      .select('-paraExpertId -createdAt -updatedAt -__v')
+      .populate({
+        path: 'userId',
+        model: 'User',
+        select: 'name profilePicture'
+      }).exec();
 
     if (!appointment) {
       return res.json(
@@ -406,7 +424,7 @@ const getBookingById = asyncHandler(async (req: Request, res: Response) => {
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        { appointment},
+        { appointment },
         "Appointment fetched successfully"
       )
     );
@@ -422,31 +440,33 @@ const getBookingById = asyncHandler(async (req: Request, res: Response) => {
 const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
-    const { status, startTime, endTime, appointmentMode,appointmentMethod, problem, reason } = req.body;
+    const { status, startTime, endTime, appointmentMode, appointmentMethod, problem, reason } = req.body;
 
     const date = new Date(req.body.date);
 
     const appointment = await Appointments.findByIdAndUpdate(
       bookingId,
-      { $set: { date, startTime, endTime, status, appointmentMode,appointmentMethod, problem, reason } },
+      { $set: { date, startTime, endTime, status, appointmentMode, appointmentMethod, problem, reason } },
       { new: true }
     );
 
-    if(!appointment){
+    if (!appointment) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
         "Appointment not found"
       );
     }
 
-    // const bookingUser = await User.findById(appointment.userId);
+    const bookingUser = await User.findById(appointment.userId);
 
-    // await sendNotif(
-    //   bookingUser.fcmToken,
-    //   "Appointment updated successfully",
-    //   `Appointment ${status}`
-    // );
-    
+    await sendNotif(
+      bookingUser.fcmToken,
+      "Appointment updated successfully",
+      `Appointment ${status}`,
+      appointment?._id
+
+    );
+
 
     const createNotification = await notification(
       appointment.userId,
@@ -488,51 +508,66 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user while cancelled and completed time
-const updateAppointmentByStatus = asyncHandler(async (req: Request, res: Response) => {
-    try {
-    const { bookingId } = req.params;
-    const { status } = req.body;
-
-    if (!['completed', 'cancelled'].includes(status)) {
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Invalid status value");
+  const validStatuses = [
+    "pending",
+    "confirmed",
+    "cancelled",
+    "rescheduled",
+    "scheduled",
+  ] as const;
+  type BookingStatus = typeof validStatuses[number];
+  
+ const updateAppointmentStatus = asyncHandler(
+    async (req: Request, res: Response) => {
+      try {
+        const { bookingId } = req.params;
+        const { status } = req.query;
+  
+        if (!status) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Status is required"
+          );
+        }
+  
+        const booking = await Appointments.findById(bookingId);
+        if (!booking) {
+          throw new ApiError(ResponseStatusCode.NOT_FOUND, "Booking not found");
+        }
+  
+        if (
+          !status ||
+          typeof status !== "string" ||
+          !validStatuses.includes(status as BookingStatus)
+        ) {
+          throw new ApiError(
+            ResponseStatusCode.BAD_REQUEST,
+            "Valid status is required"
+          );
+        }
+        booking.status = status as BookingStatus;
+        await booking.save();
+  
+        res.json(
+          new ApiResponse(
+            ResponseStatusCode.SUCCESS,
+            booking,
+            "Booking status updated successfully"
+          )
+        );
+      } catch (error) {
+        res
+          .status(error.statusCode || 500)
+          .json(
+            new ApiError(
+              error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR,
+              error.message || "Internal server error"
+            )
+          );
+      }
     }
-
-    const appointment = await Appointments.findByIdAndUpdate(
-      bookingId,
-      { $set: { status } },
-      { new: true }
-    );
-
-    if (!appointment) {
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Appointment not found");
-    }
-
-    const createNotification = await notification(
-      appointment.userId,
-      "Appointment status updated successfully",
-      `Your appointment status has been changed to ${status}`,
-      "appointment",
-      appointment._id
-    );
-
-    if (!createNotification) {
-      throw new ApiError(ResponseStatusCode.BAD_REQUEST, "Failed to create notification");
-    }
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        appointment,
-        "Appointment status updated successfully"
-      )
-    );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
-  }
-});
+  );
+  
 
 
 
@@ -544,5 +579,5 @@ export {
   getParaExpertAvailability,
   updateAppointment,
   getAppointmentById,
-  updateAppointmentByStatus
+  updateAppointmentStatus
 };

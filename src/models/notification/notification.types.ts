@@ -6,6 +6,7 @@ export interface notifocationTypes {
     description:string,
     referrer: string,
     referrerId: ObjectId,
+    image?: string,
 }
 
 export interface notificationDocument extends notifocationTypes, Document {}
