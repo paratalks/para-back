@@ -14,6 +14,7 @@ export const notification = async (
   description: string,
   referrer: string,
   referrerId: any,
+  image?: String
 ) => {
   try {
     const createNotification = await Notifications.create({
@@ -22,6 +23,7 @@ export const notification = async (
       description,
       referrer,
       referrerId,
+      image,
     });
     return createNotification;
   } catch (error) {
@@ -88,11 +90,12 @@ export const fcm = async (userId: ObjectId) => {
 
 
 
-export const sendNotif = async (token: String, title: string, body: string) => {
+export const sendNotif = async (token: String, title: String, body: String, bookingId: ObjectId) => {
   try {
     if (!token || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
     }
+    
     const message = {
       notification: {
         title: title,
@@ -105,10 +108,12 @@ export const sendNotif = async (token: String, title: string, body: string) => {
         data: {
           title: title,
           body: body,
+          bookingId: bookingId,
         },
       },
       token: token,
     };
+    
     const response = await admin.messaging().send(message);
     console.log("Successfully sent message:", response);
     return response;
