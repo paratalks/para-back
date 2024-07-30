@@ -68,11 +68,12 @@ export const signup: RequestHandler = bigPromise(
         await updatedUser.save();
         const data: any = { token: updatedUser.getJwtToken(), updatedUser };
 
-        // await sendNotif(
-        //   updatedUser.fcmToken,
-        //   "Welcome to Paratalks",
-        //   "Open the doors to a world of peace and serenity!"
-        // );
+        await sendNotif(
+          updatedUser.fcmToken,
+          "Welcome to Paratalks",
+          "Open the doors to a world of peace and serenity!",
+          user._id,
+        );
 
         const createNotification = await notification(
           user._id,
@@ -88,15 +89,6 @@ export const signup: RequestHandler = bigPromise(
             "Failed to create notification"
           );
         }
-
-        // const sendNotification = fcm(createNotification._id);
-
-        // if (!sendNotification) {
-        //   throw new ApiError(
-        //     ResponseStatusCode.BAD_REQUEST,
-        //     "Failed to send notification"
-        //   );
-        // }
 
         res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {
@@ -190,7 +182,8 @@ export const paraSignup: RequestHandler = bigPromise(
         await sendNotif(
           newUser.fcmToken,
           "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!"
+          "Open the doors to a world of peace and serenity!",
+          newUser?.userId
         );
 
         const createNotification = await notification(
@@ -326,8 +319,23 @@ export const logout = bigPromise(async (req, res, next) => {
 
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
-    const phone: number = req.body.phone;
+    const { phone, fcmToken } = req.body;
+    
+    if (!phone) {
+      return res.status(400).json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: 'Mobile number is required' })
+      );
+    }
 
+    let user = await User.findOne({ phone });
+
+    if (!user) {
+      return res.status(403).json(
+        new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not an authorized user')
+      );
+    }
+    user.fcmToken = fcmToken;
+        await user.save();
     // for testing
     const otp: number =
       phone === 9999999999
@@ -343,27 +351,6 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
           route: "otp",
           numbers: phone,
         },
-      });
-    }
-
-    if (await OTP.findOne({ phone })) {
-      const newotp = await OTP.findOneAndUpdate(
-        { phone },
-        {
-          otp: otp,
-          otpExpiration: new Date(Date.now() + 10 * 60000),
-          verified: false,
-          requestId: requestID,
-        },
-        { new: true }
-      );
-    } else {
-      await OTP.create({
-        phone: phone,
-        otp: otp,
-        otpExpiration: new Date(Date.now() + 2 * 60000),
-        verified: false,
-        requestId: requestID,
       });
     }
 
@@ -413,12 +400,6 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRY,
       });
-
-      const updateotp = await OTP.findOneAndUpdate(
-        { requestId },
-        { $set: { verified: true } },
-        { new: true }
-      );
 
       res.json(
         new ApiResponse(
@@ -499,27 +480,6 @@ async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
         numbers: phone,
       },
     });
-
-    if (await OTP.findOne({ phone })) {
-      await OTP.findOneAndUpdate(
-        { phone },
-        {
-          otp,
-          otpExpiration: new Date(Date.now() + 2 * 60000),
-          verified: false,
-          requestId: requestID,
-        },
-        { new: true }
-      );
-    } else {
-      await OTP.create({
-        phone,
-        otp,
-        otpExpiration: new Date(Date.now() + 2 * 60000),
-        verified: false,
-        requestId: requestID,
-      });
-    }
 
     return new ApiResponse(
       ResponseStatusCode.SUCCESS,
