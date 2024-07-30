@@ -90,9 +90,10 @@ export const fcm = async (userId: ObjectId) => {
 
 
 
-export const sendNotif = async (token: String, title: String, body: String, bookingId: ObjectId) => {
+export const sendNotif = async (token: String, title: string, body: string, bookingId:string) => {
   try {
-    if (!token || typeof token !== "string") {
+    const tokenvalue = token.toString()
+    if (!tokenvalue || typeof token !== "string") {
       throw new Error("Invalid FCM token provided");
     }
     
@@ -111,7 +112,7 @@ export const sendNotif = async (token: String, title: String, body: String, book
           bookingId: bookingId,
         },
       },
-      token: token,
+      token: tokenvalue,
     };
     
     const response = await admin.messaging().send(message);
