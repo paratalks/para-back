@@ -543,7 +543,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user while cancelled and completed time
-type BookingStatus = "completed" | "confirmed" | "cancelled";
+type BookingStatus = "completed" | "confirmed" | "cancelled" | "ongoing";
 
 const updateAppointmentStatus = asyncHandler(
   async (req: Request, res: Response) => {
@@ -600,11 +600,17 @@ const updateAppointmentStatus = asyncHandler(
           paraExpertTitle: "Appointment Cancelled"
         },
         completed: {
-          title: "",
-          message: "",
-          paraExpertMessage: "",
-          paraExpertTitle: ""
+          title: "Appointment Completed",
+          message: `our ${appointmentMethod} appointment on ${date} from ${startTime} to ${endTime} has been completed`,
+          paraExpertMessage: "Appointment Completed",
+          paraExpertTitle: `our ${appointmentMethod} appointment with the user on ${date} from ${startTime} to ${endTime} has been completed`
         },
+        ongoing: {
+          title: "Call Started",
+          message: `Your ${appointmentMethod} call with the para expert has just started.`,
+          paraExpertMessage: `You have started the ${appointmentMethod} call with the user.`,
+          paraExpertTitle: "Call in Progress"
+        }
       };
 
       const { title, message, paraExpertMessage, paraExpertTitle } = statusMessages[status as BookingStatus];
