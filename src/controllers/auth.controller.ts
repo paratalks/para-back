@@ -33,7 +33,14 @@ export const signup: RequestHandler = bigPromise(
         fcmToken,
       }: signupObject = req.body;
 
-      if (!name || !gender || !email|| !dateOfBirth || !interests || !fcmToken) {
+      if (
+        !name ||
+        !gender ||
+        !email ||
+        !dateOfBirth ||
+        !interests ||
+        !fcmToken
+      ) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
           "All fields are required"
@@ -72,7 +79,7 @@ export const signup: RequestHandler = bigPromise(
           updatedUser.fcmToken,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
-          user._id,
+          user._id
         );
 
         const createNotification = await notification(
@@ -123,7 +130,7 @@ export const paraSignup: RequestHandler = bigPromise(
         qualifications,
         experience,
         consultancy,
-        socials
+        socials,
       }: parasignupObject = req.body;
 
       const user: any = req.user;
@@ -174,7 +181,7 @@ export const paraSignup: RequestHandler = bigPromise(
           qualifications,
           experience,
           consultancy,
-          socials
+          socials,
         });
 
         await paraExpert.save();
@@ -320,22 +327,21 @@ export const logout = bigPromise(async (req, res, next) => {
 export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   try {
     const { phone, fcmToken } = req.body;
-    
+
     if (!phone) {
-      return res.status(400).json(
-        new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: 'Mobile number is required' })
-      );
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+            message: "Mobile number is required",
+          })
+        );
     }
-
     let user = await User.findOne({ phone });
-
-    if (!user) {
-      return res.status(403).json(
-        new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not an authorized user')
-      );
+    if (user) {
+      user.fcmToken = fcmToken;
+      await user.save();
     }
-    user.fcmToken = fcmToken;
-        await user.save();
     // for testing
     const otp: number =
       phone === 9999999999
@@ -351,6 +357,27 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
           route: "otp",
           numbers: phone,
         },
+      });
+    }
+
+    if (await OTP.findOne({ phone })) {
+      const newotp = await OTP.findOneAndUpdate(
+        { phone },
+        {
+          otp: otp,
+          otpExpiration: new Date(Date.now() + 10 * 60000),
+          verified: false,
+          requestId: requestID,
+        },
+        { new: true }
+      );
+    } else {
+      await OTP.create({
+        phone: phone,
+        otp: otp,
+        otpExpiration: new Date(Date.now() + 2 * 60000),
+        verified: false,
+        requestId: requestID,
       });
     }
 
@@ -401,6 +428,12 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         expiresIn: process.env.JWT_EXPIRY,
       });
 
+      const updateotp = await OTP.findOneAndUpdate(
+        { requestId },
+        { $set: { verified: true } },
+        { new: true }
+      );
+
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
@@ -431,39 +464,57 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
       const { phone, fcmToken } = req.body;
 
       if (!phone) {
-        return res.status(400).json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, { message: 'Mobile number is required' })
-        );
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+              message: "Mobile number is required",
+            })
+          );
       }
 
       let user = await User.findOne({ phone });
 
       if (!user) {
-        return res.status(403).json(
-          new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not an authorized user')
-        );
+        return res
+          .status(403)
+          .json(
+            new ApiResponse(
+              ResponseStatusCode.FORBIDDEN,
+              false,
+              "This mobile number is not an authorized user"
+            )
+          );
       }
 
       const userId = user._id;
       const paraExpert = await ParaExpert.findOne({ userId });
 
       if (!paraExpert) {
-        return res.status(403).json(
-          new ApiResponse(ResponseStatusCode.FORBIDDEN, false, 'This mobile number is not authorized Para Expert')
-        );
+        return res
+          .status(403)
+          .json(
+            new ApiResponse(
+              ResponseStatusCode.FORBIDDEN,
+              false,
+              "This mobile number is not authorized Para Expert"
+            )
+          );
       }
-        user.fcmToken = fcmToken;
-        await user.save();
+      user.fcmToken = fcmToken;
+      await user.save();
 
-        const otpResponse = await sendOTPToParaexpert(phone);
-        return res.json(otpResponse); 
-      
-
+      const otpResponse = await sendOTPToParaexpert(phone);
+      return res.json(otpResponse);
     } catch (error) {
       console.error(error);
-      res.status(500).json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, { message: error.message })
-      );
+      res
+        .status(500)
+        .json(
+          new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
+            message: error.message,
+          })
+        );
     }
   }
 );
@@ -481,12 +532,32 @@ async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
       },
     });
 
+    if (await OTP.findOne({ phone })) {
+      await OTP.findOneAndUpdate(
+        { phone },
+        {
+          otp,
+          otpExpiration: new Date(Date.now() + 2 * 60000),
+          verified: false,
+          requestId: requestID,
+        },
+        { new: true }
+      );
+    } else {
+      await OTP.create({
+        phone,
+        otp,
+        otpExpiration: new Date(Date.now() + 2 * 60000),
+        verified: false,
+        requestId: requestID,
+      });
+    }
+
     return new ApiResponse(
       ResponseStatusCode.SUCCESS,
       { requestID },
       `OTP ${otp} sent successfully to ${phone}`
     );
-
   } catch (error) {
     console.error(error);
     return new ApiResponse(
