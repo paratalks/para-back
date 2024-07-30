@@ -196,9 +196,10 @@ const getBookedAppointment = asyncHandler(
       let queryObj: Query = { userId };
 
       if (status) {
-        if (status === "scheduled") {
-          queryObj.status = { $in: ["scheduled", "rescheduled"] };
-        } else {
+        if (status === "confirmed") {
+          queryObj.status = { $in: ["confirmed", "rescheduled","ongoing"] };
+        }
+        else {
           queryObj.status = status;
         }
       }
@@ -386,14 +387,30 @@ const getParaExpertsBookings = asyncHandler(
           "Invalid refresh token"
         );
       }
-      const paraExpertId = await ParaExpert.find({ userId });
-      const { status = "scheduled" }: { status?: string } = req.query;
+      
+      const { status } = req.query;
+
+      const queryObj: { status?: any } = {};
+
+      if (status) {
+        if (status === "confirmed") {
+          queryObj.status = { $in: ["confirmed", "rescheduled", "ongoing"] };
+        } else {
+          queryObj.status = status;
+        }
+      }
+
+      const paraExpert = await ParaExpert.findOne({ userId });
+      if (!paraExpert) {
+        throw new ApiError(ResponseStatusCode.NOT_FOUND, "ParaExpert not found");
+      }
+
+      const paraExpertId = paraExpert._id;
 
       const appointments = await Appointments.find({
         paraExpertId,
-        status: status,
-      })
-        .select("-problem -paraExpertId -reason -createdAt -updatedAt -__v")
+        ...queryObj
+      }).select("-problem -paraExpertId -reason -createdAt -updatedAt -__v")
         .populate({
           path: "userId",
           model: "User",
