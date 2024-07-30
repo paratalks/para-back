@@ -535,7 +535,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     await sendNotif(
       bookingUser.fcmToken,
-      "Appointment Rescheduled",
+      "Appointment Rescheduling in Progress",
       `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
       appointment._id
     );
