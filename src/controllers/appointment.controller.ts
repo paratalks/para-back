@@ -559,7 +559,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-//user while cancelled and completed time
+//user while Confirm and ongoing  cancelled and completed time
 type BookingStatus = "completed" | "confirmed" | "cancelled" | "ongoing";
 
 const updateAppointmentStatus = asyncHandler(

@@ -8,6 +8,7 @@ import { User } from "../models/user/user.model";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 import { uploadfileToS3 } from "../util/s3Client.util";
 import { IPackage } from "../models/paraExpert/paraExpert.types";
+import { sendNotif,notification } from "../util/notification.util";
 
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
@@ -37,15 +38,7 @@ export const createBooking = asyncHandler(
         );
       }
 
-      const paraExpert = await ParaExpert.findById(paraExpertId);
-      if (!paraExpert) {
-        throw new ApiError(
-          ResponseStatusCode.NOT_FOUND,
-          "ParaExpert not found"
-        );
-      }
-
-      const booking = new PackagesBooking({
+    const booking = new PackagesBooking({
         packageId,
         paraExpertId,
         userId,
@@ -55,9 +48,68 @@ export const createBooking = asyncHandler(
         bookingDate:bookingDate || Date.now(),
         address,
         status,
-      });
+    });
 
-      await booking.save();
+    const bookedPackage = await booking.save();
+    const date = bookingDate.toISOString().split("T")[0];
+
+
+    const bookingUser = await User.findById(userId);
+
+    await sendNotif(
+      bookingUser.fcmToken,
+      "Package Booking Placed",
+      `Your package booking request for package has been successfully placed. The Booking is scheduled for ${date} at ${address}`,
+      bookedPackage._id
+    );
+
+    const createNotification = await notification(
+      userId,
+      "Package Booking Placed",
+      `Your package booking request for ${packageId} has been successfully placed. The Booking is scheduled for ${date} at ${address}`,
+      packageId,
+      bookedPackage._id
+    );
+
+    if (!createNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification"
+      );
+    }
+
+    const paraExpert = await ParaExpert.findById(paraExpertId);
+  
+    const paraExpertUser = await User.findById(paraExpert.userId);
+    if (!paraExpertUser) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "FCM token not found for para expert user"
+      );
+    }
+
+    await sendNotif(
+      paraExpertUser.fcmToken,
+      "New Package Booking Request",
+      `You have a new package booking request form ${bookingUser?.name} from ${bookingUser.name}. The Booking is scheduled form ${date} to ${address} location`,
+      bookedPackage?._id
+    );
+
+    const createParaExpertNotification = await notification(
+      paraExpertUser._id,
+      "New Package Booking Request",
+      `You have a new package booking request for packageId ${packageId} from ${bookingUser.name}. The Booking is scheduled for ${date} at ${address}, ${location}.`,
+      packageId,
+      bookedPackage._id,
+      bookingUser?.profilePicture
+    );
+    if (!createParaExpertNotification) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Failed to create notification"
+      );
+    }
+
 
       res.json(
         new ApiResponse(
@@ -240,14 +292,7 @@ export const getExpertsBookings = asyncHandler(
   }
 );
 
-const validStatuses = [
-  "pending",
-  "confirmed",
-  "cancelled",
-  "rescheduled",
-  "scheduled",
-] as const;
-type BookingStatus = typeof validStatuses[number];
+type BookingStatus = "completed"| "confirmed"| "cancelled";
 
 export const updateBookingStatus = asyncHandler(
   async (req: Request, res: Response) => {
@@ -262,28 +307,87 @@ export const updateBookingStatus = asyncHandler(
         );
       }
 
-      const booking = await PackagesBooking.findById(bookingId);
-      if (!booking) {
+      const packBooking = await PackagesBooking.findById(bookingId);
+      if (!packBooking) {
         throw new ApiError(ResponseStatusCode.NOT_FOUND, "Booking not found");
       }
+      packBooking.status = status as BookingStatus;
+      const pakBooking = await packBooking.save();
 
-      if (
-        !status ||
-        typeof status !== "string" ||
-        !validStatuses.includes(status as BookingStatus)
-      ) {
+      const date = pakBooking?.bookingDate.toISOString().split("T")[0];
+      const address = pakBooking.address;
+      const packageId = pakBooking?.packageId.toString();
+
+      const bookingUser = await User.findById(packBooking?.userId);
+      const paraExpert = await ParaExpert.findById(packBooking?.paraExpertId);
+      const paraExpertUser = await User.findById(paraExpert.userId);
+      if (!paraExpertUser) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
-          "Valid status is required"
+          "FCM token not found for para expert user"
         );
       }
-      booking.status = status as BookingStatus;
-      await booking.save();
 
+      const statusMessages: Record<BookingStatus, { title: string, message: string, paraExpertMessage: string, paraExpertTitle: string }> = {
+        confirmed: {
+            title: "Package Booking Confirmed",
+            message: `Your package booking has been confirmed for ${date} at ${address}.`,
+            paraExpertMessage: `You have a package booking confirmed for ${date} at ${address}.`,
+            paraExpertTitle: "Package Booking Scheduled"
+        },
+        cancelled: {
+            title: "Package Booking Cancelled",
+            message: `Your package booking for ${date} at ${address} has been cancelled.`,
+            paraExpertMessage: `The package booking scheduled for ${date} at ${address} has been cancelled.`,
+            paraExpertTitle: "Package Booking Cancelled"
+        },
+        completed: {
+            title: "Package Booking Completed",
+            message: `Your package booking on ${date} at ${address} has been completed.`,
+            paraExpertMessage: `The package booking with the ${bookingUser?.name} on ${date} at ${address} has been completed.`,
+            paraExpertTitle: "Package Booking Completed"
+        }
+    };
+
+    const { title, message, paraExpertMessage, paraExpertTitle } = statusMessages[status as BookingStatus];
+
+    
+    // Notify the user
+    await sendNotif(
+      bookingUser.fcmToken,
+      title,
+      message,
+      bookingId
+    );
+
+    await notification(
+      bookingUser._id,
+      title,
+      message,
+      packageId,
+      bookingId,
+      paraExpertUser.profilePicture
+    );
+
+    await sendNotif(
+      paraExpertUser.fcmToken,
+      paraExpertTitle,
+      paraExpertMessage,
+      bookingId
+    );
+
+    await notification(
+      paraExpertUser._id,
+      paraExpertTitle,
+      paraExpertMessage,
+      packageId,
+      bookingId,
+      bookingUser.profilePicture
+    );
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          booking,
+          pakBooking,
           "Booking status updated successfully"
         )
       );
