@@ -15,7 +15,7 @@ export const createBooking = asyncHandler(
     try {
       let fileUrl: string = "";
       if (req?.file) {
-        // fileUrl = await uploadfileToS3(req.file, "prescription-report");
+        fileUrl = await uploadfileToS3(req.file, "prescription-report");
       } else {
         console.log("No file uploaded, proceeding without file.");
       }
@@ -303,6 +303,136 @@ export const getExpertsBookings = asyncHandler(
     }
   }
 );
+
+export const updatePackageBooking = asyncHandler(
+  async (req: Request, res: Response) => {
+    const {bookingId} = req.params;
+    try {
+      const {
+        packageId,
+        paraExpertId,
+        userId,
+        location,
+        questions,
+        address,
+        status,
+        bookingDate,
+      } = req.body;
+
+      if (!bookingId) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Booking ID is required"
+        );
+      }
+
+      // Find the existing booking
+      const booking = await PackagesBooking.findById(bookingId);
+      if (!booking) {
+        throw new ApiError(
+          ResponseStatusCode.NOT_FOUND,
+          "Booking not found"
+        );
+      }
+
+      // Update the booking details
+      if (packageId) booking.packageId = packageId;
+      if (paraExpertId) booking.paraExpertId = paraExpertId;
+      if (userId) booking.userId = userId;
+      if (location) booking.location = location;
+      if (questions) booking.questions = questions;
+      if (address) booking.address = address;
+      if (status) booking.status = status;
+      if (bookingDate) booking.bookingDate = bookingDate;
+
+      // Save the updated booking
+      const updatedBooking = await booking.save();
+      const date = new Date(booking.bookingDate).toISOString().split("T")[0];
+
+      // Notify the user
+      const bookingUser = await User.findById(updatedBooking.userId);
+      if (!bookingUser) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Booking user not found"
+        );
+      }
+
+      await sendNotif(
+        bookingUser.fcmToken,
+        "Package Booking Rescheduling in Progress",
+        `Your package booking has been successfully rescheduled to ${date} at ${address}. We'll notify you once if the expert confirms`,
+        updatedBooking._id
+      );
+
+      const updateNotification = await notification(
+        bookingUser._id,
+        "Package Booking Rescheduling in Progress",
+        `Your package booking has been successfully rescheduled to ${date} at ${address}. We'll notify you once if the expert confirms`,
+        `${updatedBooking.packageId}`,
+        updatedBooking._id
+      );
+
+      // Notify the para expert
+      const paraExpert = await ParaExpert.findById(updatedBooking.paraExpertId);
+      if (!paraExpert) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Para expert not found"
+        );
+      }
+
+      const paraExpertUser = await User.findById(paraExpert.userId);
+      if (!paraExpertUser) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "FCM token not found for para expert user"
+        );
+      }
+
+      await sendNotif(
+        paraExpertUser.fcmToken,
+        "Package Booking Rescheduling Request",
+        `A package booking Request has been rescheduled by the ${bookingUser.name} to ${date} at ${address}. Please review !!.`,
+        updatedBooking._id
+      );
+
+      const updateParaExpertNotification = await notification(
+        paraExpertUser._id,
+        "Package Booking Rescheduling Request",
+        `A package booking Request has been rescheduled by the ${bookingUser.name} to ${date} at ${address}. Please review and confirm your availability !!.`,
+        `${updatedBooking.packageId}`,
+        updatedBooking._id,
+        bookingUser.profilePicture
+      );
+
+      if (!updateParaExpertNotification) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Failed to create notification"
+        );
+      }
+
+      res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          updatedBooking,
+          "Package booking updated successfully"
+        )
+      );
+    } catch (error) {
+      console.error("Error updating booking:", error);
+
+      const statusCode = error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
+      const message = error.message || "Internal server error";
+
+      res.status(statusCode).json(
+        new ApiError(statusCode, message)
+      );
+    }
+  }
+);
+
 
 type BookingStatus = "completed" | "confirmed" | "cancelled";
 
