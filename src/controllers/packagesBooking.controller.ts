@@ -51,8 +51,9 @@ export const createBooking = asyncHandler(
       });
 
       const bookedPackage = await booking.save();
-      const packageid = packageId.toString();
-      const date = new Date(bookingDate || Date.now()).toISOString().split("T")[0];
+      const date = new Date(bookingDate || Date.now())
+        .toISOString()
+        .split("T")[0];
       console.log("date", date);
 
       const bookingUser = await User.findById(userId);
@@ -74,7 +75,7 @@ export const createBooking = asyncHandler(
         userId,
         "Package Booking Placed",
         `Your package booking request has been successfully placed. The booking is scheduled for ${date} at ${address}.`,
-        "package",
+        `${bookedPackage.packageId}`,
         bookedPackage._id
       );
 
@@ -105,7 +106,7 @@ export const createBooking = asyncHandler(
         paraExpertUser._id,
         "New Package Booking Request",
         `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
-        "package",
+        `${bookedPackage.packageId}`,
         bookedPackage._id,
         bookingUser.profilePicture
       );
@@ -126,16 +127,14 @@ export const createBooking = asyncHandler(
     } catch (error) {
       console.error("Error creating booking:", error);
 
-      const statusCode = error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
+      const statusCode =
+        error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
       const message = error.message || "Internal server error";
 
-      res.status(statusCode).json(
-        new ApiError(statusCode, message)
-      );
+      res.status(statusCode).json(new ApiError(statusCode, message));
     }
   }
 );
-
 
 export const getBookings = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -306,7 +305,7 @@ export const getExpertsBookings = asyncHandler(
 
 export const updatePackageBooking = asyncHandler(
   async (req: Request, res: Response) => {
-    const {bookingId} = req.params;
+    const { bookingId } = req.params;
     try {
       const {
         packageId,
@@ -326,16 +325,11 @@ export const updatePackageBooking = asyncHandler(
         );
       }
 
-      // Find the existing booking
       const booking = await PackagesBooking.findById(bookingId);
       if (!booking) {
-        throw new ApiError(
-          ResponseStatusCode.NOT_FOUND,
-          "Booking not found"
-        );
+        throw new ApiError(ResponseStatusCode.NOT_FOUND, "Booking not found");
       }
 
-      // Update the booking details
       if (packageId) booking.packageId = packageId;
       if (paraExpertId) booking.paraExpertId = paraExpertId;
       if (userId) booking.userId = userId;
@@ -345,11 +339,9 @@ export const updatePackageBooking = asyncHandler(
       if (status) booking.status = status;
       if (bookingDate) booking.bookingDate = bookingDate;
 
-      // Save the updated booking
       const updatedBooking = await booking.save();
       const date = new Date(booking.bookingDate).toISOString().split("T")[0];
 
-      // Notify the user
       const bookingUser = await User.findById(updatedBooking.userId);
       if (!bookingUser) {
         throw new ApiError(
@@ -373,7 +365,6 @@ export const updatePackageBooking = asyncHandler(
         updatedBooking._id
       );
 
-      // Notify the para expert
       const paraExpert = await ParaExpert.findById(updatedBooking.paraExpertId);
       if (!paraExpert) {
         throw new ApiError(
@@ -423,16 +414,14 @@ export const updatePackageBooking = asyncHandler(
     } catch (error) {
       console.error("Error updating booking:", error);
 
-      const statusCode = error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
+      const statusCode =
+        error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
       const message = error.message || "Internal server error";
 
-      res.status(statusCode).json(
-        new ApiError(statusCode, message)
-      );
+      res.status(statusCode).json(new ApiError(statusCode, message));
     }
   }
 );
-
 
 type BookingStatus = "completed" | "confirmed" | "cancelled";
 
@@ -458,7 +447,7 @@ export const updateBookingStatus = asyncHandler(
 
       const date = pakBooking?.bookingDate.toISOString().split("T")[0];
       const address = pakBooking.address;
-      const packageId = pakBooking?.packageId.toString();
+      const packageId = pakBooking.packageId.toString();
 
       const bookingUser = await User.findById(packBooking?.userId);
       const paraExpert = await ParaExpert.findById(packBooking?.paraExpertId);
