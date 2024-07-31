@@ -542,7 +542,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     const createNotification = await notification(
       appointment.userId,
-      "Appointment Rescheduled",
+      "Appointment Rescheduling in Progress",
       `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
       "appointment",
       appointment._id
@@ -556,7 +556,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
     await sendNotif(
       paraExpertUser.fcmToken,
-      "Appointment Rescheduled",
+      "Appointment Rescheduled Request",
       `The ${bookingUser.name} has requested to reschedule the ${method} appointment to ${bookingdate} from ${startTime} to ${endTime}.`,
       appointment._id
     );
