@@ -197,7 +197,7 @@ const getBookedAppointment = asyncHandler(
 
       if (status) {
         if (status === "confirmed") {
-          queryObj.status = { $in: ["confirmed", "rescheduled", "ongoing"] };
+          queryObj.status = { $in: ["confirmed", "ongoing"] };
         } else {
           queryObj.status = status;
         }
@@ -393,7 +393,7 @@ const getParaExpertsBookings = asyncHandler(
 
       if (status) {
         if (status === "confirmed") {
-          queryObj.status = { $in: ["confirmed", "rescheduled", "ongoing"] };
+          queryObj.status = { $in: ["confirmed", "ongoing"] };
         } else {
           queryObj.status = status;
         }
