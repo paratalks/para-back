@@ -2,6 +2,7 @@ import { Schema, Document, Model } from 'mongoose';
 
 export  interface  PackageBookingTpes {
   packageId: Schema.Types.ObjectId;
+  packageType?: 'offline' | 'online';
   paraExpertId: Schema.Types.ObjectId; 
   userId: Schema.Types.ObjectId;
   bookingDate: Date;

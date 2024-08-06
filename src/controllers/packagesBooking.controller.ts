@@ -22,6 +22,7 @@ export const createBooking = asyncHandler(
 
       const {
         packageId,
+        packageType,
         paraExpertId,
         userId,
         location,
@@ -40,6 +41,7 @@ export const createBooking = asyncHandler(
 
       const booking = new PackagesBooking({
         packageId,
+        packageType,
         paraExpertId,
         userId,
         location,
