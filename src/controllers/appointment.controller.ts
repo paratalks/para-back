@@ -10,6 +10,7 @@ import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
 import { title } from "node:process";
+import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 
 interface Query {
   userId: string;
@@ -516,7 +517,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     const bookingdate = appointment.date.toISOString().split("T")[0];
     const method = appointment.appointmentMethod;
-  
+
     const bookingUser = await User.findById(appointment.userId);
     const paraExpert = await ParaExpert.findById(appointment?.paraExpertId);
     if (!paraExpert) {
@@ -725,3 +726,131 @@ export {
   getAppointmentById,
   updateAppointmentStatus,
 };
+
+export const getBookingStatsByMonth = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const { year, month } = req.query;
+
+      if (!year || !month) {
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.BAD_REQUEST,
+            {},
+            "Year and month are required"
+          )
+        );
+      }
+
+      const yearInt = parseInt(year as string, 10);
+      const monthInt = parseInt(month as string, 10);
+
+      if (isNaN(yearInt) || isNaN(monthInt) || monthInt < 1 || monthInt > 12) {
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.BAD_REQUEST,
+            {},
+            "Invalid year or month"
+          )
+        );
+      }
+
+      const startDate = new Date(yearInt, monthInt - 1, 1);
+      const endDate = new Date(yearInt, monthInt, 1);
+
+      const stats = await Appointments.aggregate([
+        {
+          $match: {
+            date: { $gte: startDate, $lt: endDate },
+            appointmentMethod: { $in: ["video_call", "audio_call", "chat"] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalBookings: { $sum: 1 },
+            chat: {
+              $sum: {
+                $cond: [{ $eq: ["$appointmentMethod", "chat"] }, 1, 0],
+              },
+            },
+            audio_call: {
+              $sum: {
+                $cond: [{ $eq: ["$appointmentMethod", "audio_call"] }, 1, 0],
+              },
+            },
+            video_call: {
+              $sum: {
+                $cond: [{ $eq: ["$appointmentMethod", "video_call"] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]);
+
+      const packageStats = await PackagesBooking.aggregate([
+        {
+          $match: {
+            bookingDate: { $gte: startDate, $lt: endDate },
+            packageType: { $in: ["offline", "online"] },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalBookings: { $sum: 1 },
+            offline: {
+              $sum: {
+                $cond: [{ $eq: ["$packageType", "offline"] }, 1, 0],
+              },
+            },
+            online: {
+              $sum: {
+                $cond: [{ $eq: ["$packageType", "online"] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]);
+
+      if (stats.length === 0) {
+        return res.json(
+          new ApiResponse(
+            ResponseStatusCode.NOT_FOUND,
+            {
+              totalBookings: 0,
+              chatBookings: 0,
+              audio_callBookings: 0,
+              video_callBookings: 0,
+              totalPackageBookings: 0,
+              offlineBookings: 0,
+              onlineBookings: 0,
+            },
+            "No bookings found for the specified month"
+          )
+        );
+      }
+
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.SUCCESS,
+          {
+            totalBookings: stats[0].totalBookings,
+            chatBookings: stats[0].chat,
+            audio_callBookings: stats[0].audio_call,
+            video_callBookings: stats[0].video_call,
+            totalPackageBookings: packageStats[0].totalBookings,
+            offlineBookings: packageStats[0].offline,
+            onlineBookings: packageStats[0].online,
+          },
+          "Booking statistics fetched successfully"
+        )
+      );
+    } catch (error) {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Internal server error"
+      );
+    }
+  }
+);

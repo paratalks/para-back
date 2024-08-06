@@ -8,6 +8,11 @@ const PackageBookingSchema = new mongoose.Schema(
       required: true,
 
     },
+    packageType:{
+      type: String,
+      default:'offline',
+      enum:['offline','online']
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
