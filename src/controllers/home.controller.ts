@@ -53,16 +53,22 @@ export const getSearchResults = asyncHandler(
 export const getAll = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { limit }: any = req.query;
-    const limitNumber = +limit;
+    const limitNumber = limit ? +limit : 0; 
+    
     const categories = listCategories();
-    const paraExperts: any[] = await ParaExpert.find().limit(limitNumber)
-    .select("expertise ratings ")
-        .populate({
-          path: "userId",
-          model: "User",
-          select:
-            "name profilePicture ",
-        });
+
+    let query = ParaExpert.find().select("expertise ratings")
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "name profilePicture",
+      });
+
+    if (limitNumber > 0) {
+      query = query.limit(limitNumber);
+    }
+
+    const paraExperts: any[] = await query.exec();
 
     return res.json(
       new ApiResponse(ResponseStatusCode.SUCCESS, {
@@ -77,6 +83,7 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
     );
   }
 });
+
 
 export const getParaExpertByID = asyncHandler(
   async (req: Request, res: Response) => {
