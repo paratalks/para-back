@@ -730,6 +730,18 @@ export {
 export const getBookingStatsByMonth = asyncHandler(
   async (req: Request, res: Response) => {
     try {
+      const user = req.user;
+      const userId = user._id;
+      if (!userId) {
+        throw new ApiError(
+          ResponseStatusCode.UNAUTHORIZED,
+          "Invalid refresh token"
+        );
+      }
+      
+      const expert = await ParaExpert.findById(userId);
+      const expertId = expert?._id;
+      
       const { year, month } = req.query;
 
       if (!year || !month) {
@@ -763,6 +775,7 @@ export const getBookingStatsByMonth = asyncHandler(
           $match: {
             date: { $gte: startDate, $lt: endDate },
             appointmentMethod: { $in: ["video_call", "audio_call", "chat"] },
+            paraExpertId: expertId,
           },
         },
         {
@@ -793,6 +806,7 @@ export const getBookingStatsByMonth = asyncHandler(
           $match: {
             bookingDate: { $gte: startDate, $lt: endDate },
             packageType: { $in: ["offline", "online"] },
+            paraExpertId:expertId,
           },
         },
         {
