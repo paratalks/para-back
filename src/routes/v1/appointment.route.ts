@@ -12,7 +12,7 @@ router.route("/get-appointments").get(verifyJWT, getBookedAppointment);
 router.route("/update-appointment/:bookingId").patch(updateAppointment);
 router.route("/appointment/:bookingId").get(getAppointmentById);
 router.route('/updateAppointmentStatus/:bookingId').put(updateAppointmentStatus);
-router.route('/appointment-data').get(getBookingStatsByMonth);
+router.route('/appointment-data').get(verifyJWT,getBookingStatsByMonth);
 
 
 export default router;
