@@ -24,6 +24,16 @@ export const paymentSchema = new Schema({
     required: true,
     ref: 'PackageBooking',
   },
+  paraExpertId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'ParaExpert',
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'User',
+  },
   bookingMethod: {
 	type: String,
 	required: true,
