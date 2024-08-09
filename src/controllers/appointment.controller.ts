@@ -857,42 +857,23 @@ export const getBookingStatsByMonth = asyncHandler(
         },
       ]);
 
-      const monthlyRevenueData = monthlyRevenue[0] || { totalAmount: 0 };
-      const totalRevenueData = totalRevenue[0] || { totalAmount: 0 };
+      const monthlyRevenueData = monthlyRevenue[0] || 0 ;
+      const totalRevenueData = totalRevenue[0] || 0 ;
 
-
-
-      if (stats.length === 0) {
-        return res.json(
-          new ApiResponse(
-            ResponseStatusCode.NOT_FOUND,
-            {
-              totalBookings: 0,
-              chatBookings: 0,
-              audio_callBookings: 0,
-              video_callBookings: 0,
-              totalPackageBookings: 0,
-              offlineBookings: 0,
-              onlineBookings: 0,
-            },
-            "No bookings found for the specified month"
-          )
-        );
-      }
 
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
           {
-            totalBookings: stats[0].totalBookings,
-            chatBookings: stats[0].chat,
-            audio_callBookings: stats[0].audio_call,
-            video_callBookings: stats[0].video_call,
-            totalPackageBookings: packageStats[0].totalBookings,
-            offlineBookings: packageStats[0].offline,
-            onlineBookings: packageStats[0].online,
-            monthlyRevenue: monthlyRevenueData.totalAmount,
-            totalRevenue: totalRevenueData.totalAmount,
+            totalBookings: stats[0]?.totalBookings || 0,
+            chatBookings: stats[0]?.chat || 0,
+            audio_callBookings: stats[0]?.audio_call || 0,
+            video_callBookings: stats[0]?.video_call || 0,
+            totalPackageBookings: packageStats[0]?.totalBookings || 0,
+            offlineBookings: packageStats[0]?.offline || 0,
+            onlineBookings: packageStats[0]?.online || 0,
+            monthlyRevenue: monthlyRevenueData?.totalAmount || 0,
+            totalRevenue: totalRevenueData?.totalAmount || 0,
           },
           "Booking statistics fetched successfully"
         )
