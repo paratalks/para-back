@@ -11,6 +11,7 @@ import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
 import { title } from "node:process";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
+import { Payment } from "../models/payment/payment.model";
 
 interface Query {
   userId: string;
@@ -739,7 +740,7 @@ export const getBookingStatsByMonth = asyncHandler(
         );
       }
       
-      const expert = await ParaExpert.findById(userId);
+      const expert = await ParaExpert.findOne({ userId });
       const expertId = expert?._id;
       
       const { year, month } = req.query;
@@ -827,6 +828,40 @@ export const getBookingStatsByMonth = asyncHandler(
         },
       ]);
 
+      const monthlyRevenue = await Payment.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startDate, $lt: endDate },
+            paraExpertId: expertId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: "$amount" },
+          },
+        },
+      ]);
+
+      const totalRevenue = await Payment.aggregate([
+        {
+          $match: {
+            paraExpertId: expertId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: "$amount" },
+          },
+        },
+      ]);
+
+      const monthlyRevenueData = monthlyRevenue[0] || { totalAmount: 0 };
+      const totalRevenueData = totalRevenue[0] || { totalAmount: 0 };
+
+
+
       if (stats.length === 0) {
         return res.json(
           new ApiResponse(
@@ -856,6 +891,8 @@ export const getBookingStatsByMonth = asyncHandler(
             totalPackageBookings: packageStats[0].totalBookings,
             offlineBookings: packageStats[0].offline,
             onlineBookings: packageStats[0].online,
+            monthlyRevenue: monthlyRevenueData.totalAmount,
+            totalRevenue: totalRevenueData.totalAmount,
           },
           "Booking statistics fetched successfully"
         )

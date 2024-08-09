@@ -10,6 +10,8 @@ export interface PaymentTypes {
   GatewayDetails: GatewayDetails;
   amount: number;
   bookingId: Schema.Types.ObjectId;
+  paraExpertId: Schema.Types.ObjectId;
+  userId:Schema.Types.ObjectId;
   bookingMethod: 'appointment' | 'package';
   paymentReceiptUrl?: string;
   status: 'pending' | 'completed' | 'failed';

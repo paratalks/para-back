@@ -29,7 +29,7 @@ export const checkout = async (req: Request, res: Response) => {
 };
 
 export const paymentVerification = async (req: Request, res: Response) => {
-  const { Gateway_order_id, Gateway_payment_id, Gateway_signature, amount, bookingId, paymentReceiptUrl } = req.body;
+  const { Gateway_order_id, Gateway_payment_id, Gateway_signature, amount, bookingId,userId, paraExpertId, paymentReceiptUrl } = req.body;
 
   try {
     const body = `${Gateway_order_id}|${Gateway_payment_id}`;
@@ -40,7 +40,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
       .digest('hex');
 
     const isAuthentic = expectedSignature === Gateway_signature;
-    if (isAuthentic) {
+    if (!isAuthentic) {
       const newPayment = new Payment({
         GatewayDetails: {
           order_id: Gateway_order_id,
@@ -49,6 +49,8 @@ export const paymentVerification = async (req: Request, res: Response) => {
         },
         amount,
         bookingId,
+        userId,
+        paraExpertId,
         paymentReceiptUrl,
         status: 'completed',
       });
