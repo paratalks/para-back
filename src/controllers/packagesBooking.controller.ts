@@ -9,6 +9,7 @@ import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 import { uploadfileToS3 } from "../util/s3Client.util";
 import { IPackage } from "../models/paraExpert/paraExpert.types";
 import { sendNotif, notification } from "../util/notification.util";
+import { checkout } from "./payment.controller";
 
 export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
@@ -22,6 +23,7 @@ export const createBooking = asyncHandler(
 
       const {
         packageId,
+        amount,
         packageType,
         paraExpertId,
         userId,
@@ -52,6 +54,8 @@ export const createBooking = asyncHandler(
         status,
       });
 
+      const checkoutResult = await checkout(amount, booking._id.toString());
+
       const bookedPackage = await booking.save();
       const date = new Date(bookingDate || Date.now())
         .toISOString()
@@ -68,15 +72,15 @@ export const createBooking = asyncHandler(
 
       await sendNotif(
         bookingUser.fcmToken,
-        "Package Booking Placed",
-        `Your package booking request has been successfully placed. The booking is scheduled for ${date} at ${address}.`,
+        "Package Request Received",
+        `Your package booking request has been successfully placed. The booking will scheduled for ${date} at ${address}. Please proceed your payment`,
         bookedPackage._id
       );
 
       const createNotification = await notification(
         userId,
-        "Package Booking Placed",
-        `Your package booking request has been successfully placed. The booking is scheduled for ${date} at ${address}.`,
+        "Package Request Received",
+        `Your package booking request has been successfully placed. The booking will scheduled for ${date} at ${address}. Please proceed your payment`,
         `${bookedPackage.packageId}`,
         bookedPackage._id
       );
@@ -100,14 +104,14 @@ export const createBooking = asyncHandler(
       await sendNotif(
         paraExpertUser.fcmToken,
         "New Package Booking Request",
-        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
+        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}. Your payment is currently being processed`,
         bookedPackage._id
       );
 
       const createParaExpertNotification = await notification(
         paraExpertUser._id,
         "New Package Booking Request",
-        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
+        `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}. Your payment is currently being processed`,
         `${bookedPackage.packageId}`,
         bookedPackage._id,
         bookingUser.profilePicture
@@ -122,7 +126,10 @@ export const createBooking = asyncHandler(
       res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          bookedPackage,
+          {
+            bookingId: booking._id,
+            paymentOrder: checkoutResult.data
+          },
           "Package booking created successfully"
         )
       );
