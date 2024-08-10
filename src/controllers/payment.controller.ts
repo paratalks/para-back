@@ -5,14 +5,16 @@ import { Payment } from "../models/payment/payment.model";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { ApiError } from "../util/apiError";
-import { S3Client,PutObjectCommand,GetObjectCommand } from '@aws-sdk/client-s3';
 import { uploadfileToS3 } from '../util/s3Client.util';
+import { sendNotif } from "../util/notification.util";
+import { notification } from "../util/notification.util";
+import { Appointments } from "../models/appointments/appointments.model";
+import { User } from "../models/user/user.model";
+import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 
 
-export const checkout = async (req: Request, res: Response) => {
+export const checkout = async (amount: number, bookingId: string) => {
   try {
-    const { amount, bookingId } = req.body;
-
     const options = {
       amount: Number(amount * 100),
       currency: 'INR',
@@ -21,15 +23,19 @@ export const checkout = async (req: Request, res: Response) => {
 
     const order = await instance.orders.create(options);
 
-    res.json(new ApiResponse(ResponseStatusCode.SUCCESS, order, 'Order created successfully'));
-  } catch (error) {
-    console.error('Error during checkout:', error);
-    res.status(500).json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, 'Error during checkout'));
-  }
+    return {
+      status: ResponseStatusCode.SUCCESS,
+      data: order,
+      message: 'Order created successfully'
+    };
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      throw new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, 'Error during checkout');
+    }  
 };
 
 export const paymentVerification = async (req: Request, res: Response) => {
-  const { Gateway_order_id, Gateway_payment_id, Gateway_signature, amount, bookingId,userId, paraExpertId, paymentReceiptUrl } = req.body;
+  const { Gateway_order_id, Gateway_payment_id, Gateway_signature, amount, bookingId, userId, paraExpertId, paymentReceiptUrl,status } = req.body;
 
   try {
     const body = `${Gateway_order_id}|${Gateway_payment_id}`;
@@ -40,8 +46,12 @@ export const paymentVerification = async (req: Request, res: Response) => {
       .digest('hex');
 
     const isAuthentic = expectedSignature === Gateway_signature;
-    if (!isAuthentic) {
-      const newPayment = new Payment({
+   
+    if (isAuthentic) {
+      return res.json(new ApiResponse(ResponseStatusCode.UNAUTHORIZED, 'Unauthorized'));
+    }
+
+    const newPayment = new Payment({
         GatewayDetails: {
           order_id: Gateway_order_id,
           payment_id: Gateway_payment_id,
@@ -52,20 +62,92 @@ export const paymentVerification = async (req: Request, res: Response) => {
         userId,
         paraExpertId,
         paymentReceiptUrl,
-        status: 'completed',
+        status,
       });
 
       const savedPayment = await newPayment.save();
 
-      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, savedPayment, 'Payment verified and saved successfully'));
-    } else {
-      res.json(new ApiResponse(ResponseStatusCode.UNAUTHORIZED, 'Unauthorized'));
+      const booking = await Appointments.findById(bookingId);
+      if (!booking) {
+        throw new ApiError(ResponseStatusCode.NOT_FOUND, 'Booking not found');
+      }
+  
+      booking.status = 'pending';
+      const appointment = await booking.save();
+      
+      const bookingdate = appointment?.date.toISOString().split("T")[0];
+      const startTime = appointment?.startTime;
+      const endTime = appointment?.endTime;
+      const appointmentMethod = appointment?.appointmentMethod;
+
+    const bookingUser = await User.findById(userId);
+
+    const paraExpert = await ParaExpert.findById(paraExpertId);
+    if (!paraExpert) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "Para expert not found"
+      );
     }
-  } catch (error) {
+    const paraExpertUser = await User.findById(paraExpert.userId);
+    if (!paraExpertUser) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "FCM token not found for para expert user"
+      );
+    }
+         
+      await sendNotif(
+        bookingUser.fcmToken,
+        "Booking Placed",
+        `Your ${appointmentMethod} appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
+        appointment._id
+      );
+  
+      const createNotification = await notification(
+        userId,
+        "Booking Placed",
+        `Your ${appointmentMethod} appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
+        "appointment",
+        appointment._id
+      );
+  
+      if (!createNotification) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Failed to create notification"
+        );
+      }
+  
+      await sendNotif(
+        paraExpertUser.fcmToken,
+        "New Booking Request",
+        `You have a new ${appointmentMethod} appointment request for ${bookingdate} from ${startTime} to ${endTime}.`,
+        appointment?._id
+      );
+  
+      const createParaExpertNotification = await notification(
+        paraExpertUser._id,
+        "New booking request",
+        `You have a new ${appointmentMethod} appointment request for ${bookingdate} from ${startTime} to ${endTime}`,
+        "appointment",
+        appointment._id,
+        bookingUser?.profilePicture
+      );
+      
+      if (!createParaExpertNotification) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Failed to create notification"
+        );
+      }
+
+      res.json(new ApiResponse(ResponseStatusCode.SUCCESS, savedPayment, 'Payment verified and saved successfully'));
+    } 
+   catch (error) {
     res.json(new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message || 'Internal server error'));
   }
-};
-
+}
 export const uploadPaymentReceipt = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -73,6 +155,7 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
     }
 
     const fileUrl = await uploadfileToS3(req.file, "payment-receipt");
+
 
     return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, fileUrl, "payment receipt Uploaded successfully"));
   } catch (error) {
@@ -82,4 +165,4 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
       error.message || "Internal server error"
     );
   }
-};
+}
