@@ -47,7 +47,7 @@ const PackageBookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["completed","pending","rescheduled","confirmed", "cancelled"],
+      enum: ["completed","pending","rescheduled","confirmed", "cancelled", "paymentPending"],
       default: "pending",
       required: true,
     },
