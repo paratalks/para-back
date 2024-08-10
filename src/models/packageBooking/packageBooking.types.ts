@@ -6,7 +6,7 @@ export  interface  PackageBookingTpes {
   paraExpertId: Schema.Types.ObjectId; 
   userId: Schema.Types.ObjectId;
   bookingDate: Date;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'rescheduled' | 'completed';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'rescheduled' | 'completed' | 'paymentPending';
   location: string;
   address?:string;
   prescriptionReport?: string; 
