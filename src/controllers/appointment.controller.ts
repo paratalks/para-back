@@ -12,6 +12,7 @@ import { User } from "../models/user/user.model";
 import { title } from "node:process";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 import { Payment } from "../models/payment/payment.model";
+import { checkout } from "./payment.controller";
 
 interface Query {
   userId: string;
@@ -24,7 +25,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     startTime,
     endTime,
     status,
-    image,
     amount,
     appointmentMode,
     appointmentMethod,
@@ -33,7 +33,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     startTime: string;
     endTime: string;
     status: string;
-    image: string;
     amount: number;
     appointmentMode: string;
     appointmentMethod: string;
@@ -76,7 +75,6 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
       endTime,
       appointmentMethod
     );
-    console.log("value", isSlotAvailable);
 
     if (!isSlotAvailable) {
       throw new ApiError(
@@ -113,6 +111,8 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
         "Failed to create appointment"
       );
     }
+    const checkoutResult = await checkout(amount, appointment._id.toString());
+
     const bookingdate = appointment.date.toISOString().split("T")[0];
 
     const bookingUser = await User.findById(userId);
@@ -133,15 +133,15 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
     await sendNotif(
       bookingUser.fcmToken,
-      "Booking Placed",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
+      "Appointment Request Received",
+      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
       appointment._id
     );
 
     const createNotification = await notification(
       userId,
-      "Booking Placed",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
+      "Appointment Request Received",
+      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
       "appointment",
       appointment._id
     );
@@ -155,15 +155,15 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 
     await sendNotif(
       paraExpertUser.fcmToken,
-      "New Booking Request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}.`,
+      "New Appointment Request",
+      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
       appointment?._id
     );
 
     const createParaExpertNotification = await notification(
       paraExpertUser._id,
-      "New booking request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}`,
+      "New Appointment request",
+      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
       "appointment",
       appointment._id,
       bookingUser?.profilePicture
@@ -178,8 +178,11 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
-        appointment,
-        "Appointment created successfully"
+        {
+          bookingId: appointment._id,
+          paymentOrder: checkoutResult.data
+        },
+        "Appointment and payment order created successfully"
       )
     );
   } catch (error) {

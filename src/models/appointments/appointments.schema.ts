@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { BookingType } from "../../util";
 
 const appointmentsSchema = new mongoose.Schema({
   userId: {
@@ -24,8 +23,8 @@ const appointmentsSchema = new mongoose.Schema({
   },
   status:{
       type:String,
-      enum: ["completed","pending","rescheduled","confirmed", "cancelled","ongoing"],
-      default: "pending",
+      enum: ["completed","pending","paymentPending","confirmed", "cancelled","ongoing"],
+      default: "paymentPending",
   },
   appointmentMode: {
     type: String,
