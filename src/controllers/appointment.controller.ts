@@ -156,14 +156,14 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     await sendNotif(
       paraExpertUser.fcmToken,
       "New Appointment Request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
+      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. Your payment for this appointment is currently being processed.`,
       appointment?._id
     );
 
     const createParaExpertNotification = await notification(
       paraExpertUser._id,
       "New Appointment request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
+      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. Your payment for this appointment is currently being processed.`,
       "appointment",
       appointment._id,
       bookingUser?.profilePicture
