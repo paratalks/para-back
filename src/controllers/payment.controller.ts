@@ -61,7 +61,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
 
     const isAuthentic = expectedSignature === Gateway_signature;
 
-    if (isAuthentic) {
+    if (!isAuthentic) {
       return res.json(
         new ApiResponse(ResponseStatusCode.UNAUTHORIZED, "Unauthorized")
       );
