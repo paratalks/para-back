@@ -1,4 +1,5 @@
 import mongoose , {Mongoose, Schema} from "mongoose";
+mongoose.set('strictQuery', false);
 
 const notificationSchema =new Schema({
     userId:{

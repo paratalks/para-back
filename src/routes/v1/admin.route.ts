@@ -1,6 +1,7 @@
 import express from "express";
 import { getUsers, getParaExpert, getParaExpertByID, paraExpertSignup, getAppointments, getDashboardData, getAppointmentById, getUserById, updateUserById, updateParaExpertById, getPackageBookings } from "../../controllers/admin.controller"
 import { hasAdminAccess } from "../../middlewares/auth.middleware";
+import { createAccount } from "../../controllers/account.controller";
 
 const router = express.Router();
 
@@ -16,5 +17,7 @@ router.route("/get-all/appointments").get(hasAdminAccess, getAppointments);
 router.route("/get-appointment/:appointmentId").get(hasAdminAccess, getAppointmentById);
 router.route("/dashboard-data").get(hasAdminAccess, getDashboardData);
 router.route("/package/get-all/bookings").get(hasAdminAccess, getPackageBookings);
+
+router.route("/create-account/:expertId").post(hasAdminAccess,createAccount);
 
 export default router;
