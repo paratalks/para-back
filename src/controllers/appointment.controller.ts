@@ -139,7 +139,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     );
 
     const createNotification = await notification(
-      userId,
+      bookingUser._id,
       "Appointment Request Received",
       `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
       "appointment",
@@ -156,7 +156,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     await sendNotif(
       paraExpertUser.fcmToken,
       "New Appointment Request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. Your payment for this appointment is currently being processed.`,
+      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
       appointment?._id
     );
 
