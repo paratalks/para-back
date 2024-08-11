@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+mongoose.set('strictQuery', false);
 
 const PackageBookingSchema = new mongoose.Schema(
   {
