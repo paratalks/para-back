@@ -62,8 +62,48 @@ export const paymentVerification = async (req: Request, res: Response) => {
     const isAuthentic = expectedSignature === Gateway_signature;
 
     if (!isAuthentic) {
+      if (status === 'failed' || 'pending') {
+        const bookingUser = await User.findById(userId);
+        if (bookingMethod === "appointment") {
+          
+          await Appointments.deleteOne({ _id: bookingId });
+
+          await sendNotif(
+            bookingUser.fcmToken,
+            "Booking Canceled",
+            `Your appointment request has been canceled due to payment failure.`,
+            bookingId
+          );
+    
+          await notification(
+            userId,
+            "Booking Canceled",
+            `Your appointment request has been canceled due to payment failure.`,
+            "appointment",
+            bookingId
+          );
+        }
+        else if (bookingMethod === "package") {
+          await PackagesBooking.deleteOne({ _id: bookingId });
+
+          await sendNotif(
+            bookingUser.fcmToken,
+            "Booking Canceled",
+            `Your Package Booking request has been canceled due to payment failure.`,
+            bookingId
+          );
+    
+          await notification(
+            userId,
+            "Booking Canceled",
+            `Your Package Booking request has been canceled due to payment failure.`,
+            "appointment",
+            bookingId
+          );
+        }
+      }
       return res.json(
-        new ApiResponse(ResponseStatusCode.UNAUTHORIZED, "Unauthorized")
+        new ApiResponse(ResponseStatusCode.UNAUTHORIZED, "Payment failed and booking deleted")
       );
     }
 
@@ -106,7 +146,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
       if (!booking) {
         throw new ApiError(ResponseStatusCode.NOT_FOUND, "Booking not found");
       }
-
       booking.status = "pending";
       const appointment = await booking.save();
 
@@ -137,7 +176,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
         );
       }
 
-      // Send notification to para expert
       await sendNotif(
         paraExpertUser.fcmToken,
         "New Booking Request",
