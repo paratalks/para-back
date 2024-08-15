@@ -89,7 +89,6 @@ export const generateRTMToken = (req:Request, resp:Response) => {
     const currentTime = Math.floor(Date.now() / 1000);
     const privilegeExpireTime = currentTime + expireTime;
     // build the token
-    console.log(APP_ID, APP_CERTIFICATE, uid, role, privilegeExpireTime);
     const token = RtmTokenBuilder.buildToken(
       APP_ID,
       APP_CERTIFICATE,

@@ -260,7 +260,6 @@ export const refreshToken: RequestHandler = bigPromise(
         token,
         process.env.JWT_SECRET
       );
-      console.log(payload);
 
       data = await getNewToken(payload);
     } catch (error) {
@@ -289,7 +288,6 @@ export const refreshToken: RequestHandler = bigPromise(
 
 const getNewToken = async (payload: any) => {
   const isUser = payload?.id ? true : false;
-  console.log(isUser);
 
   let data: any;
   if (isUser) {
@@ -385,11 +383,10 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         { requestID },
-        `OTP send successfully ${otp} to ${phone}`
+        `OTP send successfully`
       )
     );
   } catch (error) {
-    console.log(error);
     return res.json(
       new ApiResponse(
         ResponseStatusCode.INTERNAL_SERVER_ERROR,
@@ -556,7 +553,7 @@ async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
     return new ApiResponse(
       ResponseStatusCode.SUCCESS,
       { requestID },
-      `OTP ${otp} sent successfully to ${phone}`
+      `OTP sent successfully`
     );
   } catch (error) {
     console.error(error);

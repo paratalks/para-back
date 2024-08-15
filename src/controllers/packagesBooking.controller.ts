@@ -17,8 +17,6 @@ export const createBooking = asyncHandler(
       let fileUrl: string = "";
       if (req?.file) {
         fileUrl = await uploadfileToS3(req.file, "prescription-report");
-      } else {
-        console.log("No file uploaded, proceeding without file.");
       }
 
       const {
@@ -60,7 +58,6 @@ export const createBooking = asyncHandler(
       const date = new Date(bookingDate || Date.now())
         .toISOString()
         .split("T")[0];
-      console.log("date", date);
 
       const bookingUser = await User.findById(userId);
       if (!bookingUser) {
