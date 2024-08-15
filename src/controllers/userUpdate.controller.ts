@@ -44,7 +44,7 @@ const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
       )
     );
   } catch (error) {
-    console.log(error);
+    new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
   }
 });
 const updateParaExpertDetails = asyncHandler(

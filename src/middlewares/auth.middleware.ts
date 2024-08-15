@@ -8,7 +8,6 @@ import { Admin } from "../models/admin/admin.modle";
 export const verifyJWT = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // console.log(req.headers.authorization.replace("Bearer ", ""))
       const token =
         req.cookies?.accessToken ||
         req.headers.authorization?.replace("Bearer ", "");
@@ -62,3 +61,23 @@ export const hasAdminAccess = asyncHandler(
     }
   }
 );
+
+const validApiKey: string | undefined = process.env.VALID_API_KEY;
+
+export const verifyApiKey = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const apiKey = req.headers['paratalks-api-key'] || req.query.api_key;
+
+    if (typeof apiKey === 'string' && validApiKey) {
+      if (apiKey === validApiKey) {
+        return next();
+      } else {
+        throw new ApiError(403, 'Forbidden: Invalid API key');
+      }
+    }
+    throw new ApiError(401, 'Unauthorized: API key is missing or invalid');
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Unauthorized Access");
+  }
+};
+

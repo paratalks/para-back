@@ -115,10 +115,8 @@ export const sendNotif = async (token: String, title: string, body: string, book
     };
     
     const response = await admin.messaging().send(message);
-    console.log("Successfully sent message:", response);
     return response;
   } catch (error) {
-    console.error("Error sending message:", error.message);
     return null;
   }
 };
