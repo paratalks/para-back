@@ -22,17 +22,13 @@ const corsOptions: cors.CorsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Load environment variables
-// dotenv.config({ path: `.env.${process.env.NODE_ENV.toLowerCase()}` });
 dotenv.config({ path: `.env.${"dev"}` });
 
 // Create Express server
 const app = express();
 
-// Connecting Database
 connectDB();
 
-// Express configuration
 app.set("port", process.env.PORT || 3000);
 app.use(compression());
 app.use(express.json());
@@ -53,17 +49,12 @@ declare global{
   }
 }
 
-// Set HTTP context
 app.use(httpContext.middleware);
 app.use(generateRequestId);
 
-// Log all the requests and response.
-app.use(logRequest);
-app.use(logResponse);
 
 app.use(router);
 
-// Error handling
 app.use(notFound);
 app.use(errorHandlerMiddleware);
 
