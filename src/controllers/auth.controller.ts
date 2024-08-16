@@ -20,6 +20,10 @@ const options = {
   httpOnly: true,
 };
 
+export const generateOTP = (): number => {
+  return Math.floor(100000 + Math.random() * 900000);
+};
+
 export const signup: RequestHandler = bigPromise(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -327,28 +331,25 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
     const { phone, fcmToken } = req.body;
 
     if (!phone) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
-            message: "Mobile number is required",
-          })
-        );
+      return res.status(400).json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+          message: "Mobile number is required",
+        })
+      );
     }
-    let user = await User.findOne({ phone });
-    if (user) {
-      user.fcmToken = fcmToken;
-      await user.save();
-    }
-    // for testing
-    const otp: number =
-      phone === 9999999999
-        ? 123456
-        : Math.floor(100000 + Math.random() * 900000);
-    // const otp:number = 123456
+
+    let user = await User.findOneAndUpdate(
+      { phone },
+      { fcmToken },
+      { new: true }
+    );
+
+    const otp = generateOTP();
+
     const requestID = httpContext.get("requestId");
-    if (phone !== 9999999999) {
-      const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+
+    try {
+      await axios.get("https://www.fast2sms.com/dev/bulkV2", {
         params: {
           authorization: process.env.FAST2SMS_API_KEY,
           variables_values: otp,
@@ -356,38 +357,34 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
           numbers: phone,
         },
       });
-    }
-
-    if (await OTP.findOne({ phone })) {
-      const newotp = await OTP.findOneAndUpdate(
-        { phone },
-        {
-          otp: otp,
-          otpExpiration: new Date(Date.now() + 10 * 60000),
-          verified: false,
-          requestId: requestID,
-        },
-        { new: true }
+    } catch (smsError) {
+      return res.status(500).json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
+          message: "Failed to send OTP",
+          error: smsError.message,
+        })
       );
-    } else {
-      await OTP.create({
-        phone: phone,
-        otp: otp,
-        otpExpiration: new Date(Date.now() + 2 * 60000),
+    }
+    await OTP.findOneAndUpdate(
+      { phone },
+      {
+        otp,
+        otpExpiration: new Date(Date.now() + 5 * 60000),
         verified: false,
         requestId: requestID,
-      });
-    }
+      },
+      { upsert: true, new: true }
+    );
 
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         { requestID },
-        `OTP send successfully`
+        "OTP sent successfully"
       )
     );
   } catch (error) {
-    return res.json(
+    return res.status(500).json(
       new ApiResponse(
         ResponseStatusCode.INTERNAL_SERVER_ERROR,
         "Failed to send OTP",
@@ -396,6 +393,7 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
     );
   }
 });
+
 
 export const verifyOTP = bigPromise(async (req, res, next) => {
   const { requestId } = req.body;
@@ -451,9 +449,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
   }
 });
 
-export const generateOTP = (): number => {
-  return Math.floor(100000 + Math.random() * 900000);
-};
+
 
 export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
   async (req: Request, res: Response) => {
@@ -518,42 +514,33 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
 
 async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
   try {
-    const otp: number = generateOTP();
+    const otp = generateOTP();
     const requestID = httpContext.get("requestId");
-    const response = await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+
+    await axios.get("https://www.fast2sms.com/dev/bulkV2", {
       params: {
         authorization: process.env.FAST2SMS_API_KEY,
         variables_values: otp,
         route: "otp",
-        numbers: phone,
+        numbers: phone.toString(),
       },
     });
 
-    if (await OTP.findOne({ phone })) {
-      await OTP.findOneAndUpdate(
-        { phone },
-        {
-          otp,
-          otpExpiration: new Date(Date.now() + 2 * 60000),
-          verified: false,
-          requestId: requestID,
-        },
-        { new: true }
-      );
-    } else {
-      await OTP.create({
-        phone,
+    await OTP.findOneAndUpdate(
+      { phone },
+      {
         otp,
-        otpExpiration: new Date(Date.now() + 2 * 60000),
+        otpExpiration: new Date(Date.now() + 5 * 60000),
         verified: false,
         requestId: requestID,
-      });
-    }
+      },
+      { upsert: true, new: true }
+    );
 
     return new ApiResponse(
       ResponseStatusCode.SUCCESS,
       { requestID },
-      `OTP sent successfully`
+      "OTP sent successfully"
     );
   } catch (error) {
     console.error(error);
