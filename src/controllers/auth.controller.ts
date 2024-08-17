@@ -6,22 +6,17 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { OTP } from "../models/otp/otp.model";
 import { Schema } from "mongoose";
-import httpContext from "express-http-context";
 import { ApiError } from "../util/apiError";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
 import { signupObject, parasignupObject } from "../constants/types";
-import axios from "axios";
 import { fcm, notification, sendNotif } from "../util/notification.util";
+import { sendOTPUtil } from "../util/sendOtp";
 dotenv.config();
 
 const options = {
   expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
   httpOnly: true,
-};
-
-export const generateOTP = (): number => {
-  return Math.floor(100000 + Math.random() * 900000);
 };
 
 export const signup: RequestHandler = bigPromise(
@@ -344,112 +339,21 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       { new: true }
     );
 
-    const otp = generateOTP();
+    const otpResponse = await sendOTPUtil(phone);
 
-    const requestID = httpContext.get("requestId");
-
-    try {
-      await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-        params: {
-          authorization: process.env.FAST2SMS_API_KEY,
-          variables_values: otp,
-          route: "otp",
-          numbers: phone,
-        },
-      });
-    } catch (smsError) {
-      return res.status(500).json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
-          message: "Failed to send OTP",
-          error: smsError.message,
-        })
-      );
-    }
-    await OTP.findOneAndUpdate(
-      { phone },
-      {
-        otp,
-        otpExpiration: new Date(Date.now() + 5 * 60000),
-        verified: false,
-        requestId: requestID,
-      },
-      { upsert: true, new: true }
-    );
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        { requestID },
-        "OTP sent successfully"
-      )
-    );
+    return res.json(otpResponse);
   } catch (error) {
-    return res.status(500).json(
-      new ApiResponse(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        "Failed to send OTP",
-        error.message
-      )
-    );
-  }
-});
-
-
-export const verifyOTP = bigPromise(async (req, res, next) => {
-  const { requestId } = req.body;
-  const { otp, otpExpiration, phone, verified } = await OTP.findOne({
-    requestId,
-  });
-
-  try {
-    const expirationTimeStamp = otpExpiration.getTime();
-    if (req.body.otp === otp && Date.now() < expirationTimeStamp && !verified) {
-      let isNewUser = false;
-      let user: any = await User.findOne({ phone });
-
-      if (!user) {
-        user = await User.create({
-          phone: phone,
-        });
-        isNewUser = true; // signup
-      }
-
-      const payload = {
-        userId: user?._id,
-        phone,
-      };
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRY,
-      });
-
-      const updateotp = await OTP.findOneAndUpdate(
-        { requestId },
-        { $set: { verified: true } },
-        { new: true }
-      );
-
-      res.json(
+    return res
+      .status(500)
+      .json(
         new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          { token, isNewUser, userId: user._id },
-          "OTP verification successfull"
+          ResponseStatusCode.INTERNAL_SERVER_ERROR,
+          "Failed to send OTP",
+          error.message
         )
-      ); //auth token jwt
-    } else {
-      res.json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid OTP"));
-    }
-  } catch (error) {
-    res.json(
-      new ApiResponse(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        "Internal server error"
-      )
-    );
+      );
   }
 });
-
-
 
 export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
   async (req: Request, res: Response) => {
@@ -457,13 +361,11 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
       const { phone, fcmToken } = req.body;
 
       if (!phone) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
-              message: "Mobile number is required",
-            })
-          );
+        return res.status(400).json(
+          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+            message: "Mobile number is required",
+          })
+        );
       }
 
       let user = await User.findOne({ phone });
@@ -497,57 +399,85 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
       user.fcmToken = fcmToken;
       await user.save();
 
-      const otpResponse = await sendOTPToParaexpert(phone);
+      const otpResponse = await sendOTPUtil(phone);
       return res.json(otpResponse);
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .json(
-          new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
-            message: error.message,
-          })
-        );
+      res.status(500).json(
+        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
+          message: error.message,
+        })
+      );
     }
   }
 );
 
-async function sendOTPToParaexpert(phone: number): Promise<ApiResponse> {
-  try {
-    const otp = generateOTP();
-    const requestID = httpContext.get("requestId");
+export const verifyOTP = bigPromise(async (req, res, next) => {
+  const { requestId, otp: userOtp } = req.body;
 
-    await axios.get("https://www.fast2sms.com/dev/bulkV2", {
-      params: {
-        authorization: process.env.FAST2SMS_API_KEY,
-        variables_values: otp,
-        route: "otp",
-        numbers: phone.toString(),
-      },
+  try {
+    const otpRecordPromise = OTP.findOne({ requestId }).exec();
+    let userPromise;
+
+    const otpRecord = await otpRecordPromise;
+
+    if (
+      !otpRecord ||
+      otpRecord.verified ||
+      Date.now() >= otpRecord.otpExpiration.getTime()
+    ) {
+      return res.json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          "Invalid or expired OTP"
+        )
+      );
+    }
+
+    if (userOtp !== otpRecord.otp) {
+      return res.json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid OTP")
+      );
+    }
+
+    userPromise = User.findOne({ phone: otpRecord.phone }).exec();
+
+    let user = await userPromise;
+    let isNewUser = false;
+
+    if (!user) {
+      user = await User.create({ phone: otpRecord.phone });
+      isNewUser = true;
+    }
+
+    const payload = {
+      userId: user._id,
+      phone: otpRecord.phone,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRY,
     });
 
     await OTP.findOneAndUpdate(
-      { phone },
-      {
-        otp,
-        otpExpiration: new Date(Date.now() + 5 * 60000),
-        verified: false,
-        requestId: requestID,
-      },
-      { upsert: true, new: true }
+      { requestId },
+      { $set: { verified: true } },
+      { new: true }
     );
 
-    return new ApiResponse(
-      ResponseStatusCode.SUCCESS,
-      { requestID },
-      "OTP sent successfully"
+    res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        { token, isNewUser, userId: user._id },
+        "OTP verification successful"
+      )
     );
   } catch (error) {
-    console.error(error);
-    return new ApiResponse(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      "Failed to send OTP",
-      error.message
+    res.json(
+      new ApiResponse(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        "Internal server error"
+      )
     );
   }
-}
+});
