@@ -66,7 +66,7 @@ const validApiKey: string | undefined = process.env.VALID_API_KEY;
 
 export const verifyApiKey = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const apiKey = req.headers['paratalks-api-key'] || req.query.api_key;
+    const apiKey = req.headers['para_talks_api_key'] || req.query.api_key;
 
     if (typeof apiKey === 'string' && validApiKey) {
       if (apiKey === validApiKey) {
