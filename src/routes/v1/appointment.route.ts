@@ -9,9 +9,9 @@ router
   .route("/book-appointment/:paraExpertId")
   .post(verifyJWT,bookAppointment);
 router.route("/get-appointments").get(verifyJWT, getBookedAppointment);
-router.route("/update-appointment/:bookingId").patch(updateAppointment);
-router.route("/appointment/:bookingId").get(getAppointmentById);
-router.route('/updateAppointmentStatus/:bookingId').put(updateAppointmentStatus);
+router.route("/update-appointment/:bookingId").patch(verifyJWT,updateAppointment);
+router.route("/appointment/:bookingId").get(verifyJWT,getAppointmentById);
+router.route('/updateAppointmentStatus/:bookingId').put(verifyJWT,updateAppointmentStatus);
 router.route('/appointment-data').get(verifyJWT,getBookingStatsByMonth);
 
 

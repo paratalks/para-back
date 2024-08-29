@@ -74,7 +74,7 @@ export const createBooking = asyncHandler(
         bookedPackage._id
       );
 
-      const createNotification = await notification(
+       await notification(
         userId,
         "Package Request Received",
         `Your package booking request has been successfully placed. The booking will scheduled for ${date} at ${address}. Please proceed your payment`,
@@ -113,12 +113,6 @@ export const createBooking = asyncHandler(
         bookedPackage._id,
         bookingUser.profilePicture
       );
-      if (!createParaExpertNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
 
       res.json(
         new ApiResponse(
@@ -131,8 +125,6 @@ export const createBooking = asyncHandler(
         )
       );
     } catch (error) {
-      console.error("Error creating booking:", error);
-
       const statusCode =
         error.statusCode || ResponseStatusCode.INTERNAL_SERVER_ERROR;
       const message = error.message || "Internal server error";
