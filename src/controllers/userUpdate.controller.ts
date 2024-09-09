@@ -30,7 +30,7 @@ const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
       userId,
       { $set: updateFields },
       { new: true }
-    ).select("-password -refreshToken");
+    ).select("-password -refreshToken -createdAt -updatedAt -__v");
 
     if (!user) {
       throw new ApiError(ResponseStatusCode.NOT_FOUND, "User not found");
