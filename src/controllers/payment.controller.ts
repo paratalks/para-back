@@ -161,7 +161,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
         appointment._id
       );
 
-      const createNotification = await notification(
+      await notification(
         userId,
         "Booking Placed",
         `Your ${appointmentMethod} appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
@@ -169,12 +169,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
         appointment._id
       );
 
-      if (!createNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
 
       await sendNotif(
         paraExpertUser.fcmToken,
@@ -183,7 +177,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
         appointment._id
       );
 
-      const createParaExpertNotification = await notification(
+      await notification(
         paraExpertUser._id,
         "New booking request",
         `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}.`,

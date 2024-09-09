@@ -8,13 +8,13 @@ const router = express.Router();
 router.route("/get-bookings").get(verifyJWT, getParaExpertsBookings);
 router.route("/get-booking/:bookingId").get(verifyJWT, getBookingById);
 
-router.route("/get-available-slots").get( getParaExpertAvailability);
+router.route("/get-available-slots").get(verifyJWT,getParaExpertAvailability);
 router.route("/set-availability").patch(verifyJWT, setAvailability);
 router.route("/get-availability").get(verifyJWT, getAvailability);
 
 router.route("/update").patch(verifyJWT, updateParaExpertDetails);
 router.route("/me").get(verifyJWT, getParaExpertDetails);
-router.post('/uploadCertificate', uploadFile('uploadCertificate'), uploadQualificationDetails);
+router.post('/uploadCertificate', uploadFile('uploadCertificate'),verifyJWT,uploadQualificationDetails);
 
 
 export default router;

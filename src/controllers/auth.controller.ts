@@ -209,13 +209,6 @@ export const paraSignup: RequestHandler = bigPromise(
 
         const sendNotification = fcm(createNotification._id);
 
-        if (!sendNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to send notification"
-          );
-        }
-
         res
           .cookie("token", token, options)
           .json(

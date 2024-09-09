@@ -330,15 +330,6 @@ const uploadProfile = async (req: Request, res: Response) => {
         );
     }
 
-    const userID = req.params.userId;
-    const isUser = await User.findById(userID);
-    if (!isUser) {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(ResponseStatusCode.NOT_FOUND, null, "User not found")
-        );
-    }
     const accessUrl = await uploadfileToS3(req?.file, "user-profile");
 
     return res.json(
