@@ -8,7 +8,7 @@ import {
   uploadProfile,
   dev,
 } from "../../controllers/userUpdate.controller";
-import { uploadFile } from "../../util/s3Client.util";
+import { upload } from "../../util/s3Client.util";
 // /**
 //  * Endpoint: /api/v1/user
 //  */
@@ -22,7 +22,7 @@ const router = express.Router();
 //     .get(authorization, getAllUsers);
 
 
-router.post('/uploadProfile', uploadFile('profilePicture'),verifyJWT,uploadProfile);
+router.post('/uploadProfile', upload.single('profilePicture'),uploadProfile);
 router.route("/update-user/:userId").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(verifyJWT,getUserById);
