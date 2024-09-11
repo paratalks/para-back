@@ -9,8 +9,8 @@ const generateRequestId = async (req: Request, res: Response, next: NextFunction
 };
 
 const logRequest = (req: Request, res: Response, next: NextFunction) => {
-    const headers = JSON.stringify({}, null, 2);
-    // const headers = JSON.stringify(req.headers, null, 2);
+    // const headers = JSON.stringify({}, null, 2);
+    const headers = JSON.stringify(req.headers, null, 2);
     logger.info(
         `${req.protocol.toUpperCase()}-${req.httpVersion} ${req.method} ${req.url}, ` +
             `headers: ${headers}, ` +
