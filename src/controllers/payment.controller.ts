@@ -12,6 +12,7 @@ import { Appointments } from "../models/appointments/appointments.model";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
+import { asyncHandler } from "../util/asyncHandler";
 
 export const checkout = async (amount: number, bookingId: string) => {
   try {
@@ -37,7 +38,7 @@ export const checkout = async (amount: number, bookingId: string) => {
   }
 };
 
-export const paymentVerification = async (req: Request, res: Response) => {
+export const paymentVerification = asyncHandler(async (req: Request, res: Response) => {
   const {
     Gateway_order_id,
     Gateway_payment_id,
@@ -65,7 +66,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
       if (status === 'failed' || 'pending') {
         const bookingUser = await User.findById(userId);
         if (bookingMethod === "appointment") {
-          
+
           await Appointments.deleteOne({ _id: bookingId });
 
           await sendNotif(
@@ -74,7 +75,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
             `Your appointment request has been canceled due to payment failure.`,
             bookingId
           );
-    
+
           await notification(
             userId,
             "Booking Canceled",
@@ -92,7 +93,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
             `Your Package Booking request has been canceled due to payment failure.`,
             bookingId
           );
-    
+
           await notification(
             userId,
             "Booking Canceled",
@@ -185,7 +186,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
         appointment._id,
         bookingUser?.profilePicture
       );
-    } 
+    }
     else if (bookingMethod === "package") {
       const packBooking = await PackagesBooking.findById(bookingId);
       if (!packBooking) {
@@ -259,9 +260,9 @@ export const paymentVerification = async (req: Request, res: Response) => {
       )
     );
   }
-};
+});
 
-export const uploadPaymentReceipt = async (req: Request, res: Response) => {
+export const uploadPaymentReceipt = asyncHandler(async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res
@@ -292,4 +293,4 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
       error.message || "Internal server error"
     );
   }
-};
+});

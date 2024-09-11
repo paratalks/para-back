@@ -12,6 +12,7 @@ import { uploadfileToS3 } from "../util/s3Client.util";
 
 export const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
+
   const { name, email, gender, interests, profilePicture, phone, dateOfBirth } =
     req.body;
 
@@ -25,28 +26,25 @@ export const updateUserDetails = asyncHandler(async (req: Request, res: Response
   if (profilePicture) updateFields.profilePicture = profilePicture;
   if (phone) updateFields.phone = phone;
 
-  try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateFields },
-      { new: true }
-    ).select("-password -refreshToken -createdAt -updatedAt -__v");
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $set: updateFields },
+    { new: true }
+  ).select("-password -refreshToken -createdAt -updatedAt -__v");
 
-    if (!user) {
-      throw new ApiError(ResponseStatusCode.NOT_FOUND, "User not found");
-    }
-
-    res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        user,
-        "User details updated successfully"
-      )
-    );
-  } catch (error) {
-    new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+  if (!user) {
+    throw new ApiError(ResponseStatusCode.NOT_FOUND, "User not found");
   }
+
+  res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      user,
+      "User details updated successfully"
+    )
+  );
 });
+
 export const updateParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const {
@@ -138,29 +136,23 @@ export const updateParaExpertDetails = asyncHandler(
 
 export const getParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
-    try {
-      const paraUser = req.user;
-      const paraExpertId = paraUser?._id;
-      const paraExpert = await ParaExpert.findOne({ userId: paraExpertId })
-        .select("-createdAt -updatedAt -__v -availability -packages")
-        .populate({
-          path: "userId",
-          model: "User",
-          select:
-            "name phone gender interests dateOfBirth email profilePicture ",
-        });
-      return res.json(
-        new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          paraExpert,
-          "para expert fetched successfully"
-        )
-      );
-    } catch (error) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-      );
-    }
+    const paraUser = req.user;
+    const paraExpertId = paraUser?._id;
+    const paraExpert = await ParaExpert.findOne({ userId: paraExpertId })
+      .select("-createdAt -updatedAt -__v -availability -packages")
+      .populate({
+        path: "userId",
+        model: "User",
+        select:
+          "name phone gender interests dateOfBirth email profilePicture ",
+      });
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        paraExpert,
+        "para expert fetched successfully"
+      )
+    );
   }
 );
 
@@ -214,177 +206,132 @@ export const setAvailability = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const getAvailability = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    const userId = user._id;
-    const paraExpert = await ParaExpert.findOne({ userId });
-    if (!paraExpert) {
-      throw new ApiError(
-        ResponseStatusCode.NOT_FOUND,
-        "Para Expert Not Founded"
-      );
-    }
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        { availability: paraExpert.availability },
-        "ParaExpert availability fetched successfully"
-      )
-    );
-  } catch (error) {
+  const user = req.user;
+  const userId = user._id;
+  const paraExpert = await ParaExpert.findOne({ userId });
+  if (!paraExpert) {
     throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
+      ResponseStatusCode.NOT_FOUND,
+      "Para Expert Not Founded"
     );
   }
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      { availability: paraExpert.availability },
+      "ParaExpert availability fetched successfully"
+    )
+  );
 });
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
-  try {
 
-    const { userId } = req.params;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "user not found")
-      );
-    }
+  const { userId } = req.params;
+  const user = await User.findById(userId);
+  if (!user) {
     return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        user,
-        "user found successfully"
-      )
-    );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
+      new ApiResponse(ResponseStatusCode.NOT_FOUND, {}, "user not found")
     );
   }
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      user,
+      "user found successfully"
+    )
+  );
 });
 
 export const getNotifications = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const user: any = req.user;
-    const userId = user._id;
-    const notifications = await Notifications.find({ userId: userId });
-    if (!notifications) {
-      return res.json(
-        new ApiResponse(
-          ResponseStatusCode.NOT_FOUND,
-          {},
-          "notification not found"
-        )
-      );
-    }
+  const user: any = req.user;
+  const userId = user._id;
+  const notifications = await Notifications.find({ userId: userId });
+  if (!notifications) {
     return res.json(
       new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        notifications,
-        "notifications found successfully"
+        ResponseStatusCode.NOT_FOUND,
+        {},
+        "notification not found"
       )
     );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
   }
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      notifications,
+      "notifications found successfully"
+    )
+  );
 });
 
 export const dev = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const { packages } = req.body;
-    const para = await ParaExpert.updateMany(
-      {},
-      {
-        $set: {
-          packages,
-        },
+  const { packages } = req.body;
+  const para = await ParaExpert.updateMany(
+    {},
+    {
+      $set: {
+        packages,
       },
-      { new: true }
-    );
-    return res.json(
-      new ApiResponse(ResponseStatusCode.SUCCESS, para, "updated successfully")
-    );
-  } catch (error) {
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
-  }
+    },
+    { new: true }
+  );
+  return res.json(
+    new ApiResponse(ResponseStatusCode.SUCCESS, para, "updated successfully")
+  );
 });
 
-export const uploadProfile = async (req: Request, res: Response) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            ResponseStatusCode.BAD_REQUEST,
-            null,
-            "No file uploaded"
-          )
-        );
-    }
-
-    const localFilePath = req.file.path;
-    const accessUrl = await uploadfileToS3(localFilePath, "user-profile");
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        accessUrl,
-        "Profile Pic Uploaded successfully"
-      )
-    );
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
+export const uploadProfile = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          null,
+          "No file uploaded"
+        )
+      );
   }
-};
 
-export const uploadQualificationDetails = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            ResponseStatusCode.BAD_REQUEST,
-            null,
-            "No file uploaded"
-          )
-        );
-    }
-    if (!req.file) {
-      return res.status(400).send('No file uploaded');
-    }
+  const localFilePath = req.file.path;
+  const accessUrl = await uploadfileToS3(localFilePath, "user-profile");
 
-    const localFilePath = req.file.path;
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      accessUrl,
+      "Profile Pic Uploaded successfully"
+    )
+  );
 
-    const fileUrl = await uploadfileToS3(localFilePath, "certificate");
+});
 
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        fileUrl,
-        "Qualification Details  Uploaded successfully"
-      )
-    );
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
+export const uploadQualificationDetails = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          null,
+          "No file uploaded"
+        )
+      );
   }
-};
+  if (!req.file) {
+    return res.status(400).send('No file uploaded');
+  }
+
+  const localFilePath = req.file.path;
+
+  const fileUrl = await uploadfileToS3(localFilePath, "certificate");
+
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      fileUrl,
+      "Qualification Details  Uploaded successfully"
+    )
+  );
+
+});

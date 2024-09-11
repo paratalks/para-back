@@ -22,7 +22,7 @@ const router = express.Router();
 //     .get(authorization, getAllUsers);
 
 
-router.post('/uploadProfile', upload.single('profilePicture'),uploadProfile);
+router.post('/uploadProfile',verifyJWT,upload.single('profilePicture'),uploadProfile);
 router.route("/update-user/:userId").patch(verifyJWT,updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(verifyJWT,getUserById);
