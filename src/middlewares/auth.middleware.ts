@@ -68,6 +68,7 @@ export const verifyApiKey = (req: Request, res: Response, next: NextFunction) =>
   try {
     const apiKey = req.headers['para_talks_api_key'] || req.query.para_talks_api_key;
     console.log("Api_key",apiKey);
+    console.log("valide_Api_key",validApiKey);
 
     if (typeof apiKey === 'string' && validApiKey) {
       if (apiKey === validApiKey) {
