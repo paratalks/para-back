@@ -9,52 +9,50 @@ import { ObjectId } from "mongoose";
 import { banner } from "../constants/banner.json";
 import { getReviews } from "../util/paraexpert.util";
 
-export const getCategories = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const categories = listCategories();
-      return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, categories));
-    } catch (error) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-      );
-    }
+export const getCategories = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const categories = listCategories();
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, categories));
+  } catch (error) {
+    return res.json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+    );
   }
+}
 );
 
-export const getSearchResults = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const { searchQuery } = req.params;
+export const getSearchResults = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { searchQuery } = req.params;
 
-      let paraExperts: any = await ParaExpert.find({
-        $or: [
-          { name: { $regex: searchQuery, $options: "i" } },
-          { expertise: { $in: searchQuery } },
-          { expertise: { $elemMatch: { $in: [searchQuery] } } },
-        ],
-      })
-        .select("ratings expertise _id userId profilePicture")
-        .limit(10)
-        .populate({
-          path: "userId",
-          model: "User",
-          select: "name",
-        });
-      return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
-    } catch (error) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-      );
-    }
+    let paraExperts: any = await ParaExpert.find({
+      $or: [
+        { name: { $regex: searchQuery, $options: "i" } },
+        { expertise: { $in: searchQuery } },
+        { expertise: { $elemMatch: { $in: [searchQuery] } } },
+      ],
+    })
+      .select("ratings expertise _id userId profilePicture")
+      .limit(10)
+      .populate({
+        path: "userId",
+        model: "User",
+        select: "name",
+      });
+    return res.json(new ApiResponse(ResponseStatusCode.SUCCESS, paraExperts));
+  } catch (error) {
+    return res.json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+    );
   }
+}
 );
 
 export const getAll = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { limit }: any = req.query;
-    const limitNumber = limit ? +limit : 0; 
-    
+    const limitNumber = limit ? +limit : 0;
+
     const categories = listCategories();
 
     let query = ParaExpert.find().select("expertise ratings")
@@ -85,81 +83,79 @@ export const getAll = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
-export const getParaExpertByID = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const paraExpert = await ParaExpert.findById(id)
-        .select("-createdAt -updatedAt -__v -availability")
-        .populate({
-          path: "userId",
-          model: "User",
-          select:
-            "name gender profilePicture ",
-        });
+export const getParaExpertByID = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const paraExpert = await ParaExpert.findById(id)
+      .select("-createdAt -updatedAt -__v -availability")
+      .populate({
+        path: "userId",
+        model: "User",
+        select:
+          "name gender profilePicture ",
+      });
 
-      if (!paraExpert) {
-        return res.json(
-          new ApiResponse(
-            ResponseStatusCode.NOT_FOUND,
-            {},
-            "ParaExpert not found"
-          )
-        );
-      }
-      const user = await User.findById(paraExpert.userId);
-      const reviews = await getReviews(paraExpert._id);
-
+    if (!paraExpert) {
       return res.json(
         new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          { paraExpert, reviews },
-          "para expert fetched successfully"
+          ResponseStatusCode.NOT_FOUND,
+          {},
+          "ParaExpert not found"
         )
       );
-    } catch (error) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-      );
     }
+    const user = await User.findById(paraExpert.userId);
+    const reviews = await getReviews(paraExpert._id);
+
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        { paraExpert, reviews },
+        "para expert fetched successfully"
+      )
+    );
+  } catch (error) {
+    return res.json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+    );
   }
+}
 );
 
-export const getOnlineOfflinepackage = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const { type } = req.query;
-      const packageType: String = String(type);
-      const paraExpert = await ParaExpert.findById(id);
+export const getOnlineOfflinepackage = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+    const packageType: String = String(type);
+    const paraExpert = await ParaExpert.findById(id);
 
-      if (!paraExpert) {
-        return res.json(
-          new ApiResponse(
-            ResponseStatusCode.NOT_FOUND,
-            {},
-            "ParaExpert not found"
-          )
-        );
-      }
-
-      const packages = paraExpert.packages.filter(
-        (pack) => pack.type === packageType
-      );
-
+    if (!paraExpert) {
       return res.json(
         new ApiResponse(
-          ResponseStatusCode.SUCCESS,
-          packages,
-          "Packages fetched successfully"
+          ResponseStatusCode.NOT_FOUND,
+          {},
+          "ParaExpert not found"
         )
       );
-    } catch (error) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
-      );
     }
+
+    const packages = paraExpert.packages.filter(
+      (pack) => pack.type === packageType
+    );
+
+    return res.json(
+      new ApiResponse(
+        ResponseStatusCode.SUCCESS,
+        packages,
+        "Packages fetched successfully"
+      )
+    );
+  } catch (error) {
+    return res.json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
+    );
   }
+}
 );
 
 // export const webHome = asyncHandler(async (req: Request, res: Response) => {

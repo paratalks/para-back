@@ -6,6 +6,6 @@ import { verifyJWT } from "../../middlewares/auth.middleware";
 const router = express.Router();
 
 router.route("/verification").post(verifyJWT,paymentVerification)
-router.post('/uploadPaymentReceipt', upload.single('paymentReceipt'),uploadPaymentReceipt);
+router.post('/uploadPaymentReceipt',verifyJWT,upload.single('paymentReceipt'),uploadPaymentReceipt);
 
 export default router;

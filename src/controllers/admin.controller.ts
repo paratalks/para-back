@@ -22,7 +22,7 @@ export const isValidatedPassword = async function (
   return await bcrypt.compare(usersendPassword, password);
 };
 
-export const adminSignup: RequestHandler = async (
+export const adminSignup = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -86,9 +86,9 @@ export const adminSignup: RequestHandler = async (
       )
     );
   }
-};
+});
 
-export const adminLogin: RequestHandler = async (
+export const adminLogin = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -158,9 +158,9 @@ export const adminLogin: RequestHandler = async (
       )
     );
   }
-};
+});
 
-export const getDashboardData = async (req: Request, res: Response) => {
+export const getDashboardData = asyncHandler(async (req: Request, res: Response) => {
   try {
     const totalParaExperts = await ParaExpert.countDocuments();
     const totalUsers = await User.countDocuments({ status: "active" });
@@ -221,9 +221,9 @@ export const getDashboardData = async (req: Request, res: Response) => {
       success: false,
     });
   }
-};
+});
 
-export const getUsers: RequestHandler = async (
+export const getUsers = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -256,9 +256,9 @@ export const getUsers: RequestHandler = async (
       )
     );
   }
-};
+});
 
-export const getParaExpert: RequestHandler = async (
+export const getParaExpert = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -296,7 +296,7 @@ export const getParaExpert: RequestHandler = async (
       )
     );
   }
-};
+});
 
 export const getParaExpertByID = asyncHandler(
   async (req: Request, res: Response) => {
@@ -364,7 +364,7 @@ export const updateParaExpertById = asyncHandler(
   }
 );
 
-export const paraExpertSignup: RequestHandler = async (
+export const paraExpertSignup = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -443,9 +443,9 @@ export const paraExpertSignup: RequestHandler = async (
       new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error?.message)
     );
   }
-};
+});
 
-export const getAppointments: RequestHandler = async (
+export const getAppointments = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -493,7 +493,7 @@ export const getAppointments: RequestHandler = async (
       )
     );
   }
-};
+});
 
 export const getAppointmentById = asyncHandler(
   async (req: Request, res: Response) => {
@@ -594,7 +594,7 @@ export const updateUserById = asyncHandler(
   }
 );
 
-export const getPackageBookings: RequestHandler = async (
+export const getPackageBookings = asyncHandler(async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -643,4 +643,4 @@ export const getPackageBookings: RequestHandler = async (
       )
     );
   }
-};
+});

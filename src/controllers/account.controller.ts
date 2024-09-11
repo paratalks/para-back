@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { Account } from "../models/account/account.model";
 import { ApiResponse } from "../util/apiResponse";
 import { ResponseStatusCode } from "../constants/constants";
+import { asyncHandler } from "../util/asyncHandler";
 
-export const createAccount = async (req: Request, res: Response) => {
+export const createAccount = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { expertId } = req.params;
 
@@ -32,7 +33,7 @@ export const createAccount = async (req: Request, res: Response) => {
     }
 
     const newAccount = new Account({
-      paraExpertId:expertId,
+      paraExpertId: expertId,
       accountHolderName,
       accountNumber,
       branchName,
@@ -58,16 +59,16 @@ export const createAccount = async (req: Request, res: Response) => {
       )
     );
   }
-};
+});
 
-export const updateAccount = async (req: Request, res: Response) => {
+export const updateAccount = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
     const updatedAccount = await Account.findByIdAndUpdate(id, updateData, {
       new: true,
-      runValidators: true, 
+      runValidators: true,
     });
 
     if (!updatedAccount) {
@@ -96,4 +97,4 @@ export const updateAccount = async (req: Request, res: Response) => {
       )
     );
   }
-};
+});

@@ -6,7 +6,7 @@ import { upload } from '../../util/s3Client.util';
 const router = express.Router();
 
 
-router.post('/booking', upload.single('prescriptionReport'),verifyJWT,createBooking);
+router.post('/booking', verifyJWT,upload.single('prescriptionReport'),createBooking);
 router.route("/user/get-bookings").get(verifyJWT,getBookings);
 router.route("/para/get-bookings").get(verifyJWT,getExpertsBookings);
 router.route("/user/bookings/details").get(verifyJWT,getbookingByPackageById);

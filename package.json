@@ -54,7 +54,8 @@
         "uuid": "^9.0.0",
         "validator": "^13.7.0",
         "winston": "^3.8.2",
-        "yarn": "^1.22.19"
+        "yarn": "^1.22.19",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@types/axios": "^0.14.0",

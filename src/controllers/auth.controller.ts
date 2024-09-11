@@ -1,7 +1,6 @@
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
-import { NextFunction, Request, RequestHandler, Response } from "express";
-import bigPromise from "../middlewares/bigPromise";
+import { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { OTP } from "../models/otp/otp.model";
@@ -12,6 +11,8 @@ import { ResponseStatusCode } from "../constants/constants";
 import { signupObject, parasignupObject } from "../constants/types";
 import { fcm, notification, sendNotif } from "../util/notification.util";
 import { sendOTPUtil } from "../util/sendOtp";
+import { asyncHandler } from "../util/asyncHandler";
+
 dotenv.config();
 
 const options = {
@@ -19,110 +20,159 @@ const options = {
   httpOnly: true,
 };
 
-export const signup: RequestHandler = bigPromise(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const {
-        name,
-        gender,
-        email,
-        dateOfBirth,
-        interests,
-        profilePicture,
-        fcmToken,
-      }: signupObject = req.body;
+export const signup = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      name,
+      gender,
+      email,
+      dateOfBirth,
+      interests,
+      profilePicture,
+      fcmToken,
+    }: signupObject = req.body;
 
-      if (
-        !name ||
-        !gender ||
-        !email ||
-        !dateOfBirth ||
-        !interests ||
-        !fcmToken
-      ) {
+    if (
+      !name ||
+      !gender ||
+      !email ||
+      !dateOfBirth ||
+      !interests ||
+      !fcmToken
+    ) {
+      throw new ApiError(
+        ResponseStatusCode.BAD_REQUEST,
+        "All fields are required"
+      );
+    }
+
+    const user: any = req.user;
+
+    if (user && user.name && user.gender && user.dateOfBirth) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, { message: "User already exist" }));
+      throw new ApiError(400, "User already exist");
+    }
+
+    const toStore: signupObject = {
+      name,
+      gender,
+      email,
+      dateOfBirth,
+      interests,
+      profilePicture,
+      fcmToken,
+    };
+
+    if (user) {
+      const updatedUser: any = await User.findOneAndUpdate(
+        { _id: user._id },
+        toStore,
+        { new: true, runValidators: true }
+      );
+      await updatedUser.save();
+      const data: any = { token: updatedUser.getJwtToken(), updatedUser };
+
+      await sendNotif(
+        updatedUser.fcmToken,
+        "Welcome to Paratalks",
+        "Open the doors to a world of peace and serenity!",
+        user._id
+      );
+
+      const createNotification = await notification(
+        user._id,
+        "Welcome to Paratalks",
+        "Open the doors to a world of peace and serenity!",
+        null,
+        null
+      );
+
+      if (!createNotification) {
         throw new ApiError(
           ResponseStatusCode.BAD_REQUEST,
-          "All fields are required"
+          "Failed to create notification"
         );
       }
 
-      const user: any = req.user;
-
-      if (user && user.name && user.gender && user.dateOfBirth) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, { message: "User already exist" }));
-        throw new ApiError(400, "User already exist");
-      }
-
-      const toStore: signupObject = {
-        name,
-        gender,
-        email,
-        dateOfBirth,
-        interests,
-        profilePicture,
-        fcmToken,
-      };
-
-      if (user) {
-        const updatedUser: any = await User.findOneAndUpdate(
-          { _id: user._id },
-          toStore,
-          { new: true, runValidators: true }
-        );
-        await updatedUser.save();
-        const data: any = { token: updatedUser.getJwtToken(), updatedUser };
-
-        await sendNotif(
-          updatedUser.fcmToken,
-          "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!",
-          user._id
-        );
-
-        const createNotification = await notification(
-          user._id,
-          "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!",
-          null,
-          null
-        );
-
-        if (!createNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to create notification"
-          );
-        }
-
-        res.json(new ApiResponse(200, data, "User Registered Successfully!"));
-      } else {
-        throw new ApiError(
-          ResponseStatusCode.INTERNAL_SERVER_ERROR,
-          "User not authorized to sign-up please redo otp procedure"
-        );
-      }
-    } catch (error) {
-      throw new ApiError(401, error?.message || "Failure in User registration");
+      res.json(new ApiResponse(200, data, "User Registered Successfully!"));
+    } else {
+      throw new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        "User not authorized to sign-up please redo otp procedure"
+      );
     }
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Failure in User registration");
   }
+}
 );
 
-export const paraSignup: RequestHandler = bigPromise(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const {
-        name,
-        gender,
-        email,
-        dateOfBirth,
+export const paraSignup = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      name,
+      gender,
+      email,
+      dateOfBirth,
+      interests,
+      fcmToken,
+      expertise,
+      availability,
+      packages,
+      profilePicture,
+      ratings,
+      bio,
+      basedOn,
+      qualifications,
+      experience,
+      consultancy,
+      socials,
+    }: parasignupObject = req.body;
+
+    const user: any = req.user;
+
+    if (user && user.name && user.gender && user.dateOfBirth) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, { message: "User already exist" }));
+      throw new ApiError(400, "User already exist");
+    }
+
+    if (
+      availability.filter((item) => item.day < 0 || item.day > 6).length > 0
+    ) {
+      return res.json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid day")
+      );
+    }
+
+    const toStore: signupObject = {
+      name,
+      gender,
+      email,
+      dateOfBirth,
+      interests,
+      profilePicture,
+      fcmToken,
+    };
+
+    if (user) {
+      const newUser: any = await User.findOneAndUpdate(
+        { _id: user._id },
+        toStore,
+        { new: true, runValidators: true }
+      );
+      await newUser.save();
+      const token: any = newUser.getJwtToken();
+
+      const paraExpert = new ParaExpert({
+        userId: newUser?._id as Schema.Types.ObjectId,
         interests,
-        fcmToken,
         expertise,
         availability,
         packages,
-        profilePicture,
         ratings,
         bio,
         basedOn,
@@ -130,152 +180,100 @@ export const paraSignup: RequestHandler = bigPromise(
         experience,
         consultancy,
         socials,
-      }: parasignupObject = req.body;
+      });
 
-      const user: any = req.user;
+      await paraExpert.save();
 
-      if (user && user.name && user.gender && user.dateOfBirth) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, { message: "User already exist" }));
-        throw new ApiError(400, "User already exist");
-      }
+      await sendNotif(
+        newUser.fcmToken,
+        "Welcome to Paratalks",
+        "Open the doors to a world of peace and serenity!",
+        newUser?.userId
+      );
 
-      if (
-        availability.filter((item) => item.day < 0 || item.day > 6).length > 0
-      ) {
-        return res.json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid day")
+      const createNotification = await notification(
+        newUser._id,
+        "Welcome to Paratalks",
+        "Open the doors to a world of peace and serenity!",
+        null,
+        null
+      );
+
+      if (!createNotification) {
+        throw new ApiError(
+          ResponseStatusCode.BAD_REQUEST,
+          "Failed to create notification"
         );
       }
 
-      const toStore: signupObject = {
-        name,
-        gender,
-        email,
-        dateOfBirth,
-        interests,
-        profilePicture,
-        fcmToken,
-      };
+      const sendNotification = fcm(createNotification._id);
 
-      if (user) {
-        const newUser: any = await User.findOneAndUpdate(
-          { _id: user._id },
-          toStore,
-          { new: true, runValidators: true }
-        );
-        await newUser.save();
-        const token: any = newUser.getJwtToken();
-
-        const paraExpert = new ParaExpert({
-          userId: newUser?._id as Schema.Types.ObjectId,
-          interests,
-          expertise,
-          availability,
-          packages,
-          ratings,
-          bio,
-          basedOn,
-          qualifications,
-          experience,
-          consultancy,
-          socials,
-        });
-
-        await paraExpert.save();
-
-        await sendNotif(
-          newUser.fcmToken,
-          "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!",
-          newUser?.userId
-        );
-
-        const createNotification = await notification(
-          newUser._id,
-          "Welcome to Paratalks",
-          "Open the doors to a world of peace and serenity!",
-          null,
-          null
-        );
-
-        if (!createNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to create notification"
-          );
-        }
-
-        const sendNotification = fcm(createNotification._id);
-
-        res
-          .cookie("token", token, options)
-          .json(
-            new ApiResponse(
-              ResponseStatusCode.SUCCESS,
-              paraExpert,
-              "Paraexpert user created successfully"
-            )
-          );
-      } else {
-        res.json(
+      res
+        .cookie("token", token, options)
+        .json(
           new ApiResponse(
-            ResponseStatusCode.UNAUTHORIZED,
-            "User not authorized to sign-up please redo otp procedure"
+            ResponseStatusCode.SUCCESS,
+            paraExpert,
+            "Paraexpert user created successfully"
           )
         );
-      }
-    } catch (error) {
+    } else {
       res.json(
         new ApiResponse(
-          ResponseStatusCode.INTERNAL_SERVER_ERROR,
-          error?.message
+          ResponseStatusCode.UNAUTHORIZED,
+          "User not authorized to sign-up please redo otp procedure"
         )
       );
     }
-  }
-);
-
-export const refreshToken: RequestHandler = bigPromise(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer")) {
-      const message = "Unauthenticated No Bearer";
-      throw new ApiError(401, message);
-    }
-
-    let data: any;
-    const token = authHeader.split(" ")[1];
-    try {
-      const payload: string | jwt.JwtPayload | any = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-      );
-
-      data = await getNewToken(payload);
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        const payload: any = jwt.decode(token, { complete: true }).payload;
-        data = await getNewToken(payload);
-
-        if (!data) {
-          const message = "Authentication failed invalid JWT";
-          throw new ApiError(ResponseStatusCode.UNAUTHORIZED, message);
-        }
-      } else {
-        const message = "Authentication failed invalid JWT";
-        throw new ApiError(ResponseStatusCode.UNAUTHORIZED, message);
-      }
-    }
+  } catch (error) {
     res.json(
       new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        data,
-        "Refresh Token Generated"
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error?.message
       )
     );
   }
+}
+);
+
+export const refreshToken = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    const message = "Unauthenticated No Bearer";
+    throw new ApiError(401, message);
+  }
+
+  let data: any;
+  const token = authHeader.split(" ")[1];
+  try {
+    const payload: string | jwt.JwtPayload | any = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    data = await getNewToken(payload);
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      const payload: any = jwt.decode(token, { complete: true }).payload;
+      data = await getNewToken(payload);
+
+      if (!data) {
+        const message = "Authentication failed invalid JWT";
+        throw new ApiError(ResponseStatusCode.UNAUTHORIZED, message);
+      }
+    } else {
+      const message = "Authentication failed invalid JWT";
+      throw new ApiError(ResponseStatusCode.UNAUTHORIZED, message);
+    }
+  }
+  res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      data,
+      "Refresh Token Generated"
+    )
+  );
+}
 );
 
 const getNewToken = async (payload: any) => {
@@ -294,7 +292,7 @@ const getNewToken = async (payload: any) => {
   return data;
 };
 
-export const logout = bigPromise(async (req, res, next) => {
+export const logout = asyncHandler(async (req, res, next) => {
   try {
     res.cookie("token", null, {
       expires: new Date(Date.now()),
@@ -314,7 +312,7 @@ export const logout = bigPromise(async (req, res, next) => {
   }
 });
 
-export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
+export const sendOTP = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { phone, fcmToken } = req.body;
 
@@ -348,64 +346,63 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
   }
 });
 
-export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
-  async (req: Request, res: Response) => {
-    try {
-      const { phone, fcmToken } = req.body;
+export const handleMobileVerificationAndOTP = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { phone, fcmToken } = req.body;
 
-      if (!phone) {
-        return res.status(400).json(
-          new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
-            message: "Mobile number is required",
-          })
-        );
-      }
-
-      let user = await User.findOne({ phone });
-
-      if (!user) {
-        return res
-          .status(403)
-          .json(
-            new ApiResponse(
-              ResponseStatusCode.FORBIDDEN,
-              false,
-              "This mobile number is not an authorized user"
-            )
-          );
-      }
-
-      const userId = user._id;
-      const paraExpert = await ParaExpert.findOne({ userId });
-
-      if (!paraExpert) {
-        return res
-          .status(403)
-          .json(
-            new ApiResponse(
-              ResponseStatusCode.FORBIDDEN,
-              false,
-              "This mobile number is not authorized Para Expert"
-            )
-          );
-      }
-      user.fcmToken = fcmToken;
-      await user.save();
-
-      const otpResponse = await sendOTPUtil(phone);
-      return res.json(otpResponse);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json(
-        new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
-          message: error.message,
+    if (!phone) {
+      return res.status(400).json(
+        new ApiResponse(ResponseStatusCode.BAD_REQUEST, {
+          message: "Mobile number is required",
         })
       );
     }
+
+    let user = await User.findOne({ phone });
+
+    if (!user) {
+      return res
+        .status(403)
+        .json(
+          new ApiResponse(
+            ResponseStatusCode.FORBIDDEN,
+            false,
+            "This mobile number is not an authorized user"
+          )
+        );
+    }
+
+    const userId = user._id;
+    const paraExpert = await ParaExpert.findOne({ userId });
+
+    if (!paraExpert) {
+      return res
+        .status(403)
+        .json(
+          new ApiResponse(
+            ResponseStatusCode.FORBIDDEN,
+            false,
+            "This mobile number is not authorized Para Expert"
+          )
+        );
+    }
+    user.fcmToken = fcmToken;
+    await user.save();
+
+    const otpResponse = await sendOTPUtil(phone);
+    return res.json(otpResponse);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(
+      new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, {
+        message: error.message,
+      })
+    );
   }
+}
 );
 
-export const verifyOTP = bigPromise(async (req, res, next) => {
+export const verifyOTP = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const { requestId, otp: userOtp } = req.body;
 
   try {
