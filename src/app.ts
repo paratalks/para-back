@@ -17,7 +17,7 @@ import { ObjectId } from "mongoose";
 const corsOptions: cors.CorsOptions = {
   origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: ["Content-Type", "Accept", "X-Requested-With", "Authorization"],
+  allowedHeaders: ["Content-Type", "Accept", "X-Requested-With", "Authorization","x-para_talks_api_key"],
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
