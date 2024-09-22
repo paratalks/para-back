@@ -5,7 +5,7 @@ import { ApiResponse } from "../util/apiResponse";
 import { Appointments } from "../models/appointments/appointments.model";
 import { ResponseStatusCode } from "../constants/constants";
 import { getSlotAvailability } from "../util/paraexpert.util";
-import { fcm, notification, sendNotif } from "../util/notification.util";
+import { fcm, notification, sendNotif,notificationQueue } from "../util/notification.util";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { generateRtcToken } from "../util/token.util";
 import { User } from "../models/user/user.model";
@@ -42,7 +42,7 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
   const date = new Date(req.body.date);
 
   const user = req.user;
-  const userId = user._id;
+  const userId = '6693718bed046ddb41ad55bb';
   if (!userId) {
     throw new ApiError(
       ResponseStatusCode.UNAUTHORIZED,
@@ -131,49 +131,24 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
         "FCM token not found for para expert user"
       );
     }
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Appointment Request Received",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
-      appointment._id
-    );
+    notificationQueue.add({
+      fcmToken: bookingUser.fcmToken,
+      title: "Appointment Request Received",
+      message: `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed with your payment.`,
+      userId: bookingUser._id,
+      appointmentId: appointment._id,
+      type: "appointment",
+    });
 
-    const createNotification = await notification(
-      bookingUser._id,
-      "Appointment Request Received",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
-      "appointment",
-      appointment._id
-    );
-
-    if (!createNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
-      );
-    }
-
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      "New Appointment Request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
-      appointment?._id
-    );
-
-    const createParaExpertNotification = await notification(
-      paraExpertUser._id,
-      "New Appointment request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. Your payment for this appointment is currently being processed.`,
-      "appointment",
-      appointment._id,
-      bookingUser?.profilePicture
-    );
-    if (!createParaExpertNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
-      );
-    }
+    notificationQueue.add({
+      fcmToken: paraExpertUser.fcmToken,
+      title: "New Appointment Request",
+      message: `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
+      userId: paraExpertUser._id,
+      appointmentId: appointment._id,
+      type: "appointment",
+      profilePicture: bookingUser?.profilePicture,
+    });
 
     return res.json(
       new ApiResponse(
