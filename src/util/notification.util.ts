@@ -7,6 +7,7 @@ import { title } from "node:process";
 const PushNotifications = require("@pusher/push-notifications-server");
 const admin = require("firebase-admin");
 const serviceAccount = require("../../paratalks-admin.json");
+import Queue from "bull";
 
 export const notification = async (
   userId: ObjectId,
@@ -120,6 +121,41 @@ export const sendNotif = async (token: String, title: string, body: string, book
     return null;
   }
 };
+
+
+
+// Initialize a Bull queue
+export const notificationQueue = new Queue("notifications", {
+  redis: {
+    host: "127.0.0.1",
+    port: 6379,
+  },
+});
+
+// Process notifications asynchronously
+notificationQueue.process(async (job, done) => {
+  const { fcmToken, title, message, userId, appointmentId, type, profilePicture } = job.data;
+  
+  try {
+    // Log that the job has started processing
+    console.log(`Processing notification for user ${userId} and appointment ${appointmentId}...`);
+
+    // Send notification to user/paraExpert
+    await sendNotif(fcmToken, title, message, appointmentId);
+
+    // Create notification in DB
+    await notification(userId, title, message, type, appointmentId, profilePicture);
+
+    // Log success after notification has been sent
+    console.log(`Notification successfully sent to user ${userId} for appointment ${appointmentId}`);
+
+    done(); // Mark job as done
+  } catch (error) {
+    // Log failure if notification fails
+    console.error(`Failed to send notification to user ${userId} for appointment ${appointmentId}: `, error);
+    done(new Error(`Failed to send notification: ${error.message}`)); // Mark job as failed
+  }
+});
 
 
 
