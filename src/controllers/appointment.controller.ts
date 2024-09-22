@@ -42,7 +42,7 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
   const date = new Date(req.body.date);
 
   const user = req.user;
-  const userId = '6693718bed046ddb41ad55bb';
+  const userId = req.user._id;
   if (!userId) {
     throw new ApiError(
       ResponseStatusCode.UNAUTHORIZED,
