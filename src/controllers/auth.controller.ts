@@ -413,65 +413,49 @@ export const handleMobileVerificationAndOTP: RequestHandler = bigPromise(
 );
 
 export const verifyOTP = bigPromise(async (req, res, next) => {
-  const { requestId, otp: userOtp } = req.body;
+  const { requestId } = req.body;
+  const { otp, otpExpiration, phone, verified } = await OTP.findOne({
+    requestId,
+  });
 
   try {
-    const otpRecordPromise = OTP.findOne({ requestId }).exec();
-    let userPromise;
+    const expirationTimeStamp = otpExpiration.getTime();
+    if (req.body.otp === otp && Date.now() < expirationTimeStamp && !verified) {
+      let isNewUser = false;
+      let user: any = await User.findOne({ phone });
 
-    const otpRecord = await otpRecordPromise;
+      if (!user) {
+        user = await User.create({
+          phone: phone,
+        });
+        isNewUser = true; // signup
+      }
 
-    if (
-      !otpRecord ||
-      otpRecord.verified ||
-      Date.now() >= otpRecord.otpExpiration.getTime()
-    ) {
-      return res.json(
+      const payload = {
+        userId: user?._id,
+        phone,
+      };
+
+      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRY,
+      });
+
+      const updateotp = await OTP.findOneAndUpdate(
+        { requestId },
+        { $set: { verified: true } },
+        { new: true }
+      );
+
+      res.json(
         new ApiResponse(
-          ResponseStatusCode.BAD_REQUEST,
-          "Invalid or expired OTP"
+          ResponseStatusCode.SUCCESS,
+          { token, isNewUser, userId: user._id },
+          "OTP verification successfull"
         )
-      );
+      ); //auth token jwt
+    } else {
+      res.json(new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid OTP"));
     }
-
-    if (userOtp !== otpRecord.otp) {
-      return res.json(
-        new ApiResponse(ResponseStatusCode.BAD_REQUEST, "Invalid OTP")
-      );
-    }
-
-    userPromise = User.findOne({ phone: otpRecord.phone }).exec();
-
-    let user = await userPromise;
-    let isNewUser = false;
-
-    if (!user) {
-      user = await User.create({ phone: otpRecord.phone });
-      isNewUser = true;
-    }
-
-    const payload = {
-      userId: user._id,
-      phone: otpRecord.phone,
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRY,
-    });
-
-    await OTP.findOneAndUpdate(
-      { requestId },
-      { $set: { verified: true } },
-      { new: true }
-    );
-
-    res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        { token, isNewUser, userId: user._id },
-        "OTP verification successful"
-      )
-    );
   } catch (error) {
     res.json(
       new ApiResponse(
