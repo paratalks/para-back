@@ -52,6 +52,9 @@ declare global{
 app.use(httpContext.middleware);
 app.use(generateRequestId);
 
+// Log all the requests and response.
+app.use(logRequest);
+app.use(logResponse);
 
 app.use(router);
 
