@@ -438,14 +438,17 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     // Verify OTP and its expiration time
     if (req.body.otp === otp.toString() && Date.now() < expirationTimeStamp && !verified) {
       let isNewUser = false;
-      let user = await User.findOne({ phone });
 
-      // Create new user if not found
+      let user = await User.findOne({ phone }).select('phone email');
+
       if (!user) {
         user = await User.create({ phone });
-        isNewUser = true; // signup
+        isNewUser = true; // Mark as new/incomplete user
       }
-
+      else if (!user.email) {
+        isNewUser = true; // Mark as new/incomplete user
+      }
+      
       const payload = { userId: user._id, phone };
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRY,
