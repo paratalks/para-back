@@ -339,6 +339,16 @@ export const sendOTP: RequestHandler = bigPromise(async (req, res) => {
       { new: true }
     );
 
+    const userId = user?._id;
+    console.log("userId",userId);
+    const paraExpert = await ParaExpert.findOne({ userId });
+    
+    if (paraExpert) {
+      return res.status(403).json(
+        new ApiResponse(ResponseStatusCode.FORBIDDEN, "You are not Allowed to Register as a User since this phone number is linked to a ParaExpert")
+      );
+    }
+
     const otpResponse = await sendOTPUtil(phone);
 
     return res.json(otpResponse);
