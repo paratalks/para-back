@@ -95,7 +95,7 @@ export const getParaExpertByID = asyncHandler(
           path: "userId",
           model: "User",
           select:
-            "name gender profilePicture ",
+            "name gender profilePicture email",
         });
 
       if (!paraExpert) {
