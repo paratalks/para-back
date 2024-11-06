@@ -61,16 +61,19 @@ export const getSlotAvailability = async (
   startTime: string,
   endTime: string,
   appointmentMethod : string
-) => {
-  const availability: String[] = await getAvailableSlots(paraExpertId, date, appointmentMethod);
-  const slots = availability?.find(
-    (slot) => slot.split("-")[0] === startTime //&& slot.split("-")[1] === endTime
-  );
-  if (slots) {
-    return true;
-  } else {
-    return false;
-  }
+):Promise<boolean> =>{
+  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+  const conflictingAppointment = await Appointments.findOne({
+    paraExpertId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    startTime, 
+    endTime,
+    status: { $nin: ["cancelled", "paymentPending"] }
+  });
+
+  return !conflictingAppointment;
 };
 
 export const getReviews = async (paraExpertId:ObjectId) => {
