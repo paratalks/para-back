@@ -71,6 +71,7 @@ export const getSlotAvailability = async (
     startTime, 
     endTime,
     status: { $nin: ["cancelled", "paymentPending"] }
+    //completed
   });
 
   return !conflictingAppointment;

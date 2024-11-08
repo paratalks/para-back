@@ -452,10 +452,11 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
       let user = await User.findOne({ phone }).select('phone email');
 
       if (!user) {
-        user = await User.create({ phone });
-        isNewUser = true; // Mark as new/incomplete user
+        const tempEmail = `${phone}@paratalks.in`;
+        user = await User.create({ phone, email: tempEmail });
+        isNewUser = true;
       }
-      else if (!user.email) {
+      else if (!user.email && !user.name) {
         isNewUser = true; // Mark as new/incomplete user
       }
       
@@ -464,14 +465,12 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         expiresIn: process.env.JWT_EXPIRY,
       });
 
-      // Mark OTP as verified
       await OTP.findOneAndUpdate(
         { requestId },
         { $set: { verified: true } },
         { new: true }
       );
 
-      // Return success response with token
       res.json(
         new ApiResponse(ResponseStatusCode.SUCCESS, { token, isNewUser, userId: user._id }, "OTP verification successful")
       );
