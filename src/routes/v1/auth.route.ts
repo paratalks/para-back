@@ -8,11 +8,11 @@ const router = express.Router();
 router.route("/refresh-token").get(refreshToken);
 router.route("/signup").post(verifyJWT,signup);
 router.route("/paraexpert/signup").post(verifyJWT,paraSignup);
-router.route('/paraexpert/send-otp').post(verifyApiKey,handleMobileVerificationAndOTP);
+router.route('/paraexpert/send-otp').post(handleMobileVerificationAndOTP);
 router.route("/logout").get(logout);
-router.route("/send-otp").post(verifyApiKey,sendOTP);
-router.route("/verify-otp").post(verifyApiKey,verifyOTP);
-router.route("/admin/signup").post(verifyApiKey,adminSignup);
-router.route("/admin/login").post(verifyApiKey,adminLogin);
+router.route("/send-otp").post(sendOTP);
+router.route("/verify-otp").post(verifyOTP);
+router.route("/admin/signup").post(adminSignup);
+router.route("/admin/login").post(adminLogin);
 
 export default router;

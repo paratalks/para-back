@@ -15,7 +15,7 @@ router.route("/get-user/:userId").get(hasAdminAccess, getUserById);
 router.route("/update-user/:userId").patch(hasAdminAccess, updateUserById);
 router.route("/get-all/appointments").get(hasAdminAccess, getAppointments);
 router.route("/get-appointment/:appointmentId").get(hasAdminAccess, getAppointmentById);
-router.route("/dashboard-data").get(hasAdminAccess,verifyApiKey,getDashboardData);
+router.route("/dashboard-data").get(hasAdminAccess,getDashboardData);
 router.route("/package/get-all/bookings").get(hasAdminAccess, getPackageBookings);
 
 router.route("/create-account/:expertId").post(hasAdminAccess,createAccount);
