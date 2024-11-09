@@ -20,7 +20,7 @@ interface Query {
 }
 
 //user
-const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
+export const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const {
     startTime,
     endTime,
@@ -191,7 +191,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user
-const getBookedAppointment = asyncHandler(
+export const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -243,7 +243,7 @@ const getBookedAppointment = asyncHandler(
 );
 
 //user
-const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
+export const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
@@ -289,7 +289,7 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //paraexpert
-const getParaExpertAvailability = async (req: Request, res: Response) => {
+export const getParaExpertAvailability = async (req: Request, res: Response) => {
   try {
     const { paraExpertId, startDate, endDate } = req.query;
 
@@ -380,7 +380,7 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
 };
 
 //paraexpert
-const getParaExpertsBookings = asyncHandler(
+export const getParaExpertsBookings = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -443,7 +443,7 @@ const getParaExpertsBookings = asyncHandler(
 );
 
 //paraexpert
-const getBookingById = asyncHandler(async (req: Request, res: Response) => {
+export const getBookingById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
@@ -480,7 +480,7 @@ const getBookingById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user while reschduled time
-const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
+export const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const {
@@ -593,7 +593,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 //user while Confirm and ongoing  cancelled and completed time
 type BookingStatus = "completed" | "confirmed" | "cancelled" | "ongoing";
 
-const updateAppointmentStatus = asyncHandler(
+export const updateAppointmentStatus = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { bookingId } = req.params;
@@ -719,17 +719,6 @@ const updateAppointmentStatus = asyncHandler(
     }
   }
 );
-
-export {
-  bookAppointment,
-  getBookingById,
-  getBookedAppointment,
-  getParaExpertsBookings,
-  getParaExpertAvailability,
-  updateAppointment,
-  getAppointmentById,
-  updateAppointmentStatus,
-};
 
 export const getBookingStatsByMonth = asyncHandler(
   async (req: Request, res: Response) => {

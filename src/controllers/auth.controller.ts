@@ -285,7 +285,7 @@ export const refreshToken: RequestHandler = bigPromise(
   }
 );
 
-const getNewToken = async (payload: any) => {
+export const getNewToken = async (payload: any) => {
   const isUser = payload?.id ? true : false;
 
   let data: any;

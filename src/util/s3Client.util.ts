@@ -53,26 +53,3 @@ export const uploadfileToS3 = async (
   return `https://${bucketName}.s3.${process.env
     .AWS_REGION!}.amazonaws.com/uploads/${pathName}/${filename}`;
 };
-
-// export const uploadPrescriptionReportToS3 = async (file: Express.Multer.File): Promise<string> => {
-//   if (!file) {
-//     throw new ApiResponse(ResponseStatusCode.BAD_REQUEST, null, 'No file uploaded');
-//   }
-
-//   const filename = `${Date.now()}-${file.originalname}`;
-//   const contentType = file.mimetype;
-//   const fileContent = file.buffer;
-
-//   const putCommand = new PutObjectCommand({
-//     Bucket: bucketName,
-//     Key: `uploads/prescription-report/${filename}`,
-//     Body: fileContent,
-//     ContentType: contentType,
-//     ACL: 'public-read',
-//   });
-
-//   const s3Client: S3Client = createS3Client();
-//   await s3Client.send(putCommand);
-
-//   return `https://${bucketName}.s3.${process.env.AWS_REGION!}.amazonaws.com/uploads/prescription-report/${filename}`;
-// };
