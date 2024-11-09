@@ -456,7 +456,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         user = await User.create({ phone, email: tempEmail });
         isNewUser = true;
       }
-      else if (!user.email && !user.name) {
+      else if (!user.email || !user.name) {
         isNewUser = true; // Mark as new/incomplete user
       }
       

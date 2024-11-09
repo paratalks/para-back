@@ -79,7 +79,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     if (!isSlotAvailable) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
-        "Availability not found for the given date"
+        "Slot is Not Availabilie select another slot"
       );
     }
 
