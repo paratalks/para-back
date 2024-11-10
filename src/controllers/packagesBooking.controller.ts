@@ -15,8 +15,10 @@ export const createBooking = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       let fileUrl: string = "";
+    
       if (req?.file) {
-        fileUrl = await uploadfileToS3(req.file, "prescription-report");
+        const localFilePath = req.file.path;
+        fileUrl = await uploadfileToS3(localFilePath, "prescription-report");
       }
 
       const {

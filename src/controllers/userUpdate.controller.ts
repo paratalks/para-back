@@ -330,16 +330,8 @@ export const uploadProfile = async (req: Request, res: Response) => {
         );
     }
 
-    const userID = req.params.userId;
-    const isUser = await User.findById(userID);
-    if (!isUser) {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(ResponseStatusCode.NOT_FOUND, null, "User not found")
-        );
-    }
-    const accessUrl = await uploadfileToS3(req?.file, "user-profile");
+    const localFilePath = req.file.path;
+    const accessUrl = await uploadfileToS3(localFilePath, "user-profile");
 
     return res.json(
       new ApiResponse(
@@ -373,8 +365,13 @@ export const uploadQualificationDetails = async (
           )
         );
     }
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
+    }
 
-    const fileUrl = await uploadfileToS3(req?.file, "certificate");
+    const localFilePath = req.file.path;
+
+    const fileUrl = await uploadfileToS3(localFilePath, "certificate");
 
     return res.json(
       new ApiResponse(
