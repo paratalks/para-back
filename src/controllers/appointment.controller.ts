@@ -13,6 +13,14 @@ import { title } from "node:process";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
 import { Payment } from "../models/payment/payment.model";
 import { checkout } from "./payment.controller";
+import {
+  userBookingConfirmationTemplate,
+  userBookingCanceledTemplate,
+  userBookingCompletedTemplate,
+  userBookingOngoingTemplate,
+  sendMail,
+  paraExpertBookingNotificationTemplate,
+} from "../util/mailUtility";
 
 interface Query {
   userId: string;
@@ -20,7 +28,7 @@ interface Query {
 }
 
 //user
-const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
+export const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
   const {
     startTime,
     endTime,
@@ -113,74 +121,12 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     }
     const checkoutResult = await checkout(amount, appointment._id.toString());
 
-    const bookingdate = appointment.date.toISOString().split("T")[0];
-
-    const bookingUser = await User.findById(userId);
-
-    const paraExpert = await ParaExpert.findById(paraExpertId);
-    if (!paraExpert) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Para expert not found"
-      );
-    }
-    const paraExpertUser = await User.findById(paraExpert.userId);
-    if (!paraExpertUser) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "FCM token not found for para expert user"
-      );
-    }
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Appointment Request Received",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
-      appointment._id
-    );
-
-    const createNotification = await notification(
-      bookingUser._id,
-      "Appointment Request Received",
-      `Your appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}. Please proceed your payment.`,
-      "appointment",
-      appointment._id
-    );
-
-    if (!createNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
-      );
-    }
-
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      "New Appointment Request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. The payment for this appointment is currently being processed.`,
-      appointment?._id
-    );
-
-    const createParaExpertNotification = await notification(
-      paraExpertUser._id,
-      "New Appointment request",
-      `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}. Your payment for this appointment is currently being processed.`,
-      "appointment",
-      appointment._id,
-      bookingUser?.profilePicture
-    );
-    if (!createParaExpertNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
-      );
-    }
-
     return res.json(
       new ApiResponse(
         ResponseStatusCode.SUCCESS,
         {
           bookingId: appointment._id,
-          paymentOrder: checkoutResult.data
+          paymentOrder: checkoutResult.data,
         },
         "Appointment and payment order created successfully"
       )
@@ -191,7 +137,7 @@ const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user
-const getBookedAppointment = asyncHandler(
+export const getBookedAppointment = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -243,7 +189,7 @@ const getBookedAppointment = asyncHandler(
 );
 
 //user
-const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
+export const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
@@ -289,7 +235,7 @@ const getAppointmentById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //paraexpert
-const getParaExpertAvailability = async (req: Request, res: Response) => {
+export const getParaExpertAvailability = async (req: Request, res: Response) => {
   try {
     const { paraExpertId, startDate, endDate } = req.query;
 
@@ -380,7 +326,7 @@ const getParaExpertAvailability = async (req: Request, res: Response) => {
 };
 
 //paraexpert
-const getParaExpertsBookings = asyncHandler(
+export const getParaExpertsBookings = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -443,7 +389,7 @@ const getParaExpertsBookings = asyncHandler(
 );
 
 //paraexpert
-const getBookingById = asyncHandler(async (req: Request, res: Response) => {
+export const getBookingById = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const appointment = await Appointments.findById(bookingId)
@@ -480,7 +426,7 @@ const getBookingById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 //user while reschduled time
-const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
+export const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const {
@@ -538,42 +484,55 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
       );
     }
 
-    await sendNotif(
-      bookingUser.fcmToken,
-      "Appointment Rescheduling in Progress",
-      `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
-      appointment._id
-    );
+    const appointmentDetails = {
+      date: bookingdate,
+      startTime: startTime,
+      endTime: endTime,
+      appointmentMethod: appointmentMethod,
+      userName: paraExpertUser.name,
+    };
 
-    const createNotification = await notification(
-      appointment.userId,
-      "Appointment Rescheduling in Progress",
-      `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
-      "appointment",
-      appointment._id
-    );
+    const notificationPromises = [
+      await sendNotif(
+        bookingUser.fcmToken,
+        "Appointment Rescheduling in Progress",
+        `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
+        appointment._id
+      ),
 
-    if (!createNotification) {
-      throw new ApiError(
-        ResponseStatusCode.BAD_REQUEST,
-        "Failed to create notification"
-      );
-    }
-    await sendNotif(
-      paraExpertUser.fcmToken,
-      "Appointment Rescheduled Request",
-      `The ${bookingUser.name} has requested to reschedule the ${method} appointment to ${bookingdate} from ${startTime} to ${endTime}.`,
-      appointment._id
-    );
+      await notification(
+        appointment.userId,
+        "Appointment Rescheduling in Progress",
+        `Your ${method} appointment has been rescheduled to ${bookingdate} from ${startTime} to ${endTime}.`,
+        "appointment",
+        appointment._id
+      ),
 
-    await notification(
-      paraExpertUser._id,
-      "Appointment Reschedule Request",
-      `The ${bookingUser.name} has requested to reschedule the ${method} appointment to ${bookingdate} from ${startTime} to ${endTime}.`,
-      "appointment",
-      appointment._id,
-      bookingUser.profilePicture
-    );
+      await sendNotif(
+        paraExpertUser.fcmToken,
+        "Appointment Rescheduled Request",
+        `The ${bookingUser.name} has requested to reschedule the ${method} appointment to ${bookingdate} from ${startTime} to ${endTime}.`,
+        appointment._id
+      ),
+
+      await notification(
+        paraExpertUser._id,
+        "Appointment Reschedule Request",
+        `The ${bookingUser.name} has requested to reschedule the ${method} appointment to ${bookingdate} from ${startTime} to ${endTime}.`,
+        "appointment",
+        appointment._id,
+        bookingUser.profilePicture
+      ),
+
+      await sendMail({
+        to: paraExpertUser.email,
+        subject:
+          "ParaTalks Appointment Reschedule Request: Please Confirm or Cancel",
+        html: paraExpertBookingNotificationTemplate(appointmentDetails),
+      }),
+    ];
+
+    await Promise.allSettled(notificationPromises);
 
     return res.json(
       new ApiResponse(
@@ -593,7 +552,7 @@ const updateAppointment = asyncHandler(async (req: Request, res: Response) => {
 //user while Confirm and ongoing  cancelled and completed time
 type BookingStatus = "completed" | "confirmed" | "cancelled" | "ongoing";
 
-const updateAppointmentStatus = asyncHandler(
+export const updateAppointmentStatus = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const { bookingId } = req.params;
@@ -632,7 +591,7 @@ const updateAppointmentStatus = asyncHandler(
       const date = appointment?.date.toISOString().split("T")[0];
       const startTime = appointment?.startTime;
       const endTime = appointment?.endTime;
-      const appointmentMethod = appointment?.appointmentMethod;
+      const appointmentMethod = appointment?.appointmentMethod.toString();
 
       const statusMessages: Record<
         BookingStatus,
@@ -641,64 +600,108 @@ const updateAppointmentStatus = asyncHandler(
           message: string;
           paraExpertMessage: string;
           paraExpertTitle: string;
+          userEmailContent: string;
         }
       > = {
         confirmed: {
-          title: "Booking Confirmed",
+          title: "Appointment Confirmed",
           message: `Your ${appointmentMethod} appointment is confirmed for ${date} from ${startTime} to ${endTime}.`,
           paraExpertMessage: `You have an  appointment scheduled for ${date} from ${startTime} to ${endTime}.`,
           paraExpertTitle: "Appointment Scheduled",
+          userEmailContent: userBookingConfirmationTemplate({
+            date,
+            startTime,
+            endTime,
+            appointmentMethod,
+            userName: bookingUser.name,
+          }),
         },
         cancelled: {
-          title: "Booking Cancelled",
-          message: `Your ${appointmentMethod} appointment for ${date} from ${startTime} to ${endTime} has been cancelled.`,
-          paraExpertMessage: `The appointment scheduled for ${date} from ${startTime} to ${endTime} has been cancelled.`,
+          title: "Appointment Cancelled, Refund Processed",
+          message: `Your ${appointmentMethod} appointment for ${date} from ${startTime} to ${endTime} has been cancelled, Refund will be processed soon.`,
+          paraExpertMessage: `The appointment scheduled for ${date} from ${startTime} to ${endTime} has been cancelled, Refund will be processed soon`,
           paraExpertTitle: "Appointment Cancelled",
+          userEmailContent: userBookingCanceledTemplate({
+            date,
+            startTime,
+            endTime,
+            appointmentMethod,
+            userName: bookingUser.name,
+          }),
         },
         completed: {
           title: "Appointment Completed",
           message: `our ${appointmentMethod} appointment on ${date} from ${startTime} to ${endTime} has been completed`,
           paraExpertMessage: "Appointment Completed",
           paraExpertTitle: `our ${appointmentMethod} appointment with the user on ${date} from ${startTime} to ${endTime} has been completed`,
+          userEmailContent: userBookingCompletedTemplate({
+            date,
+            startTime,
+            endTime,
+            appointmentMethod,
+            userName: bookingUser.name,
+          }),
         },
         ongoing: {
-          title: "Call Started",
+          title: "Appointment Started",
           message: `Your ${appointmentMethod} call with the para expert has just started.`,
           paraExpertMessage: `You have started the ${appointmentMethod} call with the user.`,
           paraExpertTitle: "Call in Progress",
+          userEmailContent: userBookingOngoingTemplate({
+            date,
+            startTime,
+            endTime,
+            appointmentMethod,
+            userName: bookingUser.name,
+          }),
         },
       };
 
-      const { title, message, paraExpertMessage, paraExpertTitle } =
-        statusMessages[status as BookingStatus];
-
-      // Notify the user
-      await sendNotif(bookingUser.fcmToken, title, message, appointment._id);
-
-      await notification(
-        bookingUser._id,
+      const {
         title,
         message,
-        "appointment",
-        appointment._id,
-        paraExpertUser.profilePicture
-      );
-
-      await sendNotif(
-        paraExpertUser.fcmToken,
-        paraExpertTitle,
         paraExpertMessage,
-        appointment._id
-      );
-
-      await notification(
-        paraExpertUser._id,
         paraExpertTitle,
-        paraExpertMessage,
-        "appointment",
-        appointment._id,
-        bookingUser.profilePicture
-      );
+        userEmailContent,
+      } = statusMessages[status as BookingStatus];
+
+      const notificationPromises = [
+        // Notify the user
+        await sendNotif(bookingUser.fcmToken, title, message, appointment._id),
+
+        await notification(
+          bookingUser._id,
+          title,
+          message,
+          "appointment",
+          appointment._id,
+          paraExpertUser.profilePicture
+        ),
+
+        await sendNotif(
+          paraExpertUser.fcmToken,
+          paraExpertTitle,
+          paraExpertMessage,
+          appointment._id
+        ),
+
+        await notification(
+          paraExpertUser._id,
+          paraExpertTitle,
+          paraExpertMessage,
+          "appointment",
+          appointment._id,
+          bookingUser.profilePicture
+        ),
+
+        await sendMail({
+          to: bookingUser.email,
+          subject: `${title} - ParaTalks`,
+          html: userEmailContent,
+        }),
+      ];
+
+      await Promise.allSettled(notificationPromises);
 
       res.json(
         new ApiResponse(
@@ -720,16 +723,6 @@ const updateAppointmentStatus = asyncHandler(
   }
 );
 
-export {
-  bookAppointment,
-  getBookingById,
-  getBookedAppointment,
-  getParaExpertsBookings,
-  getParaExpertAvailability,
-  updateAppointment,
-  getAppointmentById,
-  updateAppointmentStatus,
-};
 
 export const getBookingStatsByMonth = asyncHandler(
   async (req: Request, res: Response) => {
@@ -742,10 +735,10 @@ export const getBookingStatsByMonth = asyncHandler(
           "Invalid refresh token"
         );
       }
-      
+
       const expert = await ParaExpert.findOne({ userId });
       const expertId = expert?._id;
-      
+
       const { year, month } = req.query;
 
       if (!year || !month) {
@@ -810,7 +803,7 @@ export const getBookingStatsByMonth = asyncHandler(
           $match: {
             bookingDate: { $gte: startDate, $lt: endDate },
             packageType: { $in: ["offline", "online"] },
-            paraExpertId:expertId,
+            paraExpertId: expertId,
           },
         },
         {
@@ -860,9 +853,8 @@ export const getBookingStatsByMonth = asyncHandler(
         },
       ]);
 
-      const monthlyRevenueData = monthlyRevenue[0] || 0 ;
-      const totalRevenueData = totalRevenue[0] || 0 ;
-
+      const monthlyRevenueData = monthlyRevenue[0] || 0;
+      const totalRevenueData = totalRevenue[0] || 0;
 
       return res.json(
         new ApiResponse(

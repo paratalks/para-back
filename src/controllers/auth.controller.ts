@@ -81,20 +81,13 @@ export const signup: RequestHandler = bigPromise(
           user._id
         );
 
-        const createNotification = await notification(
+        await notification(
           user._id,
           "Welcome to Paratalks",
           "Open the doors to a world of peace and serenity!",
           null,
           null
         );
-
-        if (!createNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to create notification"
-          );
-        }
 
         res.json(new ApiResponse(200, data, "User Registered Successfully!"));
       } else {
@@ -199,13 +192,6 @@ export const paraSignup: RequestHandler = bigPromise(
           null,
           null
         );
-
-        if (!createNotification) {
-          throw new ApiError(
-            ResponseStatusCode.BAD_REQUEST,
-            "Failed to create notification"
-          );
-        }
 
         const sendNotification = fcm(createNotification._id);
 
@@ -440,10 +426,6 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
 
   try {
     const expirationTimeStamp = otpExpiration.getTime();
-    console.log("Current time:", Date.now());
-    console.log("OTP Expiration:", expirationTimeStamp);
-    console.log("OTP in DB:", otp);
-    console.log("OTP in Request:", req.body.otp);
 
     // Verify OTP and its expiration time
     if (req.body.otp === otp.toString() && Date.now() < expirationTimeStamp && !verified) {
@@ -457,7 +439,7 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
         isNewUser = true;
       }
       else if (!user.email || !user.name) {
-        isNewUser = true; // Mark as new/incomplete user
+        isNewUser = true;
       }
       
       const payload = { userId: user._id, phone };

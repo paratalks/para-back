@@ -113,12 +113,6 @@ export const createBooking = asyncHandler(
         bookedPackage._id,
         bookingUser.profilePicture
       );
-      if (!createParaExpertNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
 
       res.json(
         new ApiResponse(
@@ -402,13 +396,6 @@ export const updatePackageBooking = asyncHandler(
         updatedBooking._id,
         bookingUser.profilePicture
       );
-
-      if (!updateParaExpertNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
 
       res.json(
         new ApiResponse(

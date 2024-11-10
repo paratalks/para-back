@@ -8,11 +8,11 @@ export interface appointmentsTypes {
   endTime: string;
   status: string;
   appointmentMode: {
-    type: String;
+    type: string;
     enum: ["online", "offline"];
   };
   appointmentMethod: {
-    type: String;
+    type: string;
     enum: ["chat", "video_call", "audio_call", "offline_package"];
   };
   callToken: {

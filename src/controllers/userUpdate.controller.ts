@@ -10,7 +10,7 @@ import { Notifications } from "../models/notification/notification.model";
 
 import { uploadfileToS3 } from "../util/s3Client.util";
 
-const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
+export const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { name, email, gender, interests, profilePicture, phone, dateOfBirth } =
     req.body;
@@ -47,7 +47,7 @@ const updateUserDetails = asyncHandler(async (req: Request, res: Response) => {
     new ApiResponse(ResponseStatusCode.INTERNAL_SERVER_ERROR, error.message)
   }
 });
-const updateParaExpertDetails = asyncHandler(
+export const updateParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
     const {
       name,
@@ -136,7 +136,7 @@ const updateParaExpertDetails = asyncHandler(
   }
 );
 
-const getParaExpertDetails = asyncHandler(
+export const getParaExpertDetails = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const paraUser = req.user;
@@ -164,7 +164,7 @@ const getParaExpertDetails = asyncHandler(
   }
 );
 
-const setAvailability = asyncHandler(async (req: Request, res: Response) => {
+export const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { availability } = req.body as {
       availability: Array<{
@@ -213,7 +213,7 @@ const setAvailability = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const getAvailability = asyncHandler(async (req: Request, res: Response) => {
+export const getAvailability = asyncHandler(async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const userId = user._id;
@@ -239,7 +239,7 @@ const getAvailability = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const getUserById = asyncHandler(async (req: Request, res: Response) => {
+export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   try {
 
     const { userId } = req.params;
@@ -264,7 +264,7 @@ const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const getNotifications = asyncHandler(async (req: Request, res: Response) => {
+export const getNotifications = asyncHandler(async (req: Request, res: Response) => {
   try {
     const user: any = req.user;
     const userId = user._id;
@@ -293,7 +293,7 @@ const getNotifications = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const dev = asyncHandler(async (req: Request, res: Response) => {
+export const dev = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { packages } = req.body;
     const para = await ParaExpert.updateMany(
@@ -316,7 +316,7 @@ const dev = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const uploadProfile = async (req: Request, res: Response) => {
+export const uploadProfile = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res
@@ -390,16 +390,4 @@ export const uploadQualificationDetails = async (
       error.message || "Internal server error"
     );
   }
-};
-
-export {
-  updateUserDetails,
-  updateParaExpertDetails,
-  setAvailability,
-  getAvailability,
-  getUserById,
-  getNotifications,
-  getParaExpertDetails,
-  uploadProfile,
-  dev,
 };

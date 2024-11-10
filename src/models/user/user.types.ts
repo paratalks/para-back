@@ -2,10 +2,10 @@ import { Document, Model } from "mongoose";
 import { Status } from "../../util/index";
 
 export interface userTypes {
-  name: String;
+  name: string;
   dateOfBirth: Date;
-  email:String;
-  gender: String;
+  email:string;
+  gender: string;
   interests: [String];
   profilePicture:String;
   phone: String;

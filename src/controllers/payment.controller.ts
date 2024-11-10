@@ -12,6 +12,8 @@ import { Appointments } from "../models/appointments/appointments.model";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
 import { PackagesBooking } from "../models/packageBooking/packageBooking.model";
+import { sendMail } from "../util/mailUtility";
+import { paraExpertBookingNotificationTemplate } from "../util/mailUtility";
 
 export const checkout = async (amount: number, bookingId: string) => {
   try {
@@ -152,45 +154,58 @@ export const paymentVerification = async (req: Request, res: Response) => {
       const bookingdate = appointment?.date.toISOString().split("T")[0];
       const startTime = appointment?.startTime;
       const endTime = appointment?.endTime;
-      const appointmentMethod = appointment?.appointmentMethod;
+      const appointmentMethod = appointment?.appointmentMethod.toString();
+      
+      const appointmentDetails = {
+        date: bookingdate,
+        startTime:startTime,
+        endTime: endTime,
+        appointmentMethod: appointmentMethod,
+        userName: paraExpertUser.name,
+      };
 
+      const notificationPromises = [
       await sendNotif(
         bookingUser.fcmToken,
         "Booking Placed",
         `Your ${appointmentMethod} appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
         appointment._id
-      );
+      ),
 
-      const createNotification = await notification(
+      await notification(
         userId,
         "Booking Placed",
         `Your ${appointmentMethod} appointment request has been received for ${bookingdate} from ${startTime} to ${endTime}.`,
         "appointment",
         appointment._id
-      );
-
-      if (!createNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
+      ),
 
       await sendNotif(
         paraExpertUser.fcmToken,
         "New Booking Request",
         `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}.`,
         appointment._id
-      );
+      ),
 
-      const createParaExpertNotification = await notification(
+      await notification(
         paraExpertUser._id,
         "New booking request",
         `You have a new appointment request for ${bookingdate} from ${startTime} to ${endTime}.`,
         "appointment",
         appointment._id,
         bookingUser?.profilePicture
-      );
+      ),
+
+      
+      await sendMail({
+      to: paraExpertUser.email,
+      subject: "ParaTalks New Appointment Request: Please Confirm or Cancel",
+      html: paraExpertBookingNotificationTemplate(appointmentDetails),
+    }),
+    ];
+
+    await Promise.allSettled(notificationPromises);
+  
     } 
     else if (bookingMethod === "package") {
       const packBooking = await PackagesBooking.findById(bookingId);
@@ -212,7 +227,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
         pakBooking._id
       );
 
-      const createNotification = await notification(
+      await notification(
         userId,
         "Package Booking Placed",
         `Your package booking request has been successfully placed. The booking will scheduled for ${date} at ${address}.`,
@@ -221,13 +236,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
         bookingUser.profilePicture
       );
 
-      if (!createNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
-
       await sendNotif(
         paraExpertUser.fcmToken,
         "New Package Booking Request",
@@ -235,7 +243,7 @@ export const paymentVerification = async (req: Request, res: Response) => {
         pakBooking._id
       );
 
-      const createParaExpertNotification = await notification(
+      await notification(
         paraExpertUser._id,
         "New Package Booking Request",
         `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}.`,
@@ -243,12 +251,6 @@ export const paymentVerification = async (req: Request, res: Response) => {
         pakBooking._id,
         bookingUser.profilePicture
       );
-      if (!createParaExpertNotification) {
-        throw new ApiError(
-          ResponseStatusCode.BAD_REQUEST,
-          "Failed to create notification"
-        );
-      }
     }
     res.json(
       new ApiResponse(
