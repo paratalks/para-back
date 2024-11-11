@@ -431,14 +431,14 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     if (req.body.otp === otp.toString() && Date.now() < expirationTimeStamp && !verified) {
       let isNewUser = false;
 
-      let user = await User.findOne({ phone }).select('phone email');
+      let user = await User.findOne({ phone }).select('phone email name');
 
       if (!user) {
         const tempEmail = `${phone}@paratalks.in`;
         user = await User.create({ phone, email: tempEmail });
         isNewUser = true;
       }
-      else if (!user.email || !user.name) {
+      else if (!user.name) {
         isNewUser = true;
       }
       
@@ -466,4 +466,3 @@ export const verifyOTP = bigPromise(async (req, res, next) => {
     );
   }
 });
-
