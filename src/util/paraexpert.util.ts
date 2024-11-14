@@ -59,19 +59,16 @@ export const getSlotAvailability = async (
   paraExpertId: any,
   date: Date,
   startTime: string,
-  endTime: string,
   appointmentMethod : string
 ):Promise<boolean> =>{
-  const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-
+  const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+  
   const conflictingAppointment = await Appointments.findOne({
     paraExpertId,
     date: { $gte: startOfDay, $lte: endOfDay },
-    startTime, 
-    endTime,
+    startTime,
     status: { $nin: ["cancelled", "paymentPending"] }
-    //completed
   });
 
   return !conflictingAppointment;

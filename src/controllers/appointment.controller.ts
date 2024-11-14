@@ -48,7 +48,8 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
   };
 
   const date = new Date(req.body.date);
-
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const endDateTime = `${hours}:20`
   const user = req.user;
   const userId = user._id;
   if (!userId) {
@@ -65,7 +66,6 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
       !paraExpertId ||
       !date ||
       !startTime ||
-      !endTime ||
       !status ||
       !appointmentMode ||
       !appointmentMethod ||
@@ -80,14 +80,13 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
       paraExpertId,
       date,
       startTime,
-      endTime,
       appointmentMethod
     );
 
     if (!isSlotAvailable) {
       throw new ApiError(
         ResponseStatusCode.BAD_REQUEST,
-        "Slot is Not Availabilie select another slot"
+        "Slot is not available. Please select another slot."
       );
     }
 
@@ -105,7 +104,7 @@ export const bookAppointment = asyncHandler(async (req: Request, res: Response) 
       paraExpertId,
       date,
       startTime,
-      endTime,
+      endTime:endDateTime,
       status,
       appointmentMode,
       appointmentMethod,
@@ -239,7 +238,7 @@ export const getParaExpertAvailability = async (req: Request, res: Response) => 
   try {
     const { paraExpertId, startDate, endDate } = req.query;
 
-    if (!paraExpertId || !startDate || !endDate) {
+    if (!paraExpertId || !startDate) {
       return res.json(
         new ApiResponse(
           ResponseStatusCode.BAD_REQUEST,
@@ -249,11 +248,12 @@ export const getParaExpertAvailability = async (req: Request, res: Response) => 
     }
 
     const startDateObj = new Date(startDate as string);
-    // const endDateObj = new Date(endDate as string);
+    const startOfDay = new Date(Date.UTC(startDateObj.getUTCFullYear(), startDateObj.getUTCMonth(), startDateObj.getUTCDate(), 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(startDateObj.getUTCFullYear(), startDateObj.getUTCMonth(), startDateObj.getUTCDate(), 23, 59, 59, 999));
+    const dayOfWeek = startDateObj.getUTCDay();
 
-    const day = startDateObj.getUTCDay(); // Get the day of the week (0-6)
 
-    const paraExpert = await ParaExpert.findById(paraExpertId);
+    const paraExpert = await ParaExpert.findById(paraExpertId).select('availability consultancy');
 
     if (!paraExpert) {
       return res.json(
@@ -262,7 +262,7 @@ export const getParaExpertAvailability = async (req: Request, res: Response) => 
     }
 
     const availabilityForDay = paraExpert.availability.find(
-      (a) => a.day === day
+      (a) => a.day === dayOfWeek
     );
 
     if (!availabilityForDay) {
@@ -276,38 +276,23 @@ export const getParaExpertAvailability = async (req: Request, res: Response) => 
 
     const bookings = await Appointments.find({
       paraExpertId: paraExpertId,
-      date: startDateObj,
+      date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ["confirmed", "pending"] },
-    }).select("startTime endTime");
+    }).select("startTime");
+ 
+      const bookedTimes = new Set(bookings.map((booking) => booking.startTime));
 
-    const bookedSlots = bookings.flatMap((appointment) => {
-      return [
-        { type: "chat", time: appointment.startTime },
-        { type: "chat", time: appointment.endTime },
-        { type: "video_call", time: appointment.startTime },
-        { type: "video_call", time: appointment.endTime },
-        { type: "audio_call", time: appointment.startTime },
-        { type: "audio_call", time: appointment.endTime },
-      ];
-    });
-
-    const filterAvailableSlots = (
-      type: "chat" | "video_call" | "audio_call"
-    ) => {
-      const availableSlots = availabilityForDay.slots[type];
-      return availableSlots.filter(
-        (slot) => !bookedSlots.some((b) => b.type === type && b.time === slot)
-      );
-    };
+      const availableSlots = {
+        chat: availabilityForDay.slots.chat.filter((time) => !bookedTimes.has(time)),
+        video_call: availabilityForDay.slots.video_call.filter((time) => !bookedTimes.has(time)),
+        audio_call: availabilityForDay.slots.audio_call.filter((time) => !bookedTimes.has(time)),
+      };
+  
 
     const response = {
       availability: {
         date: startDate,
-        slots: {
-          chat: filterAvailableSlots("chat"),
-          video_call: filterAvailableSlots("video_call"),
-          audio_call: filterAvailableSlots("audio_call"),
-        },
+        slots: availableSlots,
       },
       consultancy: {
         audio_call_price: paraExpert.consultancy.audio_call_price,
