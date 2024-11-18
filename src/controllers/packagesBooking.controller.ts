@@ -16,7 +16,8 @@ export const createBooking = asyncHandler(
     try {
       let fileUrl: string = "";
       if (req?.file) {
-        fileUrl = await uploadfileToS3(req.file, "prescription-report");
+        const localFilePath = req.file.path;
+        fileUrl = await uploadfileToS3(localFilePath, "prescription-report");
       }
 
       const {
@@ -74,7 +75,7 @@ export const createBooking = asyncHandler(
         bookedPackage._id
       );
 
-      const createNotification = await notification(
+      await notification(
         userId,
         "Package Request Received",
         `Your package booking request has been successfully placed. The booking will scheduled for ${date} at ${address}. Please proceed your payment`,
@@ -105,7 +106,7 @@ export const createBooking = asyncHandler(
         bookedPackage._id
       );
 
-      const createParaExpertNotification = await notification(
+      await notification(
         paraExpertUser._id,
         "New Package Booking Request",
         `You have a new package booking request from ${bookingUser.name}. The booking is scheduled for ${date} at ${address}. Your payment is currently being processed`,

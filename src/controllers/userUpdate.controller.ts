@@ -316,78 +316,58 @@ export const dev = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const uploadProfile = async (req: Request, res: Response) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            ResponseStatusCode.BAD_REQUEST,
-            null,
-            "No file uploaded"
-          )
-        );
-    }
-
-    const userID = req.params.userId;
-    const isUser = await User.findById(userID);
-    if (!isUser) {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(ResponseStatusCode.NOT_FOUND, null, "User not found")
-        );
-    }
-    const accessUrl = await uploadfileToS3(req?.file, "user-profile");
-
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        accessUrl,
-        "Profile Pic Uploaded successfully"
-      )
-    );
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
+export const uploadProfile = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          null,
+          "No file uploaded"
+        )
+      );
   }
-};
 
-export const uploadQualificationDetails = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            ResponseStatusCode.BAD_REQUEST,
-            null,
-            "No file uploaded"
-          )
-        );
-    }
+  const localFilePath = req.file.path;
+  const accessUrl = await uploadfileToS3(localFilePath, "user-profile");
 
-    const fileUrl = await uploadfileToS3(req?.file, "certificate");
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      accessUrl,
+      "Profile Pic Uploaded successfully"
+    )
+  );
 
-    return res.json(
-      new ApiResponse(
-        ResponseStatusCode.SUCCESS,
-        fileUrl,
-        "Qualification Details  Uploaded successfully"
-      )
-    );
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new ApiError(
-      ResponseStatusCode.INTERNAL_SERVER_ERROR,
-      error.message || "Internal server error"
-    );
+});
+
+export const uploadQualificationDetails = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          ResponseStatusCode.BAD_REQUEST,
+          null,
+          "No file uploaded"
+        )
+      );
   }
-};
+  if (!req.file) {
+    return res.status(400).send('No file uploaded');
+  }
+
+  const localFilePath = req.file.path;
+
+  const fileUrl = await uploadfileToS3(localFilePath, "certificate");
+
+  return res.json(
+    new ApiResponse(
+      ResponseStatusCode.SUCCESS,
+      fileUrl,
+      "Qualification Details  Uploaded successfully"
+    )
+  );
+
+});

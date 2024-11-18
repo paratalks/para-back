@@ -14,7 +14,7 @@ router.route("/get-availability").get(verifyJWT, getAvailability);
 
 router.route("/update").patch(verifyJWT, updateParaExpertDetails);
 router.route("/me").get(verifyJWT, getParaExpertDetails);
-router.post('/uploadCertificate', uploadFile('uploadCertificate'), uploadQualificationDetails);
+router.post('/uploadCertificate', uploadFile.single('uploadCertificate'), uploadQualificationDetails);
 
 
 export default router;

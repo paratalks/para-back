@@ -9,20 +9,11 @@ import {
   dev,
 } from "../../controllers/userUpdate.controller";
 import { uploadFile } from "../../util/s3Client.util";
-// /**
-//  * Endpoint: /api/v1/user
-//  */
 
 const router = express.Router();
 
-// // const RESTICT_TO = "admin";
 
-// router
-//     .route("/") //
-//     .get(authorization, getAllUsers);
-
-
-router.post('/uploadProfile/:userId', uploadFile('profilePicture'), uploadProfile);
+router.post('/uploadProfile/:userId', uploadFile.single('profilePicture'), uploadProfile);
 router.route("/update-user/:userId").patch(updateUserDetails);
 router.route("/update-para").patch(verifyJWT,updateParaExpertDetails);
 router.route("/me/:userId").get(getUserById);

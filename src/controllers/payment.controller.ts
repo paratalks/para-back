@@ -282,8 +282,9 @@ export const uploadPaymentReceipt = async (req: Request, res: Response) => {
           )
         );
     }
+    const localFilePath = req.file.path;
 
-    const fileUrl = await uploadfileToS3(req.file, "payment-receipt");
+    const fileUrl = await uploadfileToS3(localFilePath, "payment-receipt");
 
     return res.json(
       new ApiResponse(
