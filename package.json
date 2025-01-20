@@ -15,7 +15,7 @@
         "test": "jest --forceExit --coverage --verbose",
         "check-format": "npx prettier -c src",
         "format": "npx prettier -w src",
-        "postinstall": "pm2 install typescript",
+        "postinstall": "npm install typescript",
         "build-ts": "tsc -p tsconfig.release.json || npm run copy",
         "copy": "cp package.json ./dist/ && cp pm2.config.uat.json ./dist/pm2.config.json && cp .env.uat ./dist/",
         "build-ts:prod": "tsc -p tsconfig.release.json || npm run copy:prod",

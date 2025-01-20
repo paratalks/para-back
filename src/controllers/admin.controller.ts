@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { Admin } from "../models/admin/admin.modle";
 import { User } from "../models/user/user.model";
 import { ParaExpert } from "../models/paraExpert/paraExpert.model";
+import { Upload } from "../models/uploads/upload.model";
 import { Status, Role } from "../util/index";
 import { ApiError } from "../util/apiError";
 import { asyncHandler } from "../util/asyncHandler";
@@ -633,6 +634,33 @@ export const getPackageBookings: RequestHandler = async (
         200,
         { packageBookings, totalBookings, limit, page },
         "All Package Booking Details have been successfully retrieved!"
+      )
+    );
+  } catch (error) {
+    next(
+      new ApiError(
+        ResponseStatusCode.INTERNAL_SERVER_ERROR,
+        error.message || "Failure in fetching Admins"
+      )
+    );
+  }
+};
+
+export const getUploads: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    
+    const {youtubeVideo,createdAt,UpdatedAt}=req.body;
+    
+
+    res.json(
+      new ApiResponse(
+        200,
+       
+        "upload's here!"
       )
     );
   } catch (error) {

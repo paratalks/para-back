@@ -11,6 +11,7 @@ import reviewRoute from "./review.route"
 import adminRoutes from "./admin.route"
 import packagesbookingRoute from "./packageBooking.routes"
 import packagesRoutes from "./package.route"
+import videoContent from './videoContent.route'
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.use("/payment",paymentRoute)
 router.use("/token",tokenRoute)
 router.use("/review",reviewRoute)
 router.use("/admin",adminRoutes);
+router.use('/getVideoContent',videoContent)
 
 router.get("/", (req, res) => {
     return res.status(200).send({
