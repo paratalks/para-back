@@ -1,8 +1,8 @@
 import express from "express";
-import { getUsers, getParaExpert, getParaExpertByID, paraExpertSignup, getAppointments, getDashboardData, getAppointmentById, getUserById, updateUserById, updateParaExpertById, getPackageBookings, getUploads } from "../../controllers/admin.controller"
+import { getUsers, getParaExpert, getParaExpertByID, paraExpertSignup, getUploadsAdmin,getDeleteVideo,getUpdateVideo,getAppointments, getDashboardData, getAppointmentById, getUserById, updateUserById, updateParaExpertById, getPackageBookings, getUploads } from "../../controllers/admin.controller"
 import { hasAdminAccess } from "../../middlewares/auth.middleware";
 import { createAccount } from "../../controllers/account.controller";
-import { getUploadsAdmin,getDeleteVideo,getUpdateVideo } from "../../controllers/videoContent.controller";
+
 
 const router = express.Router();
 
