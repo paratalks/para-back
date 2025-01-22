@@ -54,7 +54,7 @@ const handleValidationError = (err: customAPIError) => {
 };
 
 const errorHandlerMiddleware = (err: customAPIError, req: Request, res: Response, next: NextFunction) => {
-    err.status = err.status || { code: 500, message: "error" };
+    err.status = err.status || { code: 500, success: false };
     err.isOperational = err.isOperational ? true : err.isOperational === false ? false : true;
 
     if (!isDev) {
