@@ -11,15 +11,27 @@ export const getUploads: RequestHandler = async (
     next: NextFunction
   ) => {  
     try {
+      const page = parseInt(req.query.page as string) || 1; 
+    const limit = parseInt(req.query.limit as string) || 10; 
+    const skip = (page - 1) * limit;
       
 
-      const uploads = await Upload.find(); 
+      const uploads = await Upload.find().skip(skip).limit(limit);
+      
+      const total = await Upload.countDocuments();
+
       
   
       return res.json(
         new ApiResponse(
           ResponseStatusCode.SUCCESS,
-          uploads,
+          {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            uploads,
+          },
           "video shows sucessfull"
         )
       );
