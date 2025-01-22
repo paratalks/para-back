@@ -646,36 +646,11 @@ export const getPackageBookings: RequestHandler = async (
   }
 };
 
-export const getUploads: RequestHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    
-    const {youtubeVideo,createdAt,UpdatedAt}=req.body;
-    
-
-    res.json(
-      new ApiResponse(
-        200,
-       
-        "upload's here!"
-      )
-    );
-  } catch (error) {
-    next(
-      new ApiError(
-        ResponseStatusCode.INTERNAL_SERVER_ERROR,
-        error.message || "Failure in fetching Admins"
-      )
-    );
-  }
-};
 
 
 
-export const getUploadsAdmin: RequestHandler = async (
+
+export const UploadVideoAdmin: RequestHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -710,7 +685,7 @@ export const getUploadsAdmin: RequestHandler = async (
   }
 };
 
-export const getDeleteVideo: RequestHandler = async (
+export const DeleteVideoAdmin: RequestHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -753,7 +728,7 @@ export const getDeleteVideo: RequestHandler = async (
   }
 };
 
-  export const getUpdateVideo: RequestHandler = async (
+  export const UpdateVideoAdmin: RequestHandler = async (
     req: Request,
     res: Response,
     next: NextFunction
